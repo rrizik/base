@@ -17,6 +17,7 @@ print(char *format, ...) {
     OutputDebugStringA(buffer);
 }
 
+
 ///////////////////////////////
 // NOTE: Win32 Memory
 ///////////////////////////////
@@ -31,6 +32,14 @@ os_virtual_alloc(u64 size){
 function bool
 os_virtual_free(void* base){
     bool result = VirtualFree(base, 0, MEM_RELEASE);
+    return(result);
+}
+
+function Arena* os_allocate_arena(size_t size){
+    Arena* result = {0};
+    result->base = os_virtual_alloc(size);
+    result->size = size;
+    result->used = 0;
     return(result);
 }
 
@@ -102,6 +111,10 @@ os_file_write(char* file_name, FileData file){
     return(result);
 }
 
+///////////////////////////////
+// NOTE: Win32 File Operations
+///////////////////////////////
+
 function bool
 os_file_delete(char* file_name){
     bool result = DeleteFileA(file_name);
@@ -129,6 +142,7 @@ os_directory_delete(char* dir_name){
 ///////////////////////////////
 // NOTE: Win32 File Paths
 ///////////////////////////////
+
 // current working directory (cwd)
 // path to binary/.exe
 // path for user config/data

@@ -289,16 +289,56 @@ typedef struct Arena{
     size_t used;
 } Arena;
 
+typedef struct ScratchArena{
+    Arena* arena;
+    size_t used;
+    //ScratchArena() {};
+    //ScratchArena(Arena* a) { arena = a; used = a->used; }
+    //ScratchArena() { arena = &transient_memory->arena; used = transient_memory->arena.used; }
+    ~ScratchArena() { arena->used = used; }
+} ScratchArena;
+
+#define allocate_array(arena, count, type) (type*)allocate_size_aligned(arena, count * sizeof(type), _Alignof(type))
+#define allocate_struct(arena, type) (type*)allocate_size_aligned(arena, sizeof(type), _Alignof(type))
+#define allocate_size(arena, size) allocate_size_aligned(arena, size, _Alignof(max_align_t))
+function void* allocate_size_aligned(Arena* arena, size_t size, size_t align){
+    size_t used_aligned = AlignUpPow2(arena->used, align); 
+    Assert(used_aligned + size <= arena->size);
+    arena->used = used_aligned;
+    void* result = (u8*)arena->base + arena->used;
+    arena->used = arena->used + size;
+    return(result);
+}
+
 //TODO: this needs some work. malloc is not ideal, need to
 //figure out how to primarily use VirtualAlloc() or OS specific
 //allocation, otherwise use malloc(). Mr. 4th (Allen Webber) is
 //a good source for this.
-function Arena* allocate_arena(size_t size){
+function Arena* malloc_arena(size_t size){
     Arena* arena = {0};
     arena->base = malloc(size);
     arena->size = size;
     arena->used = 0;
     return(arena);
+}
+
+function Arena* allocate_arena(Arena *arena, size_t size){
+    Arena* result = allocate_struct(arena, Arena);
+    result->base = allocate_size(arena, size);
+    result->size = size;
+    result->used = 0;
+    return(result);
+}
+
+function ScratchArena allocate_scratch(Arena* arena){
+    ScratchArena result;
+    result.arena = arena;
+    result.used = arena->used;
+    return(result);
+}
+
+function void free_scratch(ScratchArena scratch){
+    scratch.arena->used = scratch.used;
 }
 
 function void arena_init(Arena* arena, void* base, size_t size){
@@ -312,18 +352,6 @@ function void arena_free(Arena* arena){
 }
 
 //TODO: arena_resize_align
-
-#define allocate_array(arena, count, type) (type*)allocate_size_aligned(arena, count * sizeof(type), _Alignof(type))
-#define allocate_struct(arena, type) (type*)allocate_size_aligned(arena, sizeof(type), _Alignof(type))
-#define allocate_size(arena, size) allocate_size_aligned(arena, size, _Alignof(max_align_t))
-function void* allocate_size_aligned(Arena* arena, size_t size, size_t align){
-    size_t used_aligned = AlignUpPow2(arena->used, align); 
-    Assert(used_aligned + size <= arena->size);
-    arena->used = used_aligned;
-    void* result = (u8*)arena->base + arena->used;
-    arena->used = arena->used + size;
-    return(result);
-}
 
 ///////////////////////////////
 // NOTE: Doubly Linked List

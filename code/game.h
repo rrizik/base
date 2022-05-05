@@ -1,12 +1,13 @@
 
 
-typedef struct PermanentState{
+typedef struct PermanentMemory{
     Arena arena;
-} PermanentState, State;
+} PermanentMemory;
 
-typedef struct TransientState{
+typedef struct TransientMemory{
     Arena arena;
-} TransientState;
+    DLL stuff;
+} TransientMemory;
 
 static void render_something(RenderBuffer* render_buffer){
     u8* row = (u8*)render_buffer->base;
@@ -19,17 +20,20 @@ static void render_something(RenderBuffer* render_buffer){
     }
 }
 
+global PermanentMemory* permanent_memory;
+global TransientMemory* transient_memory;
+
 static void update_game(Memory* memory, RenderBuffer* render_buffer, Controller* controller, Clock* clock){
 
-    Assert(sizeof(PermanentState) < memory->permanent_size);
-    Assert(sizeof(TransientState) < memory->permanent_size);
-    PermanentState* permanent_state = (PermanentState*)memory->permanent_base;
-    TransientState* transient_state = (TransientState*)memory->transient_base;
+    Assert(sizeof(PermanentMemory) < memory->permanent_size);
+    Assert(sizeof(TransientMemory) < memory->transient_size);
+    permanent_memory = (PermanentMemory*)memory->permanent_base;
+    transient_memory = (TransientMemory*)memory->transient_base;
 
     if(memory->initialized){
         memory->initialized = true;
-        arena_init(&permanent_state->arena, (u8*)memory->permanent_base + sizeof(PermanentState), memory->permanent_size - sizeof(PermanentState));
-        arena_init(&transient_state->arena, (u8*)memory->transient_base + sizeof(TransientState), memory->transient_size - sizeof(TransientState));
+        arena_init(&permanent_memory->arena, (u8*)memory->permanent_base + sizeof(PermanentMemory), memory->permanent_size - sizeof(PermanentMemory));
+        arena_init(&transient_memory->arena, (u8*)memory->transient_base + sizeof(TransientMemory), memory->transient_size - sizeof(TransientMemory));
     }
 
     render_something(render_buffer);
