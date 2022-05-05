@@ -1,37 +1,17 @@
-#include <windows.h>
+#include "win32_base.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef float f32;
-typedef double f64;
-
-#define global static
-#define Kilobytes(x) (x * 1024LL)
-#define Megabytes(x) (Kilobytes(x) * 1024LL)
-#define Gigabytes(x) (Megabytes(x) * 1024LL)
-#define Terabytes(x) (Gigaybtes(x) * 1024LL)
-
-#define GET_TICKS(name) i64 name(void)
-typedef GET_TICKS(GetTicks);
-#define GET_SECONDS_ELAPSED(name) f64 name(i64 start, i64 end)
-typedef GET_SECONDS_ELAPSED(GetSecondsElapsed);
-#define GET_MS_ELAPSED(name) f64 name(i64 start, i64 end)
-typedef GET_MS_ELAPSED(GetMsElapsed);
+typedef i64 GetTicks(void);
+typedef f64 GetSecondsElapsed(i64 start, i64 end);
+typedef f64 GetMsElapsed(i64 start, i64 end);
 
 typedef struct Clock{
     i32 dt;
     i64 frequency;
-    GetTicks* get_ticks; 
-    GetSecondsElapsed* get_seconds_elapsed; 
-    GetMsElapsed* get_ms_elapsed; 
+    GetTicks* get_ticks;
+    GetSecondsElapsed* get_seconds_elapsed;
+    GetMsElapsed* get_ms_elapsed;
 } Clock;
 
 typedef struct Button{
@@ -77,31 +57,19 @@ global Memory memory;
 global Clock clock;
 
 
-static void
-print(char *format, ...) {
-    char buffer[4096] = {0};
-    va_list args;
-    va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-
-    printf("%s", buffer);
-    OutputDebugStringA(buffer);
-}
-
-GET_TICKS(get_ticks){
+static i64 get_ticks(){
     LARGE_INTEGER result;
     QueryPerformanceCounter(&result);
     return(result.QuadPart);
 }
 
-GET_SECONDS_ELAPSED(get_seconds_elapsed){
+static f64 get_seconds_elapsed(i64 start, i64 end){
     f64 result;
     result = ((f64)(start - end) / ((f64)clock.frequency));
     return(result);
 }
 
-GET_MS_ELAPSED(get_ms_elapsed){
+static f64 get_ms_elapsed(i64 start, i64 end){
     f64 result;
     result = (1000 * ((f64)(start - end) / ((f64)clock.frequency)));
     return(result);
@@ -120,10 +88,10 @@ init_clock(Clock* clock){
 
 static void
 init_memory(Memory* memory){
-    memory->permanent_size = Megabytes(4);
-    memory->transient_size = Gigabytes(4);
+    memory->permanent_size = MB(4);
+    memory->transient_size = GB(4);
     memory->size = memory->permanent_size + memory->transient_size;
-    memory->base = VirtualAlloc(0, memory->size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+    memory->base = os_virtual_alloc(memory->size);
     memory->permanent_base = memory->base;
     memory->transient_base = (u8*)memory->base + memory->permanent_size;
 }
@@ -144,13 +112,13 @@ init_render_buffer(RenderBuffer* render_buffer, i32 width, i32 height){
     render_buffer->bytes_per_pixel = bytes_per_pixel;
     render_buffer->stride = width * bytes_per_pixel;
     render_buffer->size = width * height * bytes_per_pixel;
-    render_buffer->base = VirtualAlloc(0, render_buffer->size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+    render_buffer->base = os_virtual_alloc(render_buffer->size);
 }
 
 static void
 update_window(HWND window, RenderBuffer render_buffer){
     HDC device_context = GetDC(window);
-    if(StretchDIBits(device_context, 
+    if(StretchDIBits(device_context,
                      0, 0, render_buffer.width, render_buffer.height,
                      0, 0, render_buffer.width, render_buffer.height,
                      render_buffer.base, &render_buffer.bitmap_info, DIB_RGB_COLORS, SRCCOPY))
@@ -222,6 +190,11 @@ i32 WinMain(HINSTANCE instance, HINSTANCE pinstance, LPSTR command_line, i32 win
     init_memory(&memory);
     init_clock(&clock);
     init_render_buffer(&render_buffer, 1024, 768);
+
+    char* file_name = "C:\\sh1tz\\apesticks\\cc++\\base\\delete_this";
+    os_directory_delete(file_name);
+    //os_directory_create(file_name);
+
 
     if(RegisterClassA(&window_class)){
         HWND window = CreateWindowA(window_class.lpszClassName, "Title", WS_OVERLAPPEDWINDOW|WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, instance, 0);
