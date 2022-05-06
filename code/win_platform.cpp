@@ -191,8 +191,15 @@ i32 WinMain(HINSTANCE instance, HINSTANCE pinstance, LPSTR command_line, i32 win
     init_clock(&clock);
     init_render_buffer(&render_buffer, 1024, 768);
 
-    char* file_name = "C:\\sh1tz\\apesticks\\cc++\\base\\delete_this";
-    os_directory_delete(file_name);
+    //char* file_name = "C:\\sh1tz\\apesticks\\cc++\\base\\delete_this";
+    //char* file_name = "C:\\sh1tz\\apesticks\\cc++\\base\\code\\win_platform.cpp";
+    //Arena arena = {0};
+    //void* stuff = malloc(MB(1));
+    //arena.base = malloc(MB(1));
+    //arena.size = MB(1);
+    //arena.used = 0;
+    //os_file_read(&arena, file_name);
+    //os_directory_delete(file_name);
     //os_directory_create(file_name);
 
 

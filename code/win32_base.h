@@ -53,7 +53,7 @@ typedef struct FileData{
 } FileData;
 
 function FileData
-os_file_read(char* file_name){
+os_file_read(Arena* arena, char* file_name){
     FileData result;
 
     HANDLE file_handle = CreateFileA(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
@@ -61,8 +61,8 @@ os_file_read(char* file_name){
         LARGE_INTEGER LARGE_file_size;
         if(GetFileSizeEx(file_handle, &LARGE_file_size)){
             u32 file_size = (u32)LARGE_file_size.QuadPart;
-            // TODO: This needs to allocate from arena instead of VirtualAlloc
-            result.base = os_virtual_alloc(file_size); 
+
+            result.base = allocate_size(arena, file_size);
             if(result.base){
                 DWORD bytes_read;
                 if(ReadFile(file_handle, result.base, file_size, &bytes_read, 0)){

@@ -300,7 +300,7 @@ typedef struct ScratchArena{
 
 #define allocate_array(arena, count, type) (type*)allocate_size_aligned(arena, count * sizeof(type), _Alignof(type))
 #define allocate_struct(arena, type) (type*)allocate_size_aligned(arena, sizeof(type), _Alignof(type))
-#define allocate_size(arena, size) allocate_size_aligned(arena, size, _Alignof(max_align_t))
+#define allocate_size(arena, size) allocate_size_aligned(arena, size, _Alignof(s32))
 function void* allocate_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align); 
     Assert(used_aligned + size <= arena->size);
