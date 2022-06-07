@@ -34,9 +34,10 @@ static bool os_virtual_free(void* base){
 }
 
 static Arena* os_allocate_arena(size_t size){
-    Arena* result = {0};
-    result->base = os_virtual_alloc(size);
-    result->size = size;
+    void* memory = os_virtual_alloc(size);
+    Arena* result = (Arena*)memory;
+    result->base = (u8*)memory + sizeof(Arena);
+    result->size = size - sizeof(Arena);
     result->used = 0;
     return(result);
 }
@@ -60,7 +61,7 @@ os_file_read(Arena* arena, String8 file){
         if(GetFileSizeEx(file_handle, &LARGE_file_size)){
             u32 file_size = (u32)LARGE_file_size.QuadPart;
 
-            result.base = allocate_size(arena, file_size);
+            result.base = push_size(arena, file_size);
             if(result.base){
                 DWORD bytes_read;
                 if(ReadFile(file_handle, result.base, file_size, &bytes_read, 0)){
@@ -145,7 +146,7 @@ os_directory_delete(char* dir_name){
 
 static String8
 os_utf16_to_utf8(Arena* arena, String16 utf16_string){
-    u8* str = (u8*)allocate_size(arena, utf16_string.length);
+    u8* str = (u8*)push_size(arena, utf16_string.length);
     String8 result = {str, utf16_string.length};
 
     u32 size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.length, (char*)result.str, result.length, 0, 0);
@@ -156,7 +157,7 @@ os_utf16_to_utf8(Arena* arena, String16 utf16_string){
 // UNTESTED:
 static String16
 os_utf8_to_utf16(Arena* arena, String8 utf8_string){
-    u16* str = (u16*)allocate_size(arena, utf8_string.length);
+    u16* str = (u16*)push_size(arena, utf8_string.length);
     String16 result = {str, utf8_string.length};
 
     u32 size = MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, utf8_string.length, (wchar*)result.str, result.length);
@@ -169,7 +170,7 @@ static String8 os_get_cwd(Arena* arena){
 
     ScratchArena scratch = begin_scratch(0, 0);
     u32 length = GetCurrentDirectoryW(0, 0);
-    wchar* buffer = allocate_array(scratch.arena, wchar, length);
+    wchar* buffer = push_array(scratch.arena, wchar, length);
 
     length = GetCurrentDirectoryW(length, buffer);
     String16 utf16_string = {(u16*)buffer, length};

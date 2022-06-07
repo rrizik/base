@@ -366,10 +366,10 @@ typedef struct Arena{
     size_t used;
 } Arena;
 
-#define allocate_array(arena, type, count) (type*)allocate_size_aligned(arena, count * sizeof(type), _Alignof(type))
-#define allocate_struct(arena, type) (type*)allocate_size_aligned(arena, sizeof(type), _Alignof(type))
-#define allocate_size(arena, size) allocate_size_aligned(arena, size, _Alignof(s32))
-static void* allocate_size_aligned(Arena* arena, size_t size, size_t align){
+#define push_array(arena, type, count) (type*)push_size_aligned(arena, count * sizeof(type), _Alignof(type))
+#define push_struct(arena, type) (type*)push_size_aligned(arena, sizeof(type), _Alignof(type))
+#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(s32))
+static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
     Assert(used_aligned + size <= arena->size);
     void* result = (u8*)arena->base + used_aligned;
@@ -377,9 +377,9 @@ static void* allocate_size_aligned(Arena* arena, size_t size, size_t align){
     return(result);
 }
 
-static Arena* allocate_arena(Arena *arena, size_t size){
-    Arena* result = allocate_struct(arena, Arena);
-    result->base = allocate_size(arena, size);
+static Arena* push_arena(Arena *arena, size_t size){
+    Arena* result = push_struct(arena, Arena);
+    result->base = push_size(arena, size);
     result->size = size;
     result->used = 0;
     return(result);
@@ -416,18 +416,24 @@ static ScratchArena get_scratch(Arena* arena){
     return(result);
 }
 
+static Arena*
+allocate_arena(size_t size){
+    s32 num = DEFAULT_RESERVE_SIZE;
+    void* memory = calloc((DEFAULT_RESERVE_SIZE/sizeof(s32)), sizeof(s32));
+    Arena* result = (Arena*)memory;
+    result->base = (u8*)memory + sizeof(Arena);
+    result->size = DEFAULT_RESERVE_SIZE - sizeof(Arena);
+    result->used = 0;
+    return(result);
+}
+
 static ScratchArena
 begin_scratch(Arena **conflict_array, u32 count){
     // init on first time
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = 0;
-            void* memory = malloc(DEFAULT_RESERVE_SIZE);
-            arena = (Arena*)memory;
-            arena->size = DEFAULT_RESERVE_SIZE;
-            arena->base = (u8*)memory + sizeof(Arena);
-            arena->used = 0;
+            Arena* arena = allocate_arena(DEFAULT_RESERVE_SIZE);
             *scratch_slot = arena;
         }
     }
@@ -473,8 +479,8 @@ typedef struct Node{
     u32 count;
 } Node, Sentinel, SLL, DLL, LinkedList;
 
-static Node* allocate_node(Arena* arena){
-    Node* result = allocate_struct(arena, Node);
+static Node* push_node(Arena* arena){
+    Node* result = push_struct(arena, Node);
     return(result);
 }
 
@@ -630,7 +636,7 @@ static String32 str32_(u32* str, u32 length){
 
 static String8
 str8_concatenate(Arena* arena, String8 left, String8 right){
-    u8* str = (u8*)allocate_size(arena, (left.length + right.length));
+    u8* str = (u8*)push_size(arena, (left.length + right.length));
     String8 result = {str, (left.length + right.length)};
 
     for(s32 i = 0; i < left.length; ++i){
