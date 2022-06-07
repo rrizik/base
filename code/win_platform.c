@@ -271,7 +271,6 @@ i32 WinMain(HINSTANCE instance, HINSTANCE pinstance, LPSTR command_line, i32 win
             if(SetWindowPos(window, HWND_TOP, 10, 10, 1054, 818, SWP_SHOWWINDOW)){
                 global_running = true;
                 while(global_running){
-
                     MSG message;
                     while(PeekMessageA(&message, window, 0, 0, PM_REMOVE)){
                         TranslateMessage(&message);
@@ -279,6 +278,7 @@ i32 WinMain(HINSTANCE instance, HINSTANCE pinstance, LPSTR command_line, i32 win
                     }
 
                     update_game(&memory, &render_buffer, &controller, &clock);
+                    v2 a = vec2(1, 1);
                     //update_game(&memory, &render_buffer, &sound, &controller, &clock, &threads);
                     update_window(window, render_buffer);
                     controller.up.pressed = false;

@@ -2,6 +2,7 @@
 
 typedef struct PermanentMemory{
     Arena arena;
+    String8 cwd; // CONSIDER: this might be something we want to be set on the platform side
 } PermanentMemory;
 
 typedef struct TransientMemory{
@@ -20,20 +21,22 @@ static void render_something(RenderBuffer* render_buffer){
     }
 }
 
-global PermanentMemory* permanent_memory;
-global TransientMemory* transient_memory;
 
 static void update_game(Memory* memory, RenderBuffer* render_buffer, Controller* controller, Clock* clock){
 
     Assert(sizeof(PermanentMemory) < memory->permanent_size);
     Assert(sizeof(TransientMemory) < memory->transient_size);
-    permanent_memory = (PermanentMemory*)memory->permanent_base;
-    transient_memory = (TransientMemory*)memory->transient_base;
+    PermanentMemory* PM = (PermanentMemory*)memory->permanent_base;
+    TransientMemory* TM = (TransientMemory*)memory->transient_base;
 
-    if(memory->initialized){
+    if(!memory->initialized){
+        v2 a = {1, 1};
+        v2 b = {1, 1};
+        v2 c = a + b;
         memory->initialized = true;
-        arena_init(&permanent_memory->arena, (u8*)memory->permanent_base + sizeof(PermanentMemory), memory->permanent_size - sizeof(PermanentMemory));
-        arena_init(&transient_memory->arena, (u8*)memory->transient_base + sizeof(TransientMemory), memory->transient_size - sizeof(TransientMemory));
+        arena_init(&PM->arena, (u8*)memory->permanent_base + sizeof(PermanentMemory), memory->permanent_size - sizeof(PermanentMemory));
+        arena_init(&TM->arena, (u8*)memory->transient_base + sizeof(TransientMemory), memory->transient_size - sizeof(TransientMemory));
+        PM->cwd = os_get_cwd(&TM->arena);
     }
 
     render_something(render_buffer);
