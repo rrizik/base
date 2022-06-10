@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "base.h"
 
+// something someone from HH gave me 
 static void
 print(char *format, ...) {
     char buffer[4096] = {0};
@@ -69,25 +70,25 @@ os_file_read(Arena* arena, String8 file){
                         result.size = file_size;
                     }
                     else{
-                        print("os_entire_file: bytes_read != file_size");
+                        print("os_file_read: bytes_read != file_size");
                     }
                 }
                 else{
                     os_virtual_free(result.base);
-                    print("os_entire_file: failed to read file");
+                    print("os_file_read: failed to read file");
                 }
             }
             else{
-                print("os_entire_file: failed to allocate memory");
+                print("os_file_read: failed to allocate memory");
             }
         }
         else{
-            print("os_entire_file: failed to get file size");
+            print("os_file_read: failed to get file size");
         }
         CloseHandle(file_handle);
     }
     else{
-        print("os_entire_file: failed to create file handle");
+        print("os_file_read: failed to create file handle");
     }
     return(result);
 }
@@ -105,7 +106,7 @@ os_file_write(char* file_name, FileData file){
         CloseHandle(file_handle);
     }
     else{
-        print("os_read_entire_file: failed to create file handle");
+        print("os_file_write: failed to create file handle");
     }
     return(result);
 }

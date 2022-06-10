@@ -248,6 +248,7 @@ static v2s32 vec2s32(s32 x, s32 y){
 // NOTE: Compound Types Operators
 ///////////////////////////////
 
+#if STANDARD_CPP
 static v2s32 operator+(const v2s32& a, const v2s32& b){
     v2s32 result = {a.x + b.x, a.y + b.y};
     return(result);
@@ -355,6 +356,7 @@ static bool operator==(const v4& a, const v4& b){
     }
     return(false);
 }
+#endif
 
 ///////////////////////////////
 // NOTE: Arena Functions
@@ -398,11 +400,6 @@ static void arena_free(Arena* arena){
 typedef struct ScratchArena{
     Arena* arena;
     size_t used;
-    //ScratchArena() {};
-    //ScratchArena(Arena* a) { arena = a; used = a->used; }
-    //ScratchArena() { arena = &transient_memory->arena; used = transient_memory->arena.used; }
-    //CONSIDER: This might not be good for a base, since you have less control over when you free?
-    //~ScratchArena() { arena->used = used; }
 } ScratchArena;
 
 #define DEFAULT_RESERVE_SIZE GB(1)            
@@ -419,7 +416,7 @@ static ScratchArena get_scratch(Arena* arena){
 static Arena*
 allocate_arena(size_t size){
     s32 num = DEFAULT_RESERVE_SIZE;
-    void* memory = calloc((DEFAULT_RESERVE_SIZE/sizeof(s32)), sizeof(s32));
+    void* memory = calloc(DEFAULT_RESERVE_SIZE, 1);
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
     result->size = DEFAULT_RESERVE_SIZE - sizeof(Arena);
@@ -427,6 +424,7 @@ allocate_arena(size_t size){
     return(result);
 }
 
+// mostly copy pasta from Allen, but I understand it
 static ScratchArena
 begin_scratch(Arena **conflict_array, u32 count){
     // init on first time
@@ -611,14 +609,14 @@ typedef struct String16{
 } String16;
 
 typedef struct String32{
-    u32* str;
-    u32 length;
-} String32;
+        u32* str;
+        u32 length;
+    } String32;
 
 #define str8_literal(str) str8_create_((u8*)str, (sizeof(str) - 1))
 #define str8(str, length) str8_create_((u8*)str, length)
-static String8 str8_create_(u8* str, u32 length){
-    String8 result = {str, length};
+    static String8 str8_create_(u8* str, u32 length){
+        String8 result = {str, length};
     return(result);
 }
 
@@ -650,8 +648,6 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
 }
 
 // copy str8
-// copy str16
-// str_length:
 // str_in:
 // char_in:
 // char_replace:
@@ -668,4 +664,3 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
 // append:
 
 #endif
-
