@@ -61,24 +61,25 @@
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
 
-#define Min(a,b) (((a)<=(b))?(a):(b))
-#define Max(a,b) (((a)>=(b))?(a):(b))
-#define Clamp(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
+#define MIN(a,b) (((a)<=(b))?(a):(b))
+#define MAX(a,b) (((a)>=(b))?(a):(b))
+#define CLAMP(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
 #define ABS(x) ((x)<0?-(x):(x))
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
-#define Glue(a,b) a##b
+#define GLUE(a,b) a##b
 
 #define KB(x) (x * 1024LL)
 #define MB(x) (KB(x) * 1024LL)
 #define GB(x) (MB(x) * 1024LL)
 #define TB(x) (GB(x) * 1024LL)
 
-#define Thousand(x) ((x) * 1000)
-#define Million(x) ((x) * 1000000llu)
-#define Billion(x) ((x) * 1000000000llu)
-#define Trillion(x) ((x) * 1000000000000llu)
+#define HUNDRED(x) ((x) * 100)
+#define THOUSAND(x) ((x) * 1000)
+#define MILLION(x) ((x) * 1000000llu)
+#define BILLION(x) ((x) * 1000000000llu)
+#define TRILLION(x) ((x) * 1000000000000llu)
 
 #define global static
 #define local static
@@ -135,63 +136,6 @@ global f64 f64_pi = 3.14159265359;
 global f32 RAD = 0.0174533f;
 
 ///////////////////////////////
-// NOTE: Math Functions
-///////////////////////////////
-
-#include <math.h>
-static f32 abs_f32(f32 x){
-    union{ f32 f; u32 u; } r;
-    r.f = x;
-    r.u &= 0x7fffffff;
-    return(r.f);
-}
-
-static f64 abs_f64(f64 x){
-    union{ f64 f; u64 u; } r;
-    r.f = x;
-    r.u &= 0x7fffffffffffffff;
-    return(r.f);
-}
-
-static s32 abs_s32(s32 x){
-    s32 result = ((x<0)?(-x):(x));
-    return(result);
-}
-
-static s64 abs_s64(s64 x){
-    s64 result = ((x<0)?(-x):(x));
-    return(result);
-}
-
-#define PI 3.14159265f
-#define RAD 0.0174533f
-#define RAD2DEG(n) ((180.0f/PI) * (n))
-#define DEG2RAD(n) ((PI/180.0f) * (n))
-
-static f32 sqrt_f32(f32 x){ return(sqrt(x)); }
-static f32 sin_f32(f32 x){  return(sin(x)); }
-static f32 cos_f32(f32 x){  return(cos(x)); }
-static f32 tan_f32(f32 x){  return(tan(x)); }
-
-static f64 sqrt_f64(f64 x){ return(sqrt(x)); }
-static f64 sin_f64(f64 x){  return(sin(x)); }
-static f64 cos_f64(f64 x){  return(cos(x)); }
-static f64 tan_f64(f64 x){  return(tan(x)); }
-
-static f32 lerp(f32 a, f32 t, f32 b){
-    f32 x = ((a + ((b - a) * t)));
-    return(x);
-}
-
-static f32 unlerp(f32 a, f32 x, f32 b){
-    f32 t = 0.0f;
-    if(a != b){
-        t = (x - a) / (b - a);
-    }
-    return(t);
-}
-
-///////////////////////////////
 // NOTE: Compound Types
 ///////////////////////////////
 
@@ -199,19 +143,19 @@ typedef union v2{
     struct{ f32 x; f32 y; };
     struct{ f32 w; f32 h; };
     f32 v[2];
-} v2;
+} v2, V2;
 
 typedef union v3{
     struct{ f32 x; f32 y; f32 z; };
     struct{ f32 r; f32 g; f32 b; };
     f32 v[3];
-} v3;
+} v3, V3;
 
 typedef union v4{
     struct{ f32 x; f32 y; f32 z; f32 w; };
     struct{ f32 r; f32 g; f32 b; f32 a; };
     f32 v[4];
-} v4;
+} v4, V4;
 
 typedef union v2s32{
     struct{ s32 x; s32 y; };
@@ -242,7 +186,6 @@ static v2s32 vec2s32(s32 x, s32 y){
     v2s32 result = {x, y};
     return(result);
 }
-
 
 ///////////////////////////////
 // NOTE: Compound Types Operators
@@ -330,33 +273,175 @@ static v4 operator*(const f32& a, const v4& b){
 }
 
 static bool operator==(const v2s32& a, const v2s32& b){
-    if((a.x == b.x) && (a.y == b.y)){
-        return(true);
-    }
-    return(false);
+    return((a.x == b.x) && (a.y == b.y));
 }
 
 static bool operator==(const v2& a, const v2& b){
-    if((a.x == b.x) && (a.y == b.y)){
-        return(true);
-    }
-    return(false);
+    return((a.x == b.x) && (a.y == b.y));
 }
 
 static bool operator==(const v3& a, const v3& b){
-    if((a.x == b.x) && (a.y == b.y) && (a.z == b.z)){
-        return(true);
-    }
-    return(false);
+    return((a.x == b.x) && (a.y == b.y) && (a.z == b.z));
 }
 
 static bool operator==(const v4& a, const v4& b){
-    if((a.x == b.x) && (a.y == b.y && (a.z == b.z) && (a.w == b.w))){
-        return(true);
-    }
-    return(false);
+    return((a.x == b.x) && (a.y == b.y && (a.z == b.z) && (a.w == b.w)));
+}
+
+static bool operator!=(const v2s32& a, const v2s32& b){
+    return(!(a == b));
+}
+
+static bool operator!=(const v2& a, const v2& b){
+    return(!(a == b));
+}
+
+static bool operator!=(const v3& a, const v3& b){
+    return(!(a == b));
+}
+
+static bool operator!=(const v4& a, const v4& b){
+    return(!(a == b));
 }
 #endif
+
+///////////////////////////////
+// NOTE: Math Functions
+///////////////////////////////
+
+#include <math.h>
+
+#define PI 3.14159265f
+#define RAD 0.0174533f
+#define RAD2DEG(n) ((180.0f/PI) * (n))
+#define DEG2RAD(n) ((PI/180.0f) * (n))
+
+static f32 sqrt_f32(f32 x){ return(sqrt(x)); }
+static f32 sin_f32(f32 x){ return(sinf(x)); }
+static f32 cos_f32(f32 x){ return(cosf(x)); }
+static f32 tan_f32(f32 x){ return(tanf(x)); }
+static f32 atan_f32(f32 x, f32 y){ return(atan2f(x, y)); }
+
+static f64 sqrt_f64(f64 x){ return(sqrt(x)); }
+static f64 sin_f64(f64 x){ return(sin(x)); }
+static f64 cos_f64(f64 x){ return(cos(x)); }
+static f64 tan_f64(f64 x){ return(tan(x)); }
+static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
+
+static v2
+rad_to_dir(f32 rad){
+    return(vec2(cos_f32(rad), sin_f32(rad)));
+}
+
+static f32
+dir_to_rad(v2 dir){
+    return(atan_f32(dir.y, dir.x));
+}
+
+static f32 
+abs_f32(f32 x){
+    union{ f32 f; u32 u; } r;
+    r.f = x;
+    r.u &= 0x7fffffff;
+    return(r.f);
+}
+
+static f64 
+abs_f64(f64 x){
+    union{ f64 f; u64 u; } r;
+    r.f = x;
+    r.u &= 0x7fffffffffffffff;
+    return(r.f);
+}
+
+static s32 
+abs_s32(s32 x){
+    s32 result = ((x<0)?(-x):(x));
+    return(result);
+}
+
+static s64 
+abs_s64(s64 x){
+    s64 result = ((x<0)?(-x):(x));
+    return(result);
+}
+
+static v2 
+round_v2(v2 value){
+    v2 result = {};
+    result.x = (f32)((s32)(value.x + 0.5f));
+    result.y = (f32)((s32)(value.y + 0.5f));
+    return(result);
+}
+
+static f32 
+round_f32(f32 value){
+    f32 result = (f32)((s32)(value + 0.5f));
+    return(result);
+}
+
+static s32
+round_f32_s32(f32 value){
+    s32 result = (s32)(value + 0.5f);
+    return(result);
+}
+
+static u32
+round_f32_u32(f32 value){
+    u32 result = (u32)(value + 0.5f);
+    return(result);
+}
+
+static f32
+trunc_f32(f32 value){
+    f32 result = (f32)(s32)value;
+    return(result);
+}
+
+static s32
+trunc_f32_s32(f32 value){
+    s32 result = (s32)value;
+    return(result);
+}
+
+static f32
+floor_f32(f32 value){
+    f32 result = floorf(value);
+    return(result);
+}
+
+static s32
+floor_f32_s32(f32 value){
+    s32 result = (s32)floorf(value);
+    return(result);
+}
+
+static f32
+clamp_f32(f32 left, f32 value, f32 right){
+    if(value < left) { value = left; }
+    if(value > right) { value = right; }
+    return(value);
+}
+
+static f32 lerp(f32 a, f32 t, f32 b){
+    f32 x = ((a + ((b - a) * t)));
+    return(x);
+}
+
+static f32 unlerp(f32 a, f32 at, f32 b){
+    f32 t = 0.0f;
+    if(a != b){
+        t = (at - a) / (b - a);
+    }
+    return(t);
+}
+
+// STUDY: idk whats going on here mathematically. Study it.
+static f32 lerp_rad(f32 a, f32 t, f32 b){
+    f32 difference = fmodf(b - a, 2*PI);
+    f32 distance = fmodf(2.0f * difference, 2*PI) - difference;
+    return(a + distance * t);
+}
 
 ///////////////////////////////
 // NOTE: Arena Functions
@@ -370,7 +455,7 @@ typedef struct Arena{
 
 #define push_array(arena, type, count) (type*)push_size_aligned(arena, count * sizeof(type), _Alignof(type))
 #define push_struct(arena, type) (type*)push_size_aligned(arena, sizeof(type), _Alignof(type))
-#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(s32))
+#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(s64))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
     Assert(used_aligned + size <= arena->size);
@@ -415,16 +500,15 @@ static ScratchArena get_scratch(Arena* arena){
 
 static Arena*
 allocate_arena(size_t size){
-    s32 num = DEFAULT_RESERVE_SIZE;
-    void* memory = calloc(DEFAULT_RESERVE_SIZE, 1);
+    void* memory = calloc(size, 1);
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
-    result->size = DEFAULT_RESERVE_SIZE - sizeof(Arena);
+    result->size = size - sizeof(Arena);
     result->used = 0;
     return(result);
 }
 
-// mostly copy pasta from Allen, but I understand it
+// mostly copy paste, but I understand it
 static ScratchArena
 begin_scratch(Arena **conflict_array, u32 count){
     // init on first time
@@ -532,66 +616,6 @@ static void reset_sentinel(DLL *sentinel){
     sentinel->prev = sentinel;
     sentinel->data = NULL;
 }
-
-///////////////////////////////
-// NOTE: Symbolic Constants
-///////////////////////////////
-
-typedef enum Axis{
-    Axis_X,
-    Axis_Y,
-    Axis_Z,
-    Axis_W,
-}Axis;
-
-typedef enum Direction{
-    Direction_Up,
-    Direction_Down,
-    Direction_Reft,
-    Direction_Right,
-} Direction;
-
-typedef enum OperatingSystem{
-    OperatingSystem_Null,
-    OperatingSystem_Windows,
-    OperatingSystem_Linux,
-    OperatingSystem_Mac,
-    OperatingSystem_Count,
-} OperatingSysem;
-
-typedef enum Architecture{
-    Architecture_Null,
-    Architecture_X64,
-    Architecture_X86,
-    Architecture_Arm,
-    Architecture_Arm64,
-    Architecture_Count,
-} Architecture;
-
-typedef enum Month{
-    Month_Jan,
-    Month_Feb,
-    Month_Mar,
-    Month_Apr,
-    Month_May,
-    Month_Jun,
-    Month_Jul,
-    Month_Sep,
-    Month_Aug,
-    Month_Oct,
-    Month_Nov,
-    Month_Dec,
-} Month;
-
-typedef enum DayOfWeek{
-    DayOfWeek_Sun,
-    DayOfWeek_Mon,
-    DayOfWeek_Tue,
-    DayOfWeek_Wed,
-    DayOfWeek_Thu,
-    DayOfWeek_Fri,
-    DayOfWeek_Sat,
-} DayOfWeek;
 
 ///////////////////////////////
 // INCOMPLETE: NOTE: String8

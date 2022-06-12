@@ -1,6 +1,5 @@
-#include "win32_base.h"
-#include <stdint.h>
-#include <stdbool.h>
+#include "base_include.h"
+#include "win32_base_include.h"
 
 typedef i64 GetTicks(void);
 typedef f64 GetSecondsElapsed(i64 start, i64 end);
