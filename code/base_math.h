@@ -14,7 +14,7 @@
 #define PI 3.14159265f
 #define RAD 0.017453f
 #define RAD2DEG(n) ((180.0f/PI) * (n))
-#define DEG2RAD(n) (f32)((PI/180.0f) * (n))
+#define DEG2RAD(n) ((PI/180.0f) * (n))
 
 static f32 sqrt_f32(f32 x){ return(sqrt(x)); }
 static f32 sin_f32(f32 x){ return(sinf(x)); }
