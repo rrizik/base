@@ -148,10 +148,12 @@ static f32 unlerp(f32 a, f32 at, f32 b){
 
 // UNTESTED: idk what to even test because I dont understand what this is doing
 // STUDY: idk whats going on here mathematically. Study it.
-static f32 lerp_rad(f32 a, f32 t, f32 b){
-    f32 difference = fmodf(b - a, 2*PI);
-    f32 distance = fmodf(2.0f * difference, 2*PI) - difference;
-    return(a + distance * t);
+static f32 
+lerp_rad(f32 a, f32 b, f32 t) {
+    f32 difference = fmodf(b - a, 2*PI),
+        distance = fmodf(2.0f * difference, 2*PI) - difference;
+    return a + distance * t;
 }
+
 
 #endif
