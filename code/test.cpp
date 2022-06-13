@@ -1,8 +1,13 @@
 #include "base_include.h"
 #include "win32_base_include.h"
 
-//#define evalb(x)   print("%s = %d\n", #x, (bool)(x));
-#define eval(x) ((bool)(x)?print("SUCCEED - %s\n", #x):print("FAILED  - %s\n", #x))
+#define PRINT_SUCCEED 1
+
+#if PRINT_SUCCEED
+#  define eval(x) ((bool)(x)?print("SUCCEED - %s\n", #x):print("FAILED  - %s\n", #x))
+#else
+#  define eval(x) ((bool)(x)?print(""):print("FAILED  - %s\n", #x))
+#endif
 #define evalb(x)   print("%s = %d\n", #x, (bool)(x));
 #define evals32(x) print("%s = %d\n", #x, (s32)(x));
 #define evals64(x) print("%s = %lld\n", #x, (s64)(x));
@@ -29,34 +34,28 @@ s32 main(s32 argc, char** argv){
         //ArrayCount
         s32 array[10];
         eval(assert(ArrayCount(array) == 10));
-        print("\n");
 
         // MIN - do I need to test every type?
         eval(assert(MIN(1, 2) == 1));
         eval(assert(MIN(2, 1) == 1));
-        print("\n");
 
         // MAX
         eval(assert(MAX(1, 2) == 2));
         eval(assert(MAX(2, 1) == 2));
-        print("\n");
 
         // CLAMP
         eval(assert(CLAMP(2,5,4) == 4));
         eval(assert(CLAMP(2,1,4) == 2));
-        print("\n");
 
         // ABS
         eval(assert(ABS(-1) == 1));
         eval(assert(ABS(-1.1) == 1.1));
-        print("\n");
 
         // KB/MB/GB/TB
         eval(assert(KB(1) == 1024LL));
         eval(assert(MB(1) == (1024LL * 1024LL)));
         eval(assert(GB(1) == (1024LL * 1024LL * 1024LL)));
         eval(assert(TB(1) == (1024LL * 1024LL * 1024LL * 1024LL)));
-        print("\n");
 
         // HU/TH/MI/BI/TR
         eval(assert(HUNDRED(1) == 100));
@@ -64,7 +63,6 @@ s32 main(s32 argc, char** argv){
         eval(assert(MILLION(1) == 1000000));
         eval(assert(BILLION(1) == 1000000000));
         eval(assert(TRILLION(1) == 1000000000000));
-        print("\n");
 
         // type_min_max
         eval(assert(s8_min == -128));
@@ -79,7 +77,6 @@ s32 main(s32 argc, char** argv){
         eval(assert(u16_max == 65535));
         eval(assert(u32_max == 4294967295));
         eval(assert(u64_max == 18446744073709551615ull));
-        print("\n");
 
         // compound type operators
         v2s32 _v2s32 = {1, 2};
@@ -89,7 +86,6 @@ s32 main(s32 argc, char** argv){
         eval(assert((_v2s32 * 3) == ((v2s32){3, 6})));
         eval(assert(_v2s32 == _v2s32));
         eval(assert(!(_v2s32 != _v2s32)));
-        print("\n");
         
         v2 _v2 = {1, 2};
         eval(assert((_v2 + _v2) == ((v2){2, 4})));
@@ -98,7 +94,6 @@ s32 main(s32 argc, char** argv){
         eval(assert((_v2 * 3) == ((v2){3, 6})));
         eval(assert(_v2 == _v2));
         eval(assert(!(_v2 != _v2)));
-        print("\n");
     
     
         v3 _v3 = {1, 2};
@@ -108,7 +103,6 @@ s32 main(s32 argc, char** argv){
         eval(assert((_v3 * 3) == ((v3){3, 6})));
         eval(assert(_v3 == _v3));
         eval(assert(!(_v3 != _v3)));
-        print("\n");
     
    
         v4 _v4 = {1, 2};
@@ -118,14 +112,12 @@ s32 main(s32 argc, char** argv){
         eval(assert((_v4 * 3) == ((v4){3, 6})));
         eval(assert(_v4 == _v4));
         eval(assert(!(_v4 != _v4)));
-        print("\n");
     }
 
     // base_math.h
     {
         eval(assert(AlignUpPow2(19, 4) == 20));
         eval(assert(AlignDownPow2(19, 4) == 16));
-        print("\n");
 
         // trig
         eval(assert(round_f32_s32(RAD2DEG(RAD)) == 1));
@@ -142,7 +134,6 @@ s32 main(s32 argc, char** argv){
 //static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
         eval(assert(rad_to_dir(0) == ((v2){1, 0})));
         eval(assert(dir_to_rad((v2){1, 0}) == 0));
-        print("\n");
 
         // abs/round/clamp/trunc/floor
         eval(assert(abs_f32(-1.0123f) == 1.0123f));
@@ -163,12 +154,10 @@ s32 main(s32 argc, char** argv){
         eval(assert(clamp_f32(1.0f, 3.0f, 2.0f) == 2.0f));
         eval(assert(clamp_f32(1.0f, 0.5f, 2.0f) == 1.0f));
         eval(assert(clamp_f32(1.0f, 2.0f, 3.0f) == 2.0f));
-        print("\n");
     
         eval(assert(lerp(0.0f, 0.5f, 1.0f) == 0.5f));
         eval(assert(unlerp(0.0f, 0.5f, 1.0f) == 0.5f));
 //static f32 lerp_rad(f32 a, f32 t, f32 b){
-        print("\n");
     }
     {
         Arena* test_arena1 = allocate_arena(100);
