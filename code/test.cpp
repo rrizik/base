@@ -162,14 +162,95 @@ s32 main(s32 argc, char** argv){
 //static f32 lerp_rad(f32 a, f32 t, f32 b){ 
     }
     {
-        // TEST ARENA LATER
-        Arena* test_arena1 = allocate_arena(100);
-        eval(assert(allocate_arena(10)->size == 10));
-        Arena* test_arena2 = {};
-//        arena_init(&pm->arena, (u8*)memory->permanent_base + sizeof(PermanentMemory), memory->permanent_size - sizeof(PermanentMemory));
+        typedef struct Test{
+            s32 a;
+            s32 b;
+            f32 d;
+        } Test;
 
-        //arena_init(test_arena2, test_arena1->base 
+        eval(assert(allocate_arena(10)->size == 10));
+        void* base = malloc(MB(1));
+        Arena* arena = (Arena*)base;
+        arena_init(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
+        eval(assert(arena->base == ((u8*)base + sizeof(Arena))));
+        eval(assert(arena->size == (MB(1) - sizeof(Arena))));
+        eval(assert(arena->used == 0));
+
+        push_size(arena, 100);
+        push_size(arena, 100);
+        push_size(arena, 100);
+        eval(assert(arena->used == 308));
+        push_struct(arena, Test);
+        push_struct(arena, Test);
+        eval(assert(arena->used == 332));
+        push_array(arena, Test, 2);
+        eval(assert(arena->used == 356));
+
+        arena_free(arena);
+        eval(assert(arena->used == 0));
+
+        Arena* new_arena = push_arena(arena, 100);
+        eval(assert(arena->used == 124));
+        eval(assert(new_arena->size == 100));
+        eval(new_arena);
     }
+//
+//typedef struct ScratchArena{
+//    Arena* arena;
+//    size_t used;
+//} ScratchArena;
+//
+//#define DEFAULT_RESERVE_SIZE GB(1)            
+//#define SCRATCH_POOL_COUNT 2
+//__thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
+//
+//static ScratchArena get_scratch(Arena* arena){
+//    ScratchArena result;
+//    result.arena = arena;
+//    result.used = arena->used;
+//    return(result);
+//}
+//
+//// mostly copy paste, but I understand it
+//static ScratchArena
+//begin_scratch(Arena **conflict_array, u32 count){
+//    // init on first time
+//    if (scratch_pool[0] == 0){
+//        Arena **scratch_slot = scratch_pool;
+//        for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
+//            Arena* arena = allocate_arena(DEFAULT_RESERVE_SIZE);
+//            *scratch_slot = arena;
+//        }
+//    }
+//    
+//    // get non-conflicting arena
+//    ScratchArena result = {};
+//    Arena **scratch_slot = scratch_pool;
+//    for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot += 1){
+//        bool is_non_conflict = true;
+//        Arena **conflict_ptr = conflict_array;
+//        for (u32 j = 0; j < count; ++j, conflict_ptr += 1){
+//            if (*scratch_slot == *conflict_ptr){
+//                is_non_conflict = false;
+//                break;
+//            }
+//        }
+//        if (is_non_conflict){
+//            result = get_scratch(*scratch_slot);
+//            break;
+//        }
+//    }
+//    
+//    return(result);
+//}
+//
+//static void end_scratch(ScratchArena scratch){
+//    scratch.arena->used = scratch.used;
+//}
+//
+////TODO: arena_resize_align
+//
+//#endif
     {
         typedef struct Data{
             u32 id;

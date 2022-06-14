@@ -37,7 +37,7 @@ static void arena_free(Arena* arena){
 
 #define push_array(arena, type, count) (type*)push_size_aligned(arena, count * sizeof(type), _Alignof(type))
 #define push_struct(arena, type) (type*)push_size_aligned(arena, sizeof(type), _Alignof(type))
-#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(s64))
+#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(max_align_t))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
     Assert(used_aligned + size <= arena->size);
