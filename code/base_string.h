@@ -20,14 +20,14 @@ typedef struct String16{
 } String16;
 
 typedef struct String32{
-        u32* str;
-        u32 length;
-    } String32;
+    u32* str;
+    u32 length;
+} String32;
 
 #define str8_literal(str) str8_create_((u8*)str, (sizeof(str) - 1))
 #define str8(str, length) str8_create_((u8*)str, length)
-    static String8 str8_create_(u8* str, u32 length){
-        String8 result = {str, length};
+static String8 str8_create_(u8* str, u32 length){
+    String8 result = {str, length};
     return(result);
 }
 

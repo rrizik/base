@@ -20,6 +20,9 @@ typedef struct Node{
 
 static Node* push_node(Arena* arena){
     Node* result = push_struct(arena, Node);
+    result->next = result;
+    result->prev = result;
+    result->count = 0;
     return(result);
 }
 
@@ -43,7 +46,8 @@ static void dll_push_back(Node* sentinel, Node* node){
 
 static Node* dll_pop_front(Node* sentinel){
     Node* node = sentinel->next;
-    sentinel->next = sentinel->next->next;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
     node->next = node; // QUESTION: gaurd against node referncing nodes in linked list? is this even necessay?
     node->prev = node; // QUESTION: gaurd against node referncing nodes in linked list? is this even necessay?
     sentinel->count--;
@@ -51,8 +55,9 @@ static Node* dll_pop_front(Node* sentinel){
 }
 
 static Node* dll_pop_back(Node* sentinel){
-    Node* node = sentinel->next;
-    sentinel->prev = sentinel->prev->prev;
+    Node* node = sentinel->prev;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
     node->next = node; // QUESTION: gaurd against node referncing nodes in linked list? is this even necessay?
     node->prev = node; // QUESTION: gaurd against node referncing nodes in linked list? is this even necessay?
     sentinel->count--;

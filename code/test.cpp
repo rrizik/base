@@ -4,9 +4,11 @@
 #define PRINT_SUCCEED 1
 
 #if PRINT_SUCCEED
-#  define eval(x) ((bool)(x)?print("SUCCEED - %s\n", #x):print("FAILED  - %s\n", #x))
+#  define evall(x) ((bool)(x)?print("SUCCEED - %ls\n", #x):print(" FAILED - %ls\n", #x))
+#  define eval(x)  ((bool)(x)?print("SUCCEED - %s\n", #x):print(" FAILED - %s\n", #x))
 #else
-#  define eval(x) ((bool)(x)?print(""):print("FAILED  - %s\n", #x))
+#  define evall(x) ((bool)(x)?print(""):print(" FAILED - %ls\n", #x))
+#  define eval(x)  ((bool)(x)?print(""):print(" FAILED - %s\n", #x))
 #endif
 #define evalb(x)   print("%s = %d\n", #x, (bool)(x));
 #define evals32(x) print("%s = %d\n", #x, (s32)(x));
@@ -157,9 +159,10 @@ s32 main(s32 argc, char** argv){
     
         eval(assert(lerp(0.0f, 0.5f, 1.0f) == 0.5f));
         eval(assert(unlerp(0.0f, 0.5f, 1.0f) == 0.5f));
-//static f32 lerp_rad(f32 a, f32 t, f32 b){
+//static f32 lerp_rad(f32 a, f32 t, f32 b){ 
     }
     {
+        // TEST ARENA LATER
         Arena* test_arena1 = allocate_arena(100);
         eval(assert(allocate_arena(10)->size == 10));
         Arena* test_arena2 = {};
@@ -167,99 +170,73 @@ s32 main(s32 argc, char** argv){
 
         //arena_init(test_arena2, test_arena1->base 
     }
+    {
+        typedef struct Data{
+            u32 id;
+        } Data;
+
+                //Node* node = push_node(tm->LL_arena);
+                //node->data = e;
+                //dll_push_front(&pm->ants, node);
+
+
+        Arena* arena = allocate_arena(MB(1));
+        Node* sentinel = push_node(arena);
+        eval(assert(sentinel->next == sentinel));
+        eval(assert(sentinel->prev == sentinel));
+
+        Node* n0 = push_node(arena);
+        Node* n1 = push_node(arena);
+        Node* n2 = push_node(arena);
+        Node* n3 = push_node(arena);
+        Node* n4 = push_node(arena);
+
+        n0->data = (Data*)push_struct(arena, Data);
+        n1->data = (Data*)push_struct(arena, Data);
+        n2->data = (Data*)push_struct(arena, Data);
+        dll_push_front(sentinel, n0);
+        dll_push_back(sentinel, n1);
+        dll_push_back(sentinel, n2);
+        eval(assert(sentinel->next == n0));
+        eval(assert(sentinel->prev == n2));
+        eval(assert(sentinel->prev->prev == n1));
+        dll_pop_front(sentinel);
+        eval(assert(sentinel->next == n1));
+        dll_pop_back(sentinel);
+        eval(assert(sentinel->prev == n1));
+        dll_remove(sentinel, n1);
+        eval(assert(sentinel->next == sentinel));
+        eval(assert(sentinel->prev == sentinel));
+        dll_push_front(sentinel, n0);
+        dll_push_back(sentinel, n1);
+        dll_push_back(sentinel, n2);
+        reset_sentinel(sentinel);
+        eval(assert(sentinel->next == sentinel));
+        eval(assert(sentinel->prev == sentinel));
+    }
+    {
+        eval(assert(str8_literal("haha").length == 4));
+        eval(assert(*str8_literal("haha").str == 'h'));
+        eval(assert(str8("haha", 4).length == 4));
+        eval(assert(*str8("haha", 4).str == 'h'));
+
+        eval(assert(str16("haha", 4).length == 4));
+        eval(assert(*str16("haha", 4).str == L'h'));
+        eval(assert(str32("haha", 4).length == 4));
+        eval(assert(*str32("haha", 4).str == L'h'));
+
+        ScratchArena scratch = begin_scratch(0, 0);
+        String8 left = str8_literal("Hello ");
+        String8 middle = str8_literal("World");
+        String8 right = str8_literal("!");
+        String8 left_middle = str8_concatenate(scratch.arena, left, middle);
+        eval(assert((left.length + middle.length) == 11));
+        eval(assert(*(left_middle.str + 10) == 'd'));
+        String8 full = str8_concatenate(scratch.arena, left_middle, right);
+        eval(assert((left.length + middle.length + right.length) == 12));
+        eval(assert(*(full.str + 11) == '!'));
+    }
     print("\nFAILED COUNT: %d", fail_count);
     return(0);
     //end
 }
-//typedef struct Arena{
-//    void* base;
-//    size_t size;
-//    size_t used;
-//} Arena;
-//
-//static void arena_init(Arena* arena, void* base, size_t size){
-//    arena->base = base;
-//    arena->size = size;
-//    arena->used = 0;
-//}
-//
-//static void arena_free(Arena* arena){
-//    arena->used = 0;
-//}
-//
-//#define push_array(arena, type, count) (type*)push_size_aligned(arena, count * sizeof(type), _Alignof(type))
-//#define push_struct(arena, type) (type*)push_size_aligned(arena, sizeof(type), _Alignof(type))
-//#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(s64))
-//static void* push_size_aligned(Arena* arena, size_t size, size_t align){
-//    size_t used_aligned = AlignUpPow2(arena->used, align);
-//    Assert(used_aligned + size <= arena->size);
-//    void* result = (u8*)arena->base + used_aligned;
-//    arena->used = used_aligned + size;
-//    return(result);
-//}
-//
-//static Arena* push_arena(Arena *arena, size_t size){
-//    Arena* result = push_struct(arena, Arena);
-//    result->base = push_size(arena, size);
-//    result->size = size;
-//    result->used = 0;
-//    return(result);
-//}
-//
-//typedef struct ScratchArena{
-//    Arena* arena;
-//    size_t used;
-//} ScratchArena;
-//
-//#define DEFAULT_RESERVE_SIZE GB(1)            
-//#define SCRATCH_POOL_COUNT 2
-//__thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
-//
-//static ScratchArena get_scratch(Arena* arena){
-//    ScratchArena result;
-//    result.arena = arena;
-//    result.used = arena->used;
-//    return(result);
-//}
-//
-//// mostly copy paste, but I understand it
-//static ScratchArena
-//begin_scratch(Arena **conflict_array, u32 count){
-//    // init on first time
-//    if (scratch_pool[0] == 0){
-//        Arena **scratch_slot = scratch_pool;
-//        for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-//            Arena* arena = allocate_arena(DEFAULT_RESERVE_SIZE);
-//            *scratch_slot = arena;
-//        }
-//    }
-//    
-//    // get non-conflicting arena
-//    ScratchArena result = {};
-//    Arena **scratch_slot = scratch_pool;
-//    for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot += 1){
-//        bool is_non_conflict = true;
-//        Arena **conflict_ptr = conflict_array;
-//        for (u32 j = 0; j < count; ++j, conflict_ptr += 1){
-//            if (*scratch_slot == *conflict_ptr){
-//                is_non_conflict = false;
-//                break;
-//            }
-//        }
-//        if (is_non_conflict){
-//            result = get_scratch(*scratch_slot);
-//            break;
-//        }
-//    }
-//    
-//    return(result);
-//}
-//
-//static void end_scratch(ScratchArena scratch){
-//    scratch.arena->used = scratch.used;
-//}
-//
-////TODO: arena_resize_align
-//
-//#endif
-

@@ -23,6 +23,8 @@ print(char *format, ...) {
 // NOTE: Win32 File Paths
 ///////////////////////////////
 
+// UNTESTED: test this with a malloc so its not zero'ed out
+// and you can tell that you set a null terminator
 // TODO: need none OS dependant version of this in string file
 static String8
 os_utf16_to_utf8(Arena* arena, String16 utf16_string){
@@ -37,6 +39,8 @@ os_utf16_to_utf8(Arena* arena, String16 utf16_string){
     return(result);
 }
 
+// UNTESTED: test this with a malloc so its not zero'ed out 
+// and you can tell that you set a null terminator
 // TODO: need none OS dependant version of this in string file
 static String16
 os_utf8_to_utf16(Arena* arena, String8 utf8_string){
