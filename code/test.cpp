@@ -5,6 +5,7 @@
 
 Arena* fail_arena = {};
 
+// maybe push String8 instead, not sure
 static void
 push_message(const char* message, u32 size){
     u8* message_string = (u8*)push_array(fail_arena, u8, size + 3);
@@ -32,6 +33,7 @@ static void check(bool cond, const char* msg, size_t size){
 
 
 s32 main(s32 argc, char** argv){
+    // init arena for failed messages to print out at the end
 	void* memory = calloc((KB(1) + sizeof(Arena)), 1);
 	fail_arena = (Arena*)memory;
 	fail_arena->base = (u8*)memory + sizeof(Arena);
@@ -104,19 +106,19 @@ s32 main(s32 argc, char** argv){
         eval(_v2 == _v2);
         eval(!(_v2 != _v2));
     
-        v3 _v3 = {1, 2};
-        eval((_v3 + _v3) == ((v3){2, 4}));
-        eval((_v3 - _v3) == ((v3){0, 0}));
-        eval((3 * _v3) == ((v3){3, 6}));
-        eval((_v3 * 3) == ((v3){3, 6}));
+        v3 _v3 = {1, 2, 0.5f};
+        eval((_v3 + _v3) == ((v3){2, 4, 1.0f}));
+        eval((_v3 - _v3) == ((v3){0, 0, 0}));
+        eval((3 * _v3) == ((v3){3, 6, 1.5f}));
+        eval((_v3 * 3) == ((v3){3, 6, 1.5f}));
         eval(_v3 == _v3);
         eval(!(_v3 != _v3));
     
-        v4 _v4 = {1, 2};
-        eval((_v4 + _v4) == ((v4){2, 4}));
-        eval((_v4 - _v4) == ((v4){0, 0}));
-        eval((3 * _v4) == ((v4){3, 6}));
-        eval((_v4 * 3) == ((v4){3, 6}));
+        v4 _v4 = {1, 2, 0.5f, 3};
+        eval((_v4 + _v4) == ((v4){2, 4, 1.0f, 6}));
+        eval((_v4 - _v4) == ((v4){0, 0, 0, 0}));
+        eval((3 * _v4) == ((v4){3, 6, 1.5f, 9}));
+        eval((_v4 * 3) == ((v4){3, 6, 1.5f, 9}));
         eval(_v4 == _v4);
         eval(!(_v4 != _v4));
     }
@@ -130,18 +132,19 @@ s32 main(s32 argc, char** argv){
         // trig
         eval(round_f32_s32(rad_to_degree(RAD)) == 1);
         eval(degree_to_rad(1) == 0.017453292f);
+
         eval(sqrt_f32(16.0f) == 4.0f);
         eval(round_f32_s32(sin_f32((f32_PI/2))) == 1);
         eval(round_f32_s32(cos_f32((f32_PI*2))) == 1);
         eval(round_f32_s32(tan_f32(f32_PI)) == 0);
+        eval(atan_f32(0, 0) == 0); // not sure if this is a good test
+
         eval(sqrt_f64(16.0) == 4.0);
         eval(round_f64_s64(sin_f64((f64)(f32_PI/2))) == 1);
         eval(round_f64_s64(cos_f64((f64)(f32_PI*2))) == 1);
         eval(round_f64_s64(tan_f64(f32_PI)) == 0);
+        eval(atan_f64(0, 0) == 0); // not sure if this is a good test
 
-        // TODO: Not sure how to test this with expected inputs and outputs
-        //static f32 atan_f32(f32 x, f32 y){ return(atan2f(x, y)); }
-        //static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
         eval(rad_to_dir(0) == ((v2){1, 0}));
         eval(dir_to_rad((v2){1, 0}) == 0);
 
@@ -247,8 +250,6 @@ s32 main(s32 argc, char** argv){
         Node* n0 = push_node(arena);
         Node* n1 = push_node(arena);
         Node* n2 = push_node(arena);
-        Node* n3 = push_node(arena);
-        Node* n4 = push_node(arena);
 
         n0->data = (Data*)push_struct(arena, Data);
         n1->data = (Data*)push_struct(arena, Data);
@@ -378,8 +379,8 @@ s32 main(s32 argc, char** argv){
         // dir_create + dir_delete
         String8 new_dir = str8_literal("\\new_dir");
         String8 new_path = str8_concatenate(arena, dir_build, new_dir);
-        eval(os_dir_create(dir_build, new_dir) == false);
-        eval(os_dir_delete(dir_build, new_dir) == false);
+        eval(os_dir_create(dir_build, new_dir) == true);
+        eval(os_dir_delete(dir_build, new_dir) == true);
     }
 
     print("\n");
