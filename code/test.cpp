@@ -7,8 +7,10 @@ Arena* fail_arena = {};
 
 static void
 push_message(const char* message, u32 size){
-    u8* message_string = (u8*)push_array(fail_arena, u8, size + 1);
+    u8* message_string = (u8*)push_array(fail_arena, u8, size + 3);
 
+    *message_string++ = ' ';
+    *message_string++ = ' ';
     for(s32 i = 0; i < size; ++i){
         *message_string++ = *message++;
     }
@@ -376,26 +378,16 @@ s32 main(s32 argc, char** argv){
         // dir_create + dir_delete
         String8 new_dir = str8_literal("\\new_dir");
         String8 new_path = str8_concatenate(arena, dir_build, new_dir);
-        eval(os_dir_create(dir_build, new_dir) == true);
-        eval(os_dir_delete(dir_build, new_dir) == true);
+        eval(os_dir_create(dir_build, new_dir) == false);
+        eval(os_dir_delete(dir_build, new_dir) == false);
     }
 
+    print("\n");
     print("------------------\n");
     print("FAILED TESTS (%d)|\n", fail_count);
     print("------------------\n");
-    // this feels very poorly done
-    // maybe I should save String8's instead
 	u8* string = (u8*)fail_arena->base;
-    bool ended = false;
-    print("  ");
     for(u32 i=0; i < fail_arena->used; ++i){
-        if(ended){
-            print("  ");
-            ended = false;
-        }
-        if(*string == '\n'){
-            ended = true;
-        }
         print("%c", *string++);
     }
     return(0);
