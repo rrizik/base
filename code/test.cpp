@@ -1,6 +1,7 @@
 #include "base_include.h"
 #include "win32_base_include.h"
 
+#define PRINT_ALL 1
 
 Arena* fail_arena = {};
 
@@ -14,19 +15,16 @@ push_message(const char* message, u32 size){
     *message_string++ = '\n';
 }
 
-#define PRINT_SUCCEED 1
 
 u32 fail_count = 0;
 static void check(bool cond, const char* msg, size_t size){
     if(!(cond)){
         fail_count++;
         push_message(msg, size);
-        print("%s - %s\n", " FAILED", msg);
-    } else{
-#if PRINT_SUCCEED
-        print("%s - %s\n", "SUCCEED", msg);
-#endif
     }
+#if PRINT_ALL
+    print("%s - %s\n", (cond ? "SUCCEED" : " FAILED"), msg);
+#endif
 }
 #define eval(x) check(x, #x, (sizeof(#x) - 1))
 
@@ -42,7 +40,7 @@ s32 main(s32 argc, char** argv){
     {
         //ArrayCount
         s32 array[10];
-        eval(ArrayCount(array) == 11);
+        eval(ArrayCount(array) == 10);
 
         // MIN - do I need to test every type?
         eval(MIN(1, 2) == 1);
@@ -219,7 +217,7 @@ s32 main(s32 argc, char** argv){
         arena_free(arena);
         
         // begin_scratch
-        // not sure if I want to use conflict stuff or new version without conflict stuff.
+        // CONSIDER: NOTE: not sure if I want to use conflict arena or new version without conflict arena.
         // Need to figure out use case to understand what to test, but maybe for now use
         // no conflict version.
         ScratchArena scratch1 = begin_scratch(0);
@@ -382,11 +380,23 @@ s32 main(s32 argc, char** argv){
         eval(os_dir_delete(dir_build, new_dir) == true);
     }
 
-    print("-------------------------------------------------------\n");
+    print("------------------\n");
+    print("FAILED TESTS (%d)|\n", fail_count);
+    print("------------------\n");
+    // this feels very poorly done
+    // maybe I should save String8's instead
 	u8* string = (u8*)fail_arena->base;
+    bool ended = false;
+    print("  ");
     for(u32 i=0; i < fail_arena->used; ++i){
+        if(ended){
+            print("  ");
+            ended = false;
+        }
+        if(*string == '\n'){
+            ended = true;
+        }
         print("%c", *string++);
     }
-    print("\nFAILED COUNT: %d\n", fail_count);
     return(0);
 }
