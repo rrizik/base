@@ -11,10 +11,19 @@
 #define AlignUpPow2(x,p) (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
-#define PI 3.14159265f
-#define RAD 0.017453f
-#define RAD2DEG(n) ((180.0f/PI) * (n))
-#define DEG2RAD(n) ((PI/180.0f) * (n))
+global f32 f32_PI = 3.14159265359f;
+global f64 f64_PI = 3.14159265359;
+global f32 RAD = 0.0174533f;
+
+static f32 degree_to_rad(s32 degree){
+    f32 result = ((f32_PI/180.0f) * degree);
+    return(result);
+}
+
+static s32 rad_to_degree(f32 rad){
+    s32 result = ((180.0f/f32_PI) * rad);
+    return(result);
+}
 
 static f32 sqrt_f32(f32 x){ return(sqrt(x)); }
 static f32 sin_f32(f32 x){ return(sinf(x)); }
@@ -150,8 +159,8 @@ static f32 unlerp(f32 a, f32 at, f32 b){
 // STUDY: idk whats going on here mathematically. Study it.
 static f32 
 lerp_rad(f32 a, f32 b, f32 t) {
-    f32 difference = fmodf(b - a, 2*PI),
-        distance = fmodf(2.0f * difference, 2*PI) - difference;
+    f32 difference = fmodf(b - a, 2*f32_PI),
+        distance = fmodf(2.0f * difference, 2*f32_PI) - difference;
     return a + distance * t;
 }
 

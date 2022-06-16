@@ -128,10 +128,6 @@ global u16 u16_max = (u16)0xffff;
 global u32 u32_max = (u32)0xffffffff;
 global u64 u64_max = (u64)0xffffffffffffffffllu;
 
-global f32 f32_pi = 3.14159265359f;
-global f64 f64_pi = 3.14159265359;
-global f32 RAD = 0.0174533f;
-
 ///////////////////////////////
 // NOTE: Compound Types
 ///////////////////////////////

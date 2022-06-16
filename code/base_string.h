@@ -11,47 +11,83 @@
 
 typedef struct String8{
     u8* str;
-    u32 length;
+    u32 size;
 } String8;
 
 typedef struct String16{
     u16* str;
-    u32 length;
+    u32 size;
 } String16;
 
 typedef struct String32{
     u32* str;
-    u32 length;
+    u32 size;
 } String32;
 
+#if STANDARD_CPP
+static bool operator==(const String8& a, const String8& b){
+    u8* a_string = (u8*)a.str;
+    u8* b_string = (u8*)b.str;
+    if(a.size != b.size){
+        return(false);
+    }
+    for(u32 i = 0; i < a.size; ++i){
+        if(*a_string++ != *b_string++){
+            return(false);
+        }
+    }
+    return(true);
+}
+
+static bool operator==(String16 a, String16 b){
+    if(a.size != b.size){
+        return(false);
+    }
+    for(u32 i = 0; i < a.size; ++i){
+        if(*a.str++ != *b.str++){
+            return(false);
+        }
+    }
+    return(true);
+}
+
+static bool operator!=(String8 a, String8 b){
+    return(!(a == b));
+}
+
+static bool operator!=(String16 a, String16 b){
+    return(!(a == b));
+}
+#endif
+
 #define str8_literal(str) str8_create_((u8*)str, (sizeof(str) - 1))
-#define str8(str, length) str8_create_((u8*)str, length)
-static String8 str8_create_(u8* str, u32 length){
-    String8 result = {str, length};
+#define str8(str, size) str8_create_((u8*)str, size)
+static String8 str8_create_(u8* str, u32 size){
+    String8 result = {str, size};
     return(result);
 }
 
-#define str16(str, length) str16_((u16*)str, length)
-static String16 str16_(u16* str, u32 length){
-    String16 result = {str, length};
+#define str16(str, size) str16_((u16*)str, size)
+static String16 str16_(u16* str, u32 size){
+    String16 result = {str, size};
     return(result);
 }
 
-#define str32(str, length) str32_((u32*)str, length)
-static String32 str32_(u32* str, u32 length){
-    String32 result = {str, length};
+#define str32(str, size) str32_((u32*)str, size)
+static String32 str32_(u32* str, u32 size){
+    String32 result = {str, size};
     return(result);
 }
 
 static String8
 str8_concatenate(Arena* arena, String8 left, String8 right){
-    u8* str = (u8*)push_size(arena, (left.length + right.length));
-    String8 result = {str, (left.length + right.length)};
+    u8* str = (u8*)push_array(arena, u8, (left.size + right.size));
+    String8 result = {str, (left.size + right.size)};
 
-    for(s32 i = 0; i < left.length; ++i){
+    for(s32 i = 0; i < left.size; ++i){
         *str++ = *left.str++;
     }
-    for(s32 i = 0; i < right.length; ++i){
+    for(s32 i = 0; i < right.size; ++i){
         *str++ = *right.str++;
     }
 
