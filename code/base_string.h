@@ -11,17 +11,17 @@
 
 typedef struct String8{
     u8* str;
-    u32 size;
+    u64 size;
 } String8;
 
 typedef struct String16{
     u16* str;
-    u32 size;
+    u64 size;
 } String16;
 
 typedef struct String32{
     u32* str;
-    u32 size;
+    u64 size;
 } String32;
 
 #if STANDARD_CPP

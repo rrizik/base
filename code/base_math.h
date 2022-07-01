@@ -8,32 +8,52 @@
 // NOTE: Math Functions
 ///////////////////////////////
 
+#define MIN(a,b) (((a)<=(b))?(a):(b))
+#define MAX(a,b) (((a)>=(b))?(a):(b))
+#define CLAMP(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
+#define ABS(x) ((x)<0?-(x):(x))
+
+
 // TODO: replace these with functions for less bugs and better debuggability
 #define AlignUpPow2(x,p) (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
-global f32 f32_PI = 3.14159265359f;
-global f64 f64_PI = 3.14159265359;
+global f32 PI_f32 = 3.14159265359f;
+global f64 PI_f64 = 3.14159265359;
 global f32 RAD = 0.0174533f;
 
 static f32 
 degree_to_rad(s32 degree){
-    f32 result = ((f32_PI/180.0f) * degree);
+    f32 result = ((PI_f32/180.0f) * degree);
     return(result);
 }
 
 static s32 
 rad_to_degree(f32 rad){
-    s32 result = ((180.0f/f32_PI) * rad);
+    s32 result = ((180.0f/PI_f32) * rad);
     return(result);
 }
 
 static f32 sqrt_f32(f32 x){ return(sqrt(x)); }
-static f32 sin_f32(f32 x){ return(sinf(x)); }
-static f32 cos_f32(f32 x){ return(cosf(x)); }
-static f32 tan_f32(f32 x){ return(sin_f32(x)/cos_f32(x)); }
-static f32 cot_f32(f32 x){ return(cos_f32(x)/sin_f32(x)); }
-static f32 atan_f32(f32 x, f32 y){ return(atan2f(x, y)); } 
+static f32 sin_f32(f32 theta){ 
+    f32 reslut = sinf(theta);
+    return(sinf(theta)); 
+}
+static f32 cos_f32(f32 theta){ 
+    f32 reslut = cosf(theta);
+    return(cosf(theta)); 
+}
+static f32 tan_f32(f32 theta){ 
+    f32 result = tanf(theta);
+    f32 r = sin_f32(theta)/cos_f32(theta); 
+    f32 rr = rad_to_degree(r);
+    return(sin_f32(theta)/cos_f32(theta)); 
+}
+static f32 cot_f32(f32 theta){ return(cos_f32(theta)/sin_f32(theta)); }
+static f32 atan_f32(f32 x, f32 y){ 
+    f32 result = atan2f(x, y);
+    return(result);
+} 
 
 static f64 sqrt_f64(f64 x){ return(sqrt(x)); }
 static f64 sin_f64(f64 x){ return(sin(x)); }
@@ -88,6 +108,15 @@ round_v2(v2 value){
     return(result);
 }
 
+// UNTESTED:
+static v2s32 
+round_v2_v2s32(v2 value){
+    v2s32 result = {};
+    result.x = ((s32)(value.x + 0.5f));
+    result.y = ((s32)(value.y + 0.5f));
+    return(result);
+}
+
 static f32 
 round_f32(f32 value){
     f32 result = (f32)((s32)(value + 0.5f));
@@ -136,7 +165,17 @@ floor_f32_s32(f32 value){
     return(result);
 }
 
-// TODO: No ceil?
+static f32
+ceil_f32(f32 value){
+    f32 result = ceilf(value);
+    return(result);
+}
+
+static s32
+ceil_f32_s32(f32 value){
+    s32 result = (s32)floorf(value);
+    return(result);
+}
 
 static f32
 clamp_f32(f32 left, f32 value, f32 right){
@@ -164,8 +203,8 @@ unlerp(f32 a, f32 at, f32 b){
 // STUDY: idk whats going on here mathematically. Study it.
 static f32 
 lerp_rad(f32 a, f32 b, f32 t) {
-    f32 difference = fmodf(b - a, 2 * f32_PI);
-    f32 distance = fmodf(2.0f * difference, 2 * f32_PI) - difference;
+    f32 difference = fmodf(b - a, 2 * PI_f32);
+    f32 distance = fmodf(2.0f * difference, 2 * PI_f32) - difference;
     return a + distance * t;
 }
 

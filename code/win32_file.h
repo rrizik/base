@@ -80,7 +80,7 @@ static String8 os_get_cwd(Arena* arena){
 
 typedef struct FileData{
     void* base;
-    u32 size;
+    u64 size;
 } FileData;
 
 static FileData

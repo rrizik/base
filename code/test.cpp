@@ -20,16 +20,16 @@ push_message(const char* message, u32 size){
 
 
 u32 fail_count = 0;
-static void check(bool cond, const char* msg, size_t size){
+static void check(bool cond, s32 line, const char* msg, size_t size){
     if(!(cond)){
         fail_count++;
         push_message(msg, size);
     }
 #if PRINT_ALL
-    print("%s - %s\n", (cond ? "SUCCEED" : " FAILED"), msg);
+    print("%d - %s - %s\n", line, (cond ? "SUCCEED" : " FAILED"), msg);
 #endif
 }
-#define eval(x) check(x, #x, (sizeof(#x) - 1))
+#define eval(x) check(x, __LINE__, #x, (sizeof(#x) - 1))
 
 
 s32 main(s32 argc, char** argv){
@@ -134,21 +134,22 @@ s32 main(s32 argc, char** argv){
         eval(degree_to_rad(1) == 0.017453292f);
 
         eval(sqrt_f32(16.0f) == 4.0f);
-        eval(round_f32_s32(sin_f32((f32_PI/2))) == 1);
-        eval(round_f32_s32(cos_f32((f32_PI*2))) == 1);
-        eval(round_f32_s32(tan_f32(f32_PI)) == 0);
-        eval(atan_f32(0, 0) == 0); // not sure if this is a good test
+        eval(sin_f32(RAD * 90.0f) == 1.0f);
+        eval(cos_f32(RAD * 90.0f) == 0.0f);
+        eval(round_f32_s32(tan_f32(-PI_f32/4)) == 1);
+        eval(atan_f32(0.707f, 0.707f) == 1.0f); // not sure if this is a good test
+        // STUDY: atan2 returns values in -180..180 range
 
         eval(sqrt_f64(16.0) == 4.0);
-        eval(round_f64_s64(sin_f64((f64)(f32_PI/2))) == 1);
-        eval(round_f64_s64(cos_f64((f64)(f32_PI*2))) == 1);
-        eval(round_f64_s64(tan_f64(f32_PI)) == 0);
+        eval(round_f64_s64(sin_f64((PI_f64/2))) == 1);
+        eval(round_f64_s64(cos_f64((PI_f64*2))) == 1);
+        eval(round_f64_s64(tan_f64(PI_f32)) == 0);
         eval(atan_f64(0, 0) == 0); // not sure if this is a good test
 
         eval(rad_to_dir(0) == ((v2){1, 0}));
         eval(dir_to_rad((v2){1, 0}) == 0);
 
-        // abs/round/clamp/trunc/floor
+        // abs/round/clamp/trunc/floor/ceil
         eval(abs_f32(-1.0123f) == 1.0123f);
         eval(abs_f64(-1.0123) == 1.0123);
         eval(abs_s32(-1) == 1);
@@ -164,6 +165,8 @@ s32 main(s32 argc, char** argv){
         eval(trunc_f32_s32(1.910293f) == 1);
         eval(floor_f32(1.910293f) == 1.0f);
         eval(floor_f32_s32(1.110293f) == 1);
+        eval(ceil_f32(1.910293f) == 2.0f);
+        eval(ceil_f32_s32(1.110293f) == 1);
         eval(clamp_f32(1.0f, 3.0f, 2.0f) == 2.0f);
         eval(clamp_f32(1.0f, 0.5f, 2.0f) == 1.0f);
         eval(clamp_f32(1.0f, 2.0f, 3.0f) == 2.0f);

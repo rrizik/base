@@ -59,11 +59,6 @@
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
 
-#define MIN(a,b) (((a)<=(b))?(a):(b))
-#define MAX(a,b) (((a)>=(b))?(a):(b))
-#define CLAMP(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
-#define ABS(x) ((x)<0?-(x):(x))
-
 #define STR_(x) #x
 #define STR(x) STR_(x)
 #define GLUE(a,b) a##b
@@ -89,11 +84,6 @@
 ///////////////////////////////
 // NOTE: Basic Types
 ///////////////////////////////
-
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
 
 typedef int8_t s8;
 typedef int16_t s16;
@@ -150,6 +140,12 @@ typedef union v4{
     struct{ f32 r; f32 g; f32 b; f32 a; };
     f32 v[4];
 } v4;
+
+//UNTESTED:
+typedef union RGBA{
+    struct{ f32 r; f32 g; f32 b; f32 a; };
+    f32 v[4];
+} RGBA;
 
 typedef union v2s32{
     struct{ s32 x; s32 y; };
