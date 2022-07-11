@@ -11,13 +11,16 @@
 ///////////////////////////////
 
 static void* os_virtual_alloc(u64 size){
-    // NOTE: VirtualAlloc() initializes its allocation to 0, malloc() does not
+    // NOTE: VirtualAlloc() && calloc() initializes its allocation to 0, malloc() does not
     void* result = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
     return(result);
 }
 
 static bool os_virtual_free(void* base){
-    bool result = VirtualFree(base, 0, MEM_RELEASE);
+    bool result = false;
+    if(base){
+        result = VirtualFree(base, 0, MEM_RELEASE);
+    }
     return(result);
 }
 

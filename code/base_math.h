@@ -8,13 +8,11 @@
 // NOTE: Math Functions
 ///////////////////////////////
 
+// TODO: replace these with functions for less bugs and better debuggability
 #define MIN(a,b) (((a)<=(b))?(a):(b))
 #define MAX(a,b) (((a)>=(b))?(a):(b))
 #define CLAMP(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
 #define ABS(x) ((x)<0?-(x):(x))
-
-
-// TODO: replace these with functions for less bugs and better debuggability
 #define AlignUpPow2(x,p) (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 

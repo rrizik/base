@@ -117,6 +117,7 @@ os_file_read(Arena* arena, String8 dir, String8 file_name){
         CloseHandle(file_handle);
         return(result);
     }
+
     result.size = file_size;
     CloseHandle(file_handle);
     end_scratch(scratch);
@@ -165,7 +166,6 @@ os_file_delete(String8 dir, String8 file_name){
 }
 
 static bool
-//os_file_move(String8 source_file_path, String8 dest_file_path){
 os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 dest_file){
     ScratchArena scratch = begin_scratch(0);
     String8 source_string = str8_concatenate(scratch.arena, source_dir, source_file);

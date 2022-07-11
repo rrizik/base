@@ -15,9 +15,9 @@ typedef struct Arena{
     size_t used;
 } Arena;
 
-static Arena*
-allocate_arena(size_t size){
-    void* memory = calloc((size + sizeof(Arena)), 1);
+// CONSIDER: not sure if I need this, if I have os_allocate_arena()
+static Arena* allocate_arena(size_t size){
+    void* memory = calloc((size + sizeof(Arena)), 1); // 0 initialized
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
     result->size = size;
@@ -25,13 +25,13 @@ allocate_arena(size_t size){
     return(result);
 }
 
-static void arena_init(Arena* arena, void* base, size_t size){
+static void init_arena(Arena* arena, void* base, size_t size){
     arena->base = base;
     arena->size = size;
     arena->used = 0;
 }
 
-static void arena_free(Arena* arena){
+static void free_arena(Arena* arena){
     arena->used = 0;
 }
 
@@ -40,7 +40,7 @@ static void arena_free(Arena* arena){
 #define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), _Alignof(type))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
-    Assert(used_aligned + size <= arena->size);
+    Assert((used_aligned + size) <= arena->size);
     void* result = (u8*)arena->base + used_aligned;
     arena->used = used_aligned + size;
     return(result);

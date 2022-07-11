@@ -1,7 +1,7 @@
-#include "base_include.h"
-#include "win32_base_include.h"
+#include "base_inc.h"
+#include "win32_base_inc.h"
 
-#define PRINT_ALL 1
+bool PRINT_ALL = 0;
 
 Arena* fail_arena = {};
 
@@ -25,14 +25,24 @@ static void check(bool cond, s32 line, const char* msg, size_t size){
         fail_count++;
         push_message(msg, size);
     }
-#if PRINT_ALL
-    print("%d - %s - %s\n", line, (cond ? "SUCCEED" : " FAILED"), msg);
-#endif
+    if(PRINT_ALL){
+        print("%d - %s - %s\n", line, (cond ? "SUCCEED" : " FAILED"), msg);
+    }
 }
 #define eval(x) check(x, __LINE__, #x, (sizeof(#x) - 1))
 
 
 s32 main(s32 argc, char** argv){
+
+    String8 com_verbos = str8_literal("-v");
+    String8 verbos;
+    if(argc > 1){
+        verbos = str8(argv[1], 2);
+        if(com_verbos == verbos){
+            PRINT_ALL = 1;
+        }
+    }
+
     // init arena for failed messages to print out at the end
 	void* memory = calloc((KB(1) + sizeof(Arena)), 1);
 	fail_arena = (Arena*)memory;
@@ -190,7 +200,7 @@ s32 main(s32 argc, char** argv){
         // arena init
         void* base = malloc(MB(1));
         Arena* arena = (Arena*)base;
-        arena_init(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
+        init_arena(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
         eval(arena->base == ((u8*)base + sizeof(Arena)));
         eval(arena->size == (MB(1) - sizeof(Arena)));
         eval(arena->used == 0);
@@ -201,14 +211,14 @@ s32 main(s32 argc, char** argv){
         eval(arena->used == 24);
         push_array(arena, Test, 2);
         eval(arena->used == 48);
-        arena_free(arena);
+        free_arena(arena);
         eval(arena->used == 0);
 
         // push_arena
         Arena* new_arena = push_arena(arena, 100);
         eval(arena->used == 124); // size of arena 24
         eval(new_arena->size == 100);
-        arena_free(arena);
+        free_arena(arena);
 
         // scratch
         push_array(arena, Test, 6);
@@ -222,7 +232,7 @@ s32 main(s32 argc, char** argv){
         eval(scratch.used == 72);
         end_scratch(scratch);
         eval(scratch.arena->used == 72);
-        arena_free(arena);
+        free_arena(arena);
         
         // begin_scratch
         // CONSIDER: NOTE: not sure if I want to use conflict arena or new version without conflict arena.
