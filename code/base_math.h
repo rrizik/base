@@ -179,6 +179,14 @@ static f32
 clamp_f32(f32 left, f32 value, f32 right){
     if(value < left) { value = left; }
     if(value > right) { value = right; }
+    return((s32)value);
+}
+
+// UNTESTED:
+static s32
+clamp_f32_s32(f32 left, f32 value, f32 right){
+    if(value < left) { value = left; }
+    if(value > right) { value = right; }
     return(value);
 }
 
