@@ -34,7 +34,16 @@ s32 main(s32 argc, char** argv){
         }
     }
 
-
-
+    v2 direction = (v2){0, 1};
+    f32 rad = dir_to_rad(direction);
+    f32 degree = rad_to_degree(rad + RAD);
+    print("-----------------------------\n");
+    print("-----------------------------\n");
+    print("-----------------------------\n");
+    print("-----------------------------\n");
+    print("-----------------------------\n");
+    for(s32 i=0; i < 10; ++i){
+        print("%i\n", (i % 5));
+    }
 }
 

@@ -95,10 +95,10 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-typedef wchar_t wchar;
-
 typedef float f32;
 typedef double f64;
+
+typedef wchar_t wchar;
 
 ///////////////////////////////
 // NOTE: Basic Constants
@@ -137,15 +137,8 @@ typedef union v3{
 
 typedef union v4{
     struct{ f32 x; f32 y; f32 z; f32 w; };
-    struct{ f32 r; f32 g; f32 b; f32 a; };
     f32 v[4];
 } v4;
-
-//UNTESTED:
-typedef union RGBA{
-    struct{ f32 r; f32 g; f32 b; f32 a; };
-    f32 v[4];
-} RGBA;
 
 typedef union v2s32{
     struct{ s32 x; s32 y; };
@@ -153,29 +146,15 @@ typedef union v2s32{
     s32 v[2];
 } v2s32;
 
+//UNTESTED:
+typedef union RGBA{
+    struct{ f32 r; f32 g; f32 b; f32 a; };
+    f32 v[4];
+} RGBA;
+
 ///////////////////////////////
 // NOTE: Compound Types Constructors
 ///////////////////////////////
-
-static v2 vec2(f32 x, f32 y){
-    v2 result = {x, y};
-    return(result);
-}
-
-static v3 vec3(f32 x, f32 y, f32 z){
-    v3 result = {x, y, z};
-    return(result);
-}
-
-static v4 vec4(f32 x, f32 y, f32 w, f32 h){
-    v4 result = {x, y, w, h};
-    return(result);
-}
-
-static v2s32 vec2s32(s32 x, s32 y){
-    v2s32 result = {x, y};
-    return(result);
-}
 
 ///////////////////////////////
 // NOTE: Compound Types Operators
@@ -202,6 +181,11 @@ static v4 operator+(const v4& a, const v4& b){
     return(result);
 }
 
+static RGBA operator+(const RGBA& a, const RGBA& b){
+    RGBA result = {a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a};
+    return(result);
+}
+
 static v2s32 operator-(const v2s32& a, const v2s32& b){
     v2s32 result = {a.x - b.x, a.y - b.y};
     return(result);
@@ -219,6 +203,11 @@ static v3 operator-(const v3& a, const v3& b){
 
 static v4 operator-(const v4& a, const v4& b){
     v4 result = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
+    return(result);
+}
+
+static RGBA operator-(const RGBA& a, const RGBA& b){
+    RGBA result = {a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a};
     return(result);
 }
 
@@ -278,6 +267,10 @@ static bool operator==(const v4& a, const v4& b){
     return((a.x == b.x) && (a.y == b.y && (a.z == b.z) && (a.w == b.w)));
 }
 
+static bool operator==(const RGBA& a, const RGBA& b){
+    return((a.r == b.r) && (a.g == b.g && (a.b == b.b) && (a.a == b.a)));
+}
+
 static bool operator!=(const v2s32& a, const v2s32& b){
     return(!(a == b));
 }
@@ -291,6 +284,10 @@ static bool operator!=(const v3& a, const v3& b){
 }
 
 static bool operator!=(const v4& a, const v4& b){
+    return(!(a == b));
+}
+
+static bool operator!=(const RGBA& a, const RGBA& b){
     return(!(a == b));
 }
 #endif

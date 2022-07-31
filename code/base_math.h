@@ -21,14 +21,14 @@ global f64 PI_f64 = 3.14159265359;
 global f32 RAD = 0.0174533f;
 
 static f32 
-degree_to_rad(s32 degree){
+degree_to_rad(f32 degree){
     f32 result = ((PI_f32/180.0f) * degree);
     return(result);
 }
 
-static s32 
+static f32 
 rad_to_degree(f32 rad){
-    s32 result = ((180.0f/PI_f32) * rad);
+    f32 result = ((180.0f/PI_f32) * rad);
     return(result);
 }
 
@@ -62,7 +62,7 @@ static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
 
 static v2
 rad_to_dir(f32 rad){
-    return(vec2(cos_f32(rad), sin_f32(rad)));
+    return((v2){cos_f32(rad), sin_f32(rad)});
 }
 
 static f32
@@ -208,7 +208,7 @@ unlerp(f32 a, f32 at, f32 b){
 // UNTESTED: idk what to even test because I dont understand what this is doing
 // STUDY: idk whats going on here mathematically. Study it.
 static f32 
-lerp_rad(f32 a, f32 b, f32 t) {
+lerp_rad(f32 a, f32 t, f32 b) {
     f32 difference = fmodf(b - a, 2 * PI_f32);
     f32 distance = fmodf(2.0f * difference, 2 * PI_f32) - difference;
     return a + distance * t;
