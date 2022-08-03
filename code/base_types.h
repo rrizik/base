@@ -100,6 +100,10 @@ typedef double f64;
 
 typedef wchar_t wchar;
 
+//#define true 1
+//#define false 0
+//typedef int bool
+
 ///////////////////////////////
 // NOTE: Basic Constants
 ///////////////////////////////
@@ -151,10 +155,6 @@ typedef union RGBA{
     struct{ f32 r; f32 g; f32 b; f32 a; };
     f32 v[4];
 } RGBA;
-
-///////////////////////////////
-// NOTE: Compound Types Constructors
-///////////////////////////////
 
 ///////////////////////////////
 // NOTE: Compound Types Operators

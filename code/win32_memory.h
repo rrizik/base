@@ -1,6 +1,7 @@
 #if !defined(WIN32_MEMORY_H)
 #define WIN32_MEMORY_H
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "base_types.h"
 #include "base_memory.h"

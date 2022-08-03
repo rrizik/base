@@ -23,7 +23,7 @@ print(char *format, ...) {
 // NOTE: Win32 File Paths
 ///////////////////////////////
 
-// UNTESTED: test this with a malloc so its not zero'ed out 
+// UNTESTED: test this with a malloc so its not zero'ed out
 // and you can tell that you set a null terminator
 // TODO: need none OS dependant version of this in string file
 static String16
@@ -153,6 +153,8 @@ os_file_write(FileData data, String8 dir, String8 file_name){
 ///////////////////////////////
 // NOTE: Win32 File Operations
 ///////////////////////////////
+//
+// TODO: FILE EXISTS
 
 static bool
 os_file_delete(String8 dir, String8 file_name){
