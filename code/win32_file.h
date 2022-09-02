@@ -1,6 +1,7 @@
 #if !defined(WIN32_FILE_H)
 #define WIN32_FILE_H
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "base_types.h"
 #include "base_memory.h"
@@ -27,7 +28,7 @@ print(char *format, ...) {
 // and you can tell that you set a null terminator
 // TODO: need none OS dependant version of this in string file
 static String16
-os_utf8_to_utf16(Arena* arena, String8 utf8_string){
+os_utf8_utf16(Arena* arena, String8 utf8_string){
     u32 utf16_size = MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, utf8_string.size, 0, 0);
     u16* str = (u16*)push_array(arena, u16, utf16_size + 1);
     String16 result = {str, utf16_size};
@@ -44,12 +45,12 @@ os_utf8_to_utf16(Arena* arena, String8 utf8_string){
 // and you can tell that you set a null terminator
 // TODO: need none OS dependant version of this in string file
 static String8
-os_utf16_to_utf8(Arena* arena, String16 utf16_string){
+os_utf16_utf8(Arena* arena, String16 utf16_string){
     u32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, 0, 0, 0, 0);
     u8* str = (u8*)push_array(arena, u8, utf8_size + 1);
     String8 result = {str, utf8_size};
 
-    u32 size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, (char*)result.str, result.size, 0, 0);
+    u32 size = WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, (char*)result.str, result.size, 0, 0);
 
     u8* null_char = result.str + result.size;
     *null_char = 0;
@@ -65,7 +66,7 @@ static String8 os_get_cwd(Arena* arena){
     length = GetCurrentDirectoryW(length, buffer);
     String16 utf16_string = {(u16*)buffer, length};
 
-    String8 result = os_utf16_to_utf8(arena, utf16_string);
+    String8 result = os_utf16_utf8(arena, utf16_string);
     end_scratch(scratch);
     return(result);
 }
@@ -88,7 +89,7 @@ os_file_read(Arena* arena, String8 dir, String8 file_name){
     FileData result = {0};
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
-    String16 wide_path = os_utf8_to_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
@@ -129,7 +130,7 @@ os_file_write(FileData data, String8 dir, String8 file_name){
     bool result = false;
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
-    String16 wide_path = os_utf8_to_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
@@ -154,13 +155,14 @@ os_file_write(FileData data, String8 dir, String8 file_name){
 // NOTE: Win32 File Operations
 ///////////////////////////////
 //
-// TODO: FILE EXISTS
+// TODO: file exists
+// TODO: list out files in directroy
 
 static bool
 os_file_delete(String8 dir, String8 file_name){
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
-    String16 wide_path = os_utf8_to_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);
     end_scratch(scratch);
@@ -172,8 +174,8 @@ os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 
     ScratchArena scratch = begin_scratch(0);
     String8 source_string = str8_concatenate(scratch.arena, source_dir, source_file);
     String8 dest_string = str8_concatenate(scratch.arena, dest_dir, dest_file);
-    String16 source_wide = os_utf8_to_utf16(scratch.arena, source_string);
-    String16 dest_wide = os_utf8_to_utf16(scratch.arena, dest_string);
+    String16 source_wide = os_utf8_utf16(scratch.arena, source_string);
+    String16 dest_wide = os_utf8_utf16(scratch.arena, dest_string);
 
     bool result = MoveFileW((wchar*)source_wide.str, (wchar*)dest_wide.str);
     end_scratch(scratch);
@@ -184,7 +186,7 @@ static bool
 os_dir_create(String8 dir, String8 new_dir){
     ScratchArena scratch = begin_scratch(0);
     String8 dir_path = str8_concatenate(scratch.arena, dir, new_dir);
-    String16 wide_path = os_utf8_to_utf16(scratch.arena, dir_path);
+    String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
     bool result = CreateDirectoryW((wchar*)wide_path.str, 0);
     end_scratch(scratch);
@@ -195,7 +197,7 @@ static bool
 os_dir_delete(String8 dir, String8 delete_dir){
     ScratchArena scratch = begin_scratch(0);
     String8 dir_path = str8_concatenate(scratch.arena, dir, delete_dir);
-    String16 wide_path = os_utf8_to_utf16(scratch.arena, dir_path);
+    String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
     bool result = RemoveDirectoryW((wchar*)wide_path.str);
     end_scratch(scratch);

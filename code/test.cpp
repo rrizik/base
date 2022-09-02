@@ -107,7 +107,7 @@ s32 main(s32 argc, char** argv){
         eval((_v2s32 * 3) == ((v2s32){3, 6}));
         eval(_v2s32 == _v2s32);
         eval(!(_v2s32 != _v2s32));
-        
+
         v2 _v2 = {1, 2};
         eval((_v2 + _v2) == ((v2){2, 4}));
         eval((_v2 - _v2) == ((v2){0, 0}));
@@ -115,7 +115,7 @@ s32 main(s32 argc, char** argv){
         eval((_v2 * 3) == ((v2){3, 6}));
         eval(_v2 == _v2);
         eval(!(_v2 != _v2));
-    
+
         v3 _v3 = {1, 2, 0.5f};
         eval((_v3 + _v3) == ((v3){2, 4, 1.0f}));
         eval((_v3 - _v3) == ((v3){0, 0, 0}));
@@ -123,7 +123,7 @@ s32 main(s32 argc, char** argv){
         eval((_v3 * 3) == ((v3){3, 6, 1.5f}));
         eval(_v3 == _v3);
         eval(!(_v3 != _v3));
-    
+
         v4 _v4 = {1, 2, 0.5f, 3};
         eval((_v4 + _v4) == ((v4){2, 4, 1.0f, 6}));
         eval((_v4 - _v4) == ((v4){0, 0, 0, 0}));
@@ -140,8 +140,8 @@ s32 main(s32 argc, char** argv){
         eval(AlignDownPow2(19, 4) == 16);
 
         // trig
-        eval(round_f32_s32(rad_to_degree(RAD)) == 1);
-        eval(degree_to_rad(1) == 0.017453292f);
+        eval(round_f32_s32(rad_to_deg(RAD)) == 1);
+        eval(deg_to_rad(1) == 0.017453292f);
 
         eval(sqrt_f32(16.0f) == 4.0f);
         eval(sin_f32(RAD * 90.0f) == 1.0f);
@@ -180,14 +180,14 @@ s32 main(s32 argc, char** argv){
         eval(clamp_f32(1.0f, 3.0f, 2.0f) == 2.0f);
         eval(clamp_f32(1.0f, 0.5f, 2.0f) == 1.0f);
         eval(clamp_f32(1.0f, 2.0f, 3.0f) == 2.0f);
-    
+
         // lerp stuff
         eval(lerp(0.0f, 0.5f, 1.0f) == 0.5f);
         eval(unlerp(0.0f, 0.5f, 1.0f) == 0.5f);
 
         // TODO: I use this, but dont understand it.
         // Need to understand it before I can test it.
-        //static f32 lerp_rad(f32 a, f32 t, f32 b){ 
+        //static f32 lerp_rad(f32 a, f32 t, f32 b){
     }
 
     // base_memory.h
@@ -200,7 +200,7 @@ s32 main(s32 argc, char** argv){
         // arena init
         void* base = malloc(MB(1));
         Arena* arena = (Arena*)base;
-        init_arena(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
+        arena_init(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
         eval(arena->base == ((u8*)base + sizeof(Arena)));
         eval(arena->size == (MB(1) - sizeof(Arena)));
         eval(arena->used == 0);
@@ -211,14 +211,14 @@ s32 main(s32 argc, char** argv){
         eval(arena->used == 24);
         push_array(arena, Test, 2);
         eval(arena->used == 48);
-        free_arena(arena);
+        arena_free(arena);
         eval(arena->used == 0);
 
         // push_arena
         Arena* new_arena = push_arena(arena, 100);
         eval(arena->used == 124); // size of arena 24
         eval(new_arena->size == 100);
-        free_arena(arena);
+        arena_free(arena);
 
         // scratch
         push_array(arena, Test, 6);
@@ -232,8 +232,8 @@ s32 main(s32 argc, char** argv){
         eval(scratch.used == 72);
         end_scratch(scratch);
         eval(scratch.arena->used == 72);
-        free_arena(arena);
-        
+        arena_free(arena);
+
         // begin_scratch
         // CONSIDER: NOTE: not sure if I want to use conflict arena or new version without conflict arena.
         // Need to figure out use case to understand what to test, but maybe for now use
@@ -350,9 +350,9 @@ s32 main(s32 argc, char** argv){
 
         // utf8 to utf16 to utf8
         String8 string8_1 = str8_literal("test_string");
-        String16 string16_1 = os_utf8_to_utf16(arena, string8_1);
+        String16 string16_1 = os_utf8_utf16(arena, string8_1);
         String16 string16_2 = str16(L"test_string", string16_1.size);
-        String8 string8_2 = os_utf16_to_utf8(arena, string16_1);
+        String8 string8_2 = os_utf16_utf8(arena, string16_1);
         eval(string8_1 == string8_2);
         eval(string16_1 == string16_2);
 

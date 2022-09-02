@@ -52,9 +52,9 @@
 
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
-# define Assert(x) if(!(x)) __debugbreak()
+# define assert(x) if(!(x)) __debugbreak()
 #else
-# define Assert(x)
+# define assert(x)
 #endif
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
@@ -100,6 +100,7 @@ typedef double f64;
 
 typedef wchar_t wchar;
 
+// QUESTION: Devon. stdbool or this? moving away from standard library
 //#define true 1
 //#define false 0
 //typedef int bool
@@ -135,7 +136,6 @@ typedef union v2{
 
 typedef union v3{
     struct{ f32 x; f32 y; f32 z; };
-    struct{ f32 r; f32 g; f32 b; };
     f32 v[3];
 } v3;
 
@@ -216,11 +216,6 @@ static v2s32 operator*(const v2s32& a, const s32 b){
     return(result);
 }
 
-static v2 operator*(const v2& b, const f32& a){
-    v2 result = {b.x * a, b.y * a};
-    return(result);
-}
-
 static v3 operator*(const v3& b, const f32& a){
     v3 result = {b.x * a, b.y * a, b.z * a};
     return(result);
@@ -233,6 +228,11 @@ static v4 operator*(const v4& b, const f32& a){
 
 static v2s32 operator*(const s32& a, const v2s32& b){
     v2s32 result = {b.x * a, b.y * a};
+    return(result);
+}
+
+static v2 operator*(const v2& b, const f32& a){
+    v2 result = {b.x * a, b.y * a};
     return(result);
 }
 

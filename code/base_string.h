@@ -24,42 +24,6 @@ typedef struct String32{
     u64 size;
 } String32;
 
-#if STANDARD_CPP
-static bool operator==(const String8& a, const String8& b){
-    u8* a_string = (u8*)a.str;
-    u8* b_string = (u8*)b.str;
-    if(a.size != b.size){
-        return(false);
-    }
-    for(u32 i = 0; i < a.size; ++i){
-        if(*a_string++ != *b_string++){
-            return(false);
-        }
-    }
-    return(true);
-}
-
-static bool operator==(String16 a, String16 b){
-    if(a.size != b.size){
-        return(false);
-    }
-    for(u32 i = 0; i < a.size; ++i){
-        if(*a.str++ != *b.str++){
-            return(false);
-        }
-    }
-    return(true);
-}
-
-static bool operator!=(String8 a, String8 b){
-    return(!(a == b));
-}
-
-static bool operator!=(String16 a, String16 b){
-    return(!(a == b));
-}
-#endif
-
 #define str8_literal(str) str8_create_((u8*)str, (sizeof(str) - 1))
 #define str8(str, size) str8_create_((u8*)str, size)
 static String8 str8_create_(u8* str, u32 size){
@@ -109,5 +73,42 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
 // str_ends_with:
 // str_range:
 // append:
+
+#if STANDARD_CPP
+static bool operator==(const String8& a, const String8& b){
+    u8* a_string = (u8*)a.str;
+    u8* b_string = (u8*)b.str;
+    if(a.size != b.size){
+        return(false);
+    }
+    for(u32 i = 0; i < a.size; ++i){
+        if(*a_string++ != *b_string++){
+            return(false);
+        }
+    }
+    return(true);
+}
+
+static bool operator==(String16 a, String16 b){
+    if(a.size != b.size){
+        return(false);
+    }
+    for(u32 i = 0; i < a.size; ++i){
+        if(*a.str++ != *b.str++){
+            return(false);
+        }
+    }
+    return(true);
+}
+
+static bool operator!=(String8 a, String8 b){
+    return(!(a == b));
+}
+
+static bool operator!=(String16 a, String16 b){
+    return(!(a == b));
+}
+#endif
+
 
 #endif

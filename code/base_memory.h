@@ -25,13 +25,13 @@ static Arena* allocate_arena(size_t size){
     return(result);
 }
 
-static void init_arena(Arena* arena, void* base, size_t size){
+static void arena_init(Arena* arena, void* base, size_t size){
     arena->base = base;
     arena->size = size;
     arena->used = 0;
 }
 
-static void free_arena(Arena* arena){
+static void arena_free(Arena* arena){
     arena->used = 0;
 }
 
@@ -40,7 +40,7 @@ static void free_arena(Arena* arena){
 #define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), _Alignof(type))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
-    Assert((used_aligned + size) <= arena->size);
+    assert((used_aligned + size) <= arena->size);
     void* result = (u8*)arena->base + used_aligned;
     arena->used = used_aligned + size;
     return(result);
@@ -59,8 +59,8 @@ typedef struct ScratchArena{
     size_t used;
 } ScratchArena;
 
-#define DEFAULT_RESERVE_SIZE GB(1)            
-#define SCRATCH_POOL_COUNT 2
+#define DEFAULT_RESERVE_SIZE GB(1)
+#define SCRATCH_POOL_COUNT 3
 __thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 
 static ScratchArena get_scratch(Arena* arena){
@@ -97,7 +97,7 @@ _begin_scratch(Arena **conflict_array, u32 count){
             *scratch_slot = arena;
         }
     }
-    
+
     // get non-conflicting arena
     ScratchArena result = {};
     Arena **scratch_slot = scratch_pool;
@@ -115,7 +115,7 @@ _begin_scratch(Arena **conflict_array, u32 count){
             break;
         }
     }
-    
+
     return(result);
 }
 
