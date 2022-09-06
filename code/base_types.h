@@ -58,6 +58,7 @@
 #endif
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
+#define ArrayLength(x) ArrayCount(x)
 
 #define STR_(x) #x
 #define STR(x) STR_(x)

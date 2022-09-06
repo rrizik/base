@@ -20,6 +20,7 @@ global f32 PI_f32 = 3.14159265359f;
 global f64 PI_f64 = 3.14159265359;
 global f32 RAD = 0.0174533f;
 //TODO: Add RAD_f32 RAD_f64
+//TODO: Change all angle stuff to 64 bit
 
 static f32
 deg_to_rad(f32 degree){
@@ -99,26 +100,15 @@ abs_s64(s64 x){
     return(result);
 }
 
-static v2
-round_v2(v2 value){
-    v2 result = {};
-    result.x = (f32)((s32)(value.x + 0.5f));
-    result.y = (f32)((s32)(value.y + 0.5f));
-    return(result);
-}
-
-// UNTESTED:
-static v2s32
-round_v2_v2s32(v2 value){
-    v2s32 result = {};
-    result.x = ((s32)(value.x + 0.5f));
-    result.y = ((s32)(value.y + 0.5f));
-    return(result);
-}
-
 static f32
 round_f32(f32 value){
     f32 result = (f32)((s32)(value + 0.5f));
+    return(result);
+}
+
+static f64
+round_f64(f64 value){
+    f64 result = (f64)((s64)(value + 0.5));
     return(result);
 }
 
@@ -130,10 +120,11 @@ round_f32_s32(f32 value){
 
 static s64
 round_f64_s64(f64 value){
-    s64 result = (s64)(value + 0.5f);
+    s64 result = (s64)(value + 0.5);
     return(result);
 }
 
+// TODO: Does this even make sense?
 static u32
 round_f32_u32(f32 value){
     u32 result = (u32)(value + 0.5f);
@@ -141,13 +132,13 @@ round_f32_u32(f32 value){
 }
 
 static f32
-trunc_f32(f32 value){
+truncate_f32(f32 value){
     f32 result = (f32)(s32)value;
     return(result);
 }
 
 static s32
-trunc_f32_s32(f32 value){
+truncate_f32_s32(f32 value){
     s32 result = (s32)value;
     return(result);
 }
@@ -217,10 +208,29 @@ slerp(f32 a, f32 t, f32 b) {
 }
 
 
+///////////////////////////////
+// NOTE: Vector Math
+///////////////////////////////
 // TODO: NONE OF THIS IS TESTED
-// VECTOR OPERATIONS
 
-// V2
+// Vector2
+static v2
+round_v2(v2 value){
+    v2 result = {};
+    result.x = (f32)((s32)(value.x + 0.5f));
+    result.y = (f32)((s32)(value.y + 0.5f));
+    return(result);
+}
+
+// UNTESTED:
+static v2s32
+round_v2_v2s32(v2 value){
+    v2s32 result = {};
+    result.x = ((s32)(value.x + 0.5f));
+    result.y = ((s32)(value.y + 0.5f));
+    return(result);
+}
+
 static f32
 inner_product_v2(v2 a, v2 b){
     return((a.x * b.x) + (a.y * b.y));
@@ -291,7 +301,7 @@ reflection_v2(v2 a, v2 normal){
     return(a - ((2.0f * inner) * normal));
 }
 
-// V3
+// Vector3
 static f32
 inner_product_v3(v3 a, v3 b){
     return((a.x * b.x) + (a.y * b.y) + (a.z * b.z));
@@ -337,7 +347,7 @@ direction_v3(v3 a, v3 b){
     return(b - a);
 }
 
-static v3
+static v3 // NOTE: produces a vector perpendicular to both vectors
 cross_product_v3(v3 a, v3 b){
     v3 result;
     result.x = (a.y * b.z) - (a.z * b.y);

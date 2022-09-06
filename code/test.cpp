@@ -159,7 +159,7 @@ s32 main(s32 argc, char** argv){
         eval(rad_to_dir(0) == ((v2){1, 0}));
         eval(dir_to_rad((v2){1, 0}) == 0);
 
-        // abs/round/clamp/trunc/floor/ceil
+        // abs/round/clamp/truncate/floor/ceil
         eval(abs_f32(-1.0123f) == 1.0123f);
         eval(abs_f64(-1.0123) == 1.0123);
         eval(abs_s32(-1) == 1);
@@ -171,8 +171,8 @@ s32 main(s32 argc, char** argv){
         eval(round_f32_s32(1.9f) == 2);
         eval(round_f32_u32(1.1f) == 1);
         eval(round_f32_u32(1.9f) == 2);
-        eval(trunc_f32(1.9120939f) == 1.0f);
-        eval(trunc_f32_s32(1.910293f) == 1);
+        eval(truncate_f32(1.9120939f) == 1.0f);
+        eval(truncate_f32_s32(1.910293f) == 1);
         eval(floor_f32(1.910293f) == 1.0f);
         eval(floor_f32_s32(1.110293f) == 1);
         eval(ceil_f32(1.910293f) == 2.0f);
