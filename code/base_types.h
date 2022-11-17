@@ -1,8 +1,8 @@
-#if !defined(BASE_TYPES_H)
+#ifndef BASE_TYPES_H
 #define BASE_TYPES_H
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <stdbool.h> // NOTE: C header
 
 
 ///////////////////////////////
@@ -52,13 +52,31 @@
 
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
-# define assert(x) if(!(x)) __debugbreak()
+# define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
+# define ASSERT_HR(hr) ASSERT(SUCCEEDED(hr))
+# define Assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
+# define AssertHr(hr) Assert(SUCCEEDED(hr))
+# define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
+# define assert_hr(hr) assert(SUCCEEDED(hr))
 #else
-# define assert(x)
+# define ASSERT(cond)
+# define ASSERT_HR(cond)
+# define Assert(cond)
+# define AssertHr(cond)
+# define assert(cond)
+# define assert_hr(cond)
 #endif
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
 #define ArrayLength(x) ArrayCount(x)
+#define array_count(x) (sizeof(x)/sizeof(*(x)))
+#define array_length(x) ArrayCount(x)
+
+#if STANDARD_CPP
+    #define ZERO_INIT {}
+#else
+    #define ZERO_INIT {0}
+#endif
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
@@ -77,10 +95,6 @@
 
 #define global static
 #define local static
-//#define function static
-
-// TODO: memory zero (struct, array)
-// TODO: memory copy (struct, array)
 
 ///////////////////////////////
 // NOTE: Basic Types
@@ -101,11 +115,6 @@ typedef double f64;
 
 typedef wchar_t wchar;
 
-// QUESTION: Devon. stdbool or this? moving away from standard library
-//#define true 1
-//#define false 0
-//typedef int bool
-
 ///////////////////////////////
 // NOTE: Basic Constants
 ///////////////////////////////
@@ -124,173 +133,5 @@ global u8  u8_max  = (u8) 0xff;
 global u16 u16_max = (u16)0xffff;
 global u32 u32_max = (u32)0xffffffff;
 global u64 u64_max = (u64)0xffffffffffffffffllu;
-
-///////////////////////////////
-// NOTE: Compound Types
-///////////////////////////////
-
-typedef union v2{
-    struct{ f32 x; f32 y; };
-    struct{ f32 w; f32 h; };
-    f32 v[2];
-} v2;
-
-typedef union v3{
-    struct{ f32 x; f32 y; f32 z; };
-    f32 v[3];
-} v3;
-
-typedef union v4{
-    struct{ f32 x; f32 y; f32 z; f32 w; };
-    f32 v[4];
-} v4;
-
-typedef union v2s32{
-    struct{ s32 x; s32 y; };
-    struct{ s32 w; s32 h; };
-    s32 v[2];
-} v2s32;
-
-//UNTESTED:
-typedef union RGBA{
-    struct{ f32 r; f32 g; f32 b; f32 a; };
-    f32 v[4];
-} RGBA;
-
-///////////////////////////////
-// NOTE: Compound Types Operators
-///////////////////////////////
-
-#if STANDARD_CPP
-static v2s32 operator+(const v2s32& a, const v2s32& b){
-    v2s32 result = {a.x + b.x, a.y + b.y};
-    return(result);
-}
-
-static v2 operator+(const v2& a, const v2& b){
-    v2 result = {a.x + b.x, a.y + b.y};
-    return(result);
-}
-
-static v3 operator+(const v3& a, const v3& b){
-    v3 result = {a.x + b.x, a.y + b.y, a.z + b.z};
-    return(result);
-}
-
-static v4 operator+(const v4& a, const v4& b){
-    v4 result = {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
-    return(result);
-}
-
-static RGBA operator+(const RGBA& a, const RGBA& b){
-    RGBA result = {a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a};
-    return(result);
-}
-
-static v2s32 operator-(const v2s32& a, const v2s32& b){
-    v2s32 result = {a.x - b.x, a.y - b.y};
-    return(result);
-}
-
-static v2 operator-(const v2& a, const v2& b){
-    v2 result = {a.x - b.x, a.y - b.y};
-    return(result);
-}
-
-static v3 operator-(const v3& a, const v3& b){
-    v3 result = {a.x - b.x, a.y - b.y, a.z - b.z};
-    return(result);
-}
-
-static v4 operator-(const v4& a, const v4& b){
-    v4 result = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
-    return(result);
-}
-
-static RGBA operator-(const RGBA& a, const RGBA& b){
-    RGBA result = {a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a};
-    return(result);
-}
-
-static v2s32 operator*(const v2s32& a, const s32 b){
-    v2s32 result = {a.x * b, a.y * b};
-    return(result);
-}
-
-static v3 operator*(const v3& b, const f32& a){
-    v3 result = {b.x * a, b.y * a, b.z * a};
-    return(result);
-}
-
-static v4 operator*(const v4& b, const f32& a){
-    v4 result = {b.x * a, b.y * a, b.z * a, b.w * a};
-    return(result);
-}
-
-static v2s32 operator*(const s32& a, const v2s32& b){
-    v2s32 result = {b.x * a, b.y * a};
-    return(result);
-}
-
-static v2 operator*(const v2& b, const f32& a){
-    v2 result = {b.x * a, b.y * a};
-    return(result);
-}
-
-static v2 operator*(const f32& a, const v2& b){
-    v2 result = {b.x * a, b.y * a};
-    return(result);
-}
-
-static v3 operator*(const f32& a, const v3& b){
-    v3 result = {b.x * a, b.y * a, b.z * a};
-    return(result);
-}
-
-static v4 operator*(const f32& a, const v4& b){
-    v4 result = {b.x * a, b.y * a, b.z * a, b.w * a};
-    return(result);
-}
-
-static bool operator==(const v2s32& a, const v2s32& b){
-    return((a.x == b.x) && (a.y == b.y));
-}
-
-static bool operator==(const v2& a, const v2& b){
-    return((a.x == b.x) && (a.y == b.y));
-}
-
-static bool operator==(const v3& a, const v3& b){
-    return((a.x == b.x) && (a.y == b.y) && (a.z == b.z));
-}
-
-static bool operator==(const v4& a, const v4& b){
-    return((a.x == b.x) && (a.y == b.y && (a.z == b.z) && (a.w == b.w)));
-}
-
-static bool operator==(const RGBA& a, const RGBA& b){
-    return((a.r == b.r) && (a.g == b.g && (a.b == b.b) && (a.a == b.a)));
-}
-
-static bool operator!=(const v2s32& a, const v2s32& b){
-    return(!(a == b));
-}
-
-static bool operator!=(const v2& a, const v2& b){
-    return(!(a == b));
-}
-
-static bool operator!=(const v3& a, const v3& b){
-    return(!(a == b));
-}
-
-static bool operator!=(const v4& a, const v4& b){
-    return(!(a == b));
-}
-
-static bool operator!=(const RGBA& a, const RGBA& b){
-    return(!(a == b));
-}
-#endif
 
 #endif

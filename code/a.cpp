@@ -3,9 +3,23 @@
 
 
 s32 main(s32 argc, char** argv){
-    v2 a = {3, 3};
-    v2 b = {1, 0};
-    v2 c = reflection_v2(a, b);
+    m4 m4_1 = {
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, 4, 4, 4
+    };
+    m4 m4_2 = {
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, 4, 4, 4
+    };
+    m4 r = m4_1 * m4_2;
+
+    v3 forward = {0, 0, 1};
+    v3 up = {0, 1, 0};
+    v3 right = normalized_v3(cross_product_v3(forward, up));
 
     return(0);
 }

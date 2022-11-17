@@ -29,7 +29,7 @@ static void check(bool cond, s32 line, const char* msg, size_t size){
         print("%d - %s - %s\n", line, (cond ? "SUCCEED" : " FAILED"), msg);
     }
 }
-#define eval(x) check(x, __LINE__, #x, (sizeof(#x) - 1))
+#define eval(cond) check(cond, __LINE__, #cond, (sizeof(#cond) - 1))
 
 
 s32 main(s32 argc, char** argv){
@@ -98,7 +98,10 @@ s32 main(s32 argc, char** argv){
         eval(u16_max == 65535);
         eval(u32_max == 4294967295);
         eval(u64_max == 18446744073709551615ull);
+    }
 
+    // base_vector.h
+    {
         // compound type operators
         v2s32 _v2s32 = {1, 2};
         eval((_v2s32 + _v2s32) == ((v2s32){2, 4}));
@@ -131,8 +134,57 @@ s32 main(s32 argc, char** argv){
         eval((_v4 * 3) == ((v4){3, 6, 1.5f, 9}));
         eval(_v4 == _v4);
         eval(!(_v4 != _v4));
-    }
 
+        // vector2 math
+        eval(round_v2(((v2){1.1f, 1.9f})) == ((v2){1.0f, 2.0f}));
+        eval(round_v2_v2s32(((v2){1.1f, 1.9f})) == ((v2s32){1, 2}));
+        eval(inner_product_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == 0);
+        eval(is_perpendicular_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == 1);
+        eval(right_direction_v2(((v2){1.0f, 0.5f}), ((v2){1.0f, 0.8f})) == 1);
+        eval(same_direction_v2((v2){1.0f, 0.5f}, (v2){1.0f, 0.8f}) == 1);
+        eval(left_direction_v2(((v2){1.0f, 0.5f}), ((v2){-1.0f, 0.8f})) == 1);
+        eval(opposite_direction_v2((v2){1.0f, 0.5f}, (v2){-1.0f, 0.8f}) == 1);
+        eval(magnitude_sqrt_v2((v2){3.0f, 0.0f}) == 9);
+        eval(magnitude_v2((v2){3.0f, 0.0f}) == 3);
+        eval(distance_v2((v2){0.0f, 0.0f}, (v2){3.0f, 3.0f}) == 4.2426405f);
+        eval(distance_v2((v2){0.0f, 0.0f}, (v2){3.0f, 0.0f}) == 3);
+        eval(normalized_v2((v2){100.0f, 200.0f}) == ((v2){0.44721359f, 0.89442718f}));
+        eval(direction_v2((v2){0.0f, 0.0f}, (v2){3.0f, 3.0f}) == ((v2){0.707106829f, 0.707106829f}));
+        eval(angle_v2((v2){1.0f, 0.0f}, (v2){-1.0f, 0.0f}) == PI_f32);
+        eval(angle_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == PI_f32/2);
+        eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, 1.0f}) == (PI_f32)/4);
+        eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, -1.0f}) == (PI_f32)/4);
+        eval(project_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.707, 0.0f}));
+        eval(perpendicular_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.0, 0.707}));
+        eval(reflection_v2((v2){-1.0f, -1.0f}, (v2){1.0f, 0.0f}) == ((v2){1.0, -1.0}));
+        eval(reflection_v2((v2){0.0f, 1.0f}, (v2){1.0f, 0.0f}) == ((v2){0.0, 1.0})); // QUESTION: but why
+        eval(reflection_v2((v2){1.0f, 0.0f}, (v2){1.0f, 0.0f}) == ((v2){-1.0, 0.0}));
+
+        // vector3 math
+        //eval(round_v3(((v3){1.1f, 1.9f, 2.5f})) == ((v3){1.0f, 2.0f, 2.0f})); not implemented yet
+        eval(inner_product_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == 0);
+        eval(is_perpendicular_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == 1);
+        eval(right_direction_v3(((v3){1.0f, 0.5f, 0.5f}), ((v3){1.0f, 0.8f, 0.5f})) == 1);
+        eval(same_direction_v3((v3){1.0f, 0.5f, 0.5f}, (v3){1.0f, 0.8f, 0.3f}) == 1);
+        eval(opposite_direction_v3((v3){1.0f, 0.5f, 0.5f}, (v3){-1.0f, 0.8f, 0.5f}) == 1);
+        eval(left_direction_v3(((v3){1.0f, 0.5f, 0.5f}), ((v3){-1.0f, 0.8f, 0.5f})) == 1);
+        eval(magnitude_sqrt_v3((v3){3.0f, 0.0f, 3.0f}) == 18);
+        eval(magnitude_v3((v3){3.0f, 0.0f, 3.0f}) == 4.2426405f);
+        eval(distance_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 3.0f, 3.0f}) == 5.19615221f);
+        eval(distance_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 0.0f, 0.0f}) == 3);
+        eval(normalized_v3((v3){100.0f, 200.0f, 400.0f}) == ((v3){0.218217894f, 0.436435789f, 0.872871578f}));
+        eval(direction_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 3.0f, 3.0f}) == ((v3){0.577350259f, 0.577350259f, 0.577350259f}));
+        eval(cross_product_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == ((v3){0.0f, 0.0f, 1.0f}));
+        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){-1.0f, 0.0f, 0.0f}) == PI_f32);
+        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == PI_f32/2);
+        eval(angle_v3((v3){1.0f, 1.0f, 0.0f}, (v3){1.0f, 1.0f, 1.0f}) == 0.615479767f);
+        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, -1.0f, 1.0f}) == 0.955316603f);
+        eval(project_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.0f, 0.0f}) == ((v3){0.707f, 0.0f, 0.0f}));
+        eval(perpendicular_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.5f, 0.0f}) == ((v3){0.0f, 0.0f, 0.707}));
+        eval(reflection_v3((v3){-1.0f, -1.0f, 0.0f}, (v3){1.0f, 0.0f}) == ((v3){1.0f, -1.0f, 0.0f}));
+        eval(reflection_v3((v3){0.0f, 1.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){0.0f, 1.0f, 0.0f})); // QUESTION: but why
+        eval(reflection_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){-1.0f, 0.0f, 0.0f}));
+    }
     // base_math.h
     {
         // INCOMPLETE: These will become functions, test accordingly
@@ -140,17 +192,13 @@ s32 main(s32 argc, char** argv){
         eval(AlignDownPow2(19, 4) == 16);
 
         // trig
-        eval(round_f32_s32(rad_to_deg(RAD)) == 1);
         eval(deg_to_rad(1) == 0.017453292f);
-
-        eval(sqrt_f32(16.0f) == 4.0f);
-        eval(sin_f32(RAD * 90.0f) == 1.0f);
-        eval(cos_f32(RAD * 90.0f) == 0.0f);
-        eval(round_f32_s32(tan_f32(-PI_f32/4)) == 1);
+        eval(rad_to_deg(RAD_f32) == 1);
+        eval(sin_f32(RAD_f32 * 90.0f) == 1.0f);
+        eval(cos_f32(RAD_f32 * 90.0f) == 0.0f);
         eval(atan_f32(0.707f, 0.707f) == 1.0f); // not sure if this is a good test
         // STUDY: atan2 returns values in -180..180 range
 
-        eval(sqrt_f64(16.0) == 4.0);
         eval(round_f64_s64(sin_f64((PI_f64/2))) == 1);
         eval(round_f64_s64(cos_f64((PI_f64*2))) == 1);
         eval(round_f64_s64(tan_f64(PI_f32)) == 0);
@@ -159,12 +207,13 @@ s32 main(s32 argc, char** argv){
         eval(rad_to_dir(0) == ((v2){1, 0}));
         eval(dir_to_rad((v2){1, 0}) == 0);
 
-        // abs/round/clamp/truncate/floor/ceil
+        // abs/round/clamp/truncate/floor/ceil/sqrt
+        eval(sqrt_f32(16.0f) == 4.0f);
+        eval(sqrt_f64(16.0) == 4.0);
         eval(abs_f32(-1.0123f) == 1.0123f);
         eval(abs_f64(-1.0123) == 1.0123);
         eval(abs_s32(-1) == 1);
         eval(abs_s64(-1) == 1);
-        eval(round_v2(((v2){1.1f, 1.9f})) == ((v2){1, 2}));
         eval(round_f32(1.1f) == 1.0f);
         eval(round_f32(1.9f) == 2.0f);
         eval(round_f32_s32(1.1f) == 1);

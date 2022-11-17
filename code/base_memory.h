@@ -1,9 +1,28 @@
-#if !defined(BASE_MEMORY_H)
+#ifndef BASE_MEMORY_H
 #define BASE_MEMORY_H
 
 #include <stdlib.h>
 #include "base_types.h"
 #include "base_math.h"
+
+// UNTESTED:
+static void*
+mem_set(void *base, int source, size_t size) {
+    u8* base_ref = (u8*)base;
+    while(size--) *base_ref++ = (u8)source;
+
+    return(base);
+}
+
+// UNTESTED:
+static void*
+mem_copy(void *base_to, void const *base_from, size_t size) {
+    unsigned char *base_to_ref = (unsigned char *)base_to;
+    unsigned char *base_from_ref = (unsigned char *)base_from;
+    while(size--) *base_to_ref++ = *base_from_ref++;
+
+    return(base_to);
+}
 
 ///////////////////////////////
 // NOTE: Arena Functions
