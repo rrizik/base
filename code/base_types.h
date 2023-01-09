@@ -1,7 +1,6 @@
 #ifndef BASE_TYPES_H
 #define BASE_TYPES_H
 
-#include <stdint.h>
 #include <stdbool.h> // NOTE: C header
 
 
@@ -100,6 +99,7 @@
 // NOTE: Basic Types
 ///////////////////////////////
 
+#include <stdint.h>
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
@@ -114,6 +114,9 @@ typedef float f32;
 typedef double f64;
 
 typedef wchar_t wchar;
+
+
+// create your own bool?
 
 ///////////////////////////////
 // NOTE: Basic Constants

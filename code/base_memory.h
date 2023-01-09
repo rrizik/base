@@ -29,13 +29,14 @@ mem_copy(void *base_to, void const *base_from, size_t size) {
 ///////////////////////////////
 
 typedef struct Arena{
+    // head
     void* base;
     size_t size;
     size_t used;
 } Arena;
 
-// CONSIDER: not sure if I need this, if I have os_allocate_arena()
-static Arena* allocate_arena(size_t size){
+// CONSIDER: not sure if I need this, if I have os_alloc_arena()
+static Arena* alloc_arena(size_t size){
     void* memory = calloc((size + sizeof(Arena)), 1); // 0 initialized
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
@@ -55,7 +56,7 @@ static void arena_free(Arena* arena){
 }
 
 //#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(max_align_t))
-#define push_array(arena, type, count) (type*)push_size_aligned((arena), (count) * sizeof(type), _Alignof(type))
+#define push_array(arena, type, count) (type*)push_size_aligned((arena), sizeof(type) * (count), _Alignof(type))
 #define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), _Alignof(type))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
@@ -63,6 +64,20 @@ static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     void* result = (u8*)arena->base + used_aligned;
     arena->used = used_aligned + size;
     return(result);
+}
+
+//static void* push_size_aligned(Arena* arena, size_t size, size_t align){
+//    size_t size_aligned = AlignUpPow2(size, align);
+//    assert((arena->used + size_aligned) <= arena->size);
+//    void* result = (u8*)arena->base + arena->used;
+//    arena->used = arena->used + size_aligned;
+//    return(result);
+//}
+
+//UNTESTED:
+#define pop_array(arena, type, count) pop_array_((arena), sizeof(type) * (count))
+static void pop_array_(Arena* arena, size_t size){
+    arena->used = arena->used - size;
 }
 
 static Arena* push_arena(Arena *arena, size_t size){
@@ -95,7 +110,7 @@ begin_scratch(u32 index){
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = allocate_arena(DEFAULT_RESERVE_SIZE);
+            Arena* arena = alloc_arena(DEFAULT_RESERVE_SIZE);
             *scratch_slot = arena;
         }
     }
@@ -112,7 +127,7 @@ _begin_scratch(Arena **conflict_array, u32 count){
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = allocate_arena(DEFAULT_RESERVE_SIZE);
+            Arena* arena = alloc_arena(DEFAULT_RESERVE_SIZE);
             *scratch_slot = arena;
         }
     }

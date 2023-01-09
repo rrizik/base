@@ -16,7 +16,7 @@ typedef struct Node{
     struct Node* prev;
     void* data;
     u32 count;
-} Node, DLL, SLL, Queue, Stack;
+} LLNode, DLL, SLL, Queue, Stack;
 
 static Node* push_node(Arena* arena){
     Node* result = push_struct(arena, Node);

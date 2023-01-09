@@ -21,7 +21,7 @@ global f32 PI_f32 = 3.14159265359f;
 global f64 PI_f64 = 3.14159265359;
 global f32 RAD_f32 = 0.0174533f;
 //TODO: Add RAD_f32 RAD_f64
-//TODO: Change all angle stuff to 64 bit
+//TODO IMPORTANT: Change all angle stuff to 64 bit
 
 static f32
 deg_to_rad(f32 degree){

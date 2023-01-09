@@ -7,17 +7,30 @@
 #include "base_memory.h"
 #include "base_string.h"
 
+// TODO: This probably needs to be part if an print logging file
 #include <stdio.h>
 static void
-print(char *format, ...) {
+print(char* format, ...) {
     char buffer[4096] = {};
     va_list args;
     va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
+    s32 result = vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
     printf("%s", buffer);
     OutputDebugStringA(buffer);
+}
+
+// TODO: This probably needs to be part if an IO file, maybe win32_file? idk.
+static String8
+read_stdin(Arena* arena){
+    u8* str = push_array(arena, u8, KB(1));
+    fgets((char*)str, KB(1), stdin);
+    u64 length = str_length((char*)str);
+    pop_array(arena, u8, (KB(1)-length-1));
+    String8 result = str8(str, length);
+
+    return(result);
 }
 
 ///////////////////////////////
@@ -47,8 +60,8 @@ os_utf8_utf16(Arena* arena, String8 utf8_string){
 static String8
 os_utf16_utf8(Arena* arena, String16 utf16_string){
     u32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, 0, 0, 0, 0);
-    u8* str = (u8*)push_array(arena, u8, utf8_size + 1);
-    String8 result = {str, utf8_size};
+    u8* utf8_str = (u8*)push_array(arena, u8, utf8_size + 1);
+    String8 result = {utf8_str, utf8_size};
 
     u32 size = WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, (char*)result.str, result.size, 0, 0);
 
@@ -58,7 +71,8 @@ os_utf16_utf8(Arena* arena, String16 utf16_string){
     return(result);
 }
 
-static String8 os_get_cwd(Arena* arena){
+static String8
+os_get_cwd(Arena* arena){
     ScratchArena scratch = begin_scratch(0);
     u32 length = GetCurrentDirectoryW(0, 0);
     wchar* buffer = push_array(scratch.arena, wchar, length);
@@ -84,16 +98,20 @@ typedef struct FileData{
     u64 size;
 } FileData;
 
+// TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
+// TODO: If I give an empty dir, it uses CWD.
+// TODO: Better error handling on failures? Maybe include a DWORD error in FileData, maybe pass in FileData and only return DWORD, maybe think about overall better logging? assert? idk have to ask
 static FileData
 os_file_read(Arena* arena, String8 dir, String8 file_name){
-    FileData result = {0};
+    FileData result = ZERO_INIT;
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
-        print("os_file_read: failed to create file handle\n");
+        DWORD err = GetLastError();
+        print("os_file_read: failed to create file handle - error: %d\n", err);
         return(result);
     }
 
@@ -125,21 +143,27 @@ os_file_read(Arena* arena, String8 dir, String8 file_name){
     return(result);
 }
 
+// UNTESTED: offset untested
 static bool
-os_file_write(FileData data, String8 dir, String8 file_name){
+os_file_write(FileData data, String8 dir, String8 file_name, u64 offset){
     bool result = false;
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
         print("os_file_write: failed to create file handle\n");
         return(result);
     }
 
     DWORD bytes_written;
-    if(!WriteFile(file_handle, data.base, data.size, &bytes_written, 0)){
+    OVERLAPPED overlapped = {
+        .Offset = (DWORD)(offset & 0x00000000FFFFFFFF),
+        .OffsetHigh = (DWORD)(offset >> 32)
+    };
+    if(!WriteFile(file_handle, data.base, data.size, &bytes_written, &overlapped)){
+        DWORD err = GetLastError();
         print("os_file_write: failed to write data to file\n");
         CloseHandle(file_handle);
         return(result);
@@ -206,4 +230,3 @@ os_dir_delete(String8 dir, String8 delete_dir){
 
 // list out the files in a directory
 #endif
-

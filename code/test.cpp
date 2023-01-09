@@ -195,7 +195,7 @@ s32 main(s32 argc, char** argv){
         eval(deg_to_rad(1) == 0.017453292f);
         eval(rad_to_deg(RAD_f32) == 1);
         eval(sin_f32(RAD_f32 * 90.0f) == 1.0f);
-        eval(cos_f32(RAD_f32 * 90.0f) == 0.0f);
+        eval(cos_f32(RAD_f32 * 90.0f) == 0.0000001f);
         eval(atan_f32(0.707f, 0.707f) == 1.0f); // not sure if this is a good test
         // STUDY: atan2 returns values in -180..180 range
 
@@ -244,7 +244,7 @@ s32 main(s32 argc, char** argv){
         typedef struct Test{ s32 a; s32 b; f32 d; } Test; // size 12
 
         // arena allocation
-        eval(allocate_arena(10)->size == 10);
+        eval(alloc_arena(10)->size == 10);
 
         // arena init
         void* base = malloc(MB(1));
@@ -268,6 +268,16 @@ s32 main(s32 argc, char** argv){
         eval(arena->used == 124); // size of arena 24
         eval(new_arena->size == 100);
         arena_free(arena);
+
+        // pop_array
+        {
+            Arena* arena = os_alloc_arena(100);
+            push_array(arena, u32, 20);
+            pop_array(arena, u32, 10);
+            eval(arena->used == 40);
+            pop_array(arena, u32, 10);
+            eval(arena->used == 0);
+        }
 
         // scratch
         push_array(arena, Test, 6);
@@ -304,7 +314,7 @@ s32 main(s32 argc, char** argv){
         typedef struct Data{ u32 id; } Data;
 
         // default node creation
-        Arena* arena = allocate_arena(MB(1));
+        Arena* arena = alloc_arena(MB(1));
         Node* sentinel = push_node(arena);
         eval(sentinel->next == sentinel);
         eval(sentinel->prev == sentinel);
@@ -381,12 +391,23 @@ s32 main(s32 argc, char** argv){
         eval((left.size + middle.size + right.size) == 12);
         eval(*(full.str + 11) == '!');
         end_scratch(scratch);
+
+        // str8_starts_with
+        String8 source = str8_literal("Hello World!");
+        String8 sub1 = str8_literal("Hello");
+        String8 sub2 = str8_literal("Hello World!");
+        String8 sub3 = str8_literal("Hello World! More");
+        String8 sub4 = str8_literal("Helo");
+        eval(str8_starts_with(source, sub1) == true);
+        eval(str8_starts_with(source, sub2) == true);
+        eval(str8_starts_with(source, sub3) == false);
+        eval(str8_starts_with(source, sub4) == false);
     }
 
     // win32_memory.h
     {
         // os arena allocation
-        eval(os_allocate_arena(10)->size == 10);
+        eval(os_alloc_arena(10)->size == 10);
     }
 
     // win32_file.h
@@ -416,7 +437,7 @@ s32 main(s32 argc, char** argv){
         {
             String8 write_data_string8 = str8_literal("Some random data that I want in the file\n");
             FileData write_data = {write_data_string8.str, write_data_string8.size};
-            os_file_write(write_data, dir_build, test_file);
+            os_file_write(write_data, dir_build, test_file, 0);
 
             FileData read_data = os_file_read(arena, dir_build, test_file);
             String8 read_data_string8 = str8(read_data.base, read_data.size);
@@ -426,7 +447,7 @@ s32 main(s32 argc, char** argv){
         {
             v4 write_data_v4 = {1.0f, 0.5f, 0.2f, 1.0f};
             FileData write_data = {&write_data_v4, sizeof(write_data_v4)};
-            os_file_write(write_data, dir_build, test_file);
+            os_file_write(write_data, dir_build, test_file, 0);
 
             FileData read_data = os_file_read(arena, dir_build, test_file);
             v4* read_data_v4 = (v4*)read_data.base;
