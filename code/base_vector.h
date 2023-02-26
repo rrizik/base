@@ -35,6 +35,21 @@ typedef union RGBA{
 } RGBA;
 
 ///////////////////////////////
+// NOTE: Compound Types Constructors
+///////////////////////////////
+
+static v2 make_v2(f32 x, f32 y){
+    v2 result = {x, y};
+    return(result);
+}
+
+static v2s32 make_v2s32(s32 x, s32 y){
+    v2s32 result = {x, y};
+    return(result);
+}
+
+
+///////////////////////////////
 // NOTE: Compound Types Operators
 ///////////////////////////////
 
@@ -168,7 +183,149 @@ static bool operator!=(const v4& a, const v4& b){
 static bool operator!=(const RGBA& a, const RGBA& b){
     return(!(a == b));
 }
+
 #endif
+
+// UNTESTED All of this stuff is untested
+static v2s32 v2s32_add(v2s32 a, v2s32 b){
+    v2s32 result = {
+        a.x + b.x,
+        a.y + b.y,
+    };
+    return(result);
+}
+
+static v2 v2_add(v2 a, v2 b){
+    v2 result = {
+        a.x + b.x,
+        a.y + b.y,
+    };
+    return(result);
+}
+
+static v3 v3_add(v3 a, v3 b){
+    v3 result = {
+        a.x + b.x,
+        a.y + b.y,
+        a.y + b.y,
+    };
+    return(result);
+}
+
+static v4 v4_add(v4 a, v4 b){
+    v4 result = {
+        a.x + b.x,
+        a.y + b.y,
+        a.z + b.z,
+        a.w + b.w,
+    };
+    return(result);
+}
+
+static v2s32 v2s32_sub(v2s32 a, v2s32 b){
+    v2s32 result = {
+        a.x - b.x,
+        a.y - b.y,
+    };
+    return(result);
+}
+
+static v2 v2_sub(v2 a, v2 b){
+    v2 result = {
+        a.x - b.x,
+        a.y - b.y,
+    };
+    return(result);
+}
+
+static v3 v3_sub(v3 a, v3 b){
+    v3 result = {
+        a.x - b.x,
+        a.y - b.y,
+        a.y - b.y,
+    };
+    return(result);
+}
+
+static v4 v4_sub(v4 a, v4 b){
+    v4 result = {
+        a.x - b.x,
+        a.y - b.y,
+        a.z - b.z,
+        a.w - b.w,
+    };
+    return(result);
+}
+
+static v2s32 v2s32_mul(v2s32 a, s32 b){
+    v2s32 result = {
+        a.x * b,
+        a.y * b,
+    };
+    return(result);
+}
+
+static v2 v2_mul(v2 a, f32 b){
+    v2 result = {
+        a.x * b,
+        a.y * b,
+    };
+    return(result);
+}
+
+static v3 v3_mul(v3 a, f32 b){
+    v3 result = {
+        a.x * b,
+        a.y * b,
+        a.y * b,
+    };
+    return(result);
+}
+
+static v4 v4_mul(v4 a, f32 b){
+    v4 result = {
+        a.x * b,
+        a.y * b,
+        a.z * b,
+        a.w * b,
+    };
+    return(result);
+}
+
+static bool v2s32_cmp(v2s32 a, v2s32 b){
+    bool result = (
+        a.x == b.x &&
+        a.y == b.y
+    );
+    return(result);
+}
+
+static bool v2_cmp(v2 a, v2 b){
+    bool result = (
+        a.x == b.x &&
+        a.y == b.y
+    );
+    return(result);
+}
+
+static bool v3_cmp(v3 a, v3 b){
+    bool result = (
+        a.x == b.x &&
+        a.y == b.y &&
+        a.z == b.z
+    );
+    return(result);
+}
+
+static bool v4_cmp(v4 a, v4 b){
+    bool result = (
+        a.x == b.x &&
+        a.y == b.y &&
+        a.z == b.z &&
+        a.w == b.w
+    );
+    return(result);
+}
 
 ///////////////////////////////
 // NOTE: Vector Math
@@ -221,14 +378,15 @@ magnitude_v2(v2 a){
     return(sqrtf(inner_product_v2(a, a)));
 }
 
-static f32 distance_v2(v2 a, v2 b){
+static f32
+distance_v2(v2 a, v2 b){
     f32 result = magnitude_v2(a - b);
     return(result);
 }
 
 static v2
 normalized_v2(v2 a){
-    v2 result = a * (1.0f / magnitude_v2(a));
+    v2 result = v2_mul(a, (1.0f / magnitude_v2(a)));
     return(result);
 }
 
@@ -250,7 +408,7 @@ static v2
 project_v2(v2 a, v2 b){
     f32 inner =  inner_product_v2(a, b);
     f32 mag_sqrt = magnitude_sqrt_v2(b);
-    v2 result = b * (inner / mag_sqrt);
+    v2 result = v2_mul(b, (inner / mag_sqrt));
     return(result);
 }
 
@@ -353,6 +511,14 @@ static v3
 reflection_v3(v3 a, v3 normal){
     f32 inner = inner_product_v3(a, normal);
     return(a - ((2.0f * inner) * normal));
+}
+
+// UNTSTED
+static void
+swap_v2(v2* a, v2* b){
+    v2 t = *a;
+    *a = *b;
+    *b = t;
 }
 
 #endif

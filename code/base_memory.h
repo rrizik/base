@@ -45,6 +45,7 @@ static Arena* alloc_arena(size_t size){
     return(result);
 }
 
+#define init_arena(a, b, s) arena_init(a, b, s)
 static void arena_init(Arena* arena, void* base, size_t size){
     arena->base = base;
     arena->size = size;

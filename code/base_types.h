@@ -3,6 +3,8 @@
 
 #include <stdbool.h> // NOTE: C header
 
+// TODO IMPORTANT: Change all action_thing to thing_action
+
 
 ///////////////////////////////
 // NOTE: Context
@@ -96,6 +98,24 @@
 #define local static
 
 ///////////////////////////////
+// NOTE: Defer
+///////////////////////////////
+
+template <typename F> struct Defer {
+    Defer(F f) : f(f) {}
+    ~Defer() { f(); }
+    F f;
+};
+
+template <typename F> Defer<F> MakeDefer(F f) {
+    return Defer<F>(f);
+};
+
+#define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
+#define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
+#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){code;})
+
+///////////////////////////////
 // NOTE: Basic Types
 ///////////////////////////////
 
@@ -115,8 +135,7 @@ typedef double f64;
 
 typedef wchar_t wchar;
 
-
-// create your own bool?
+// TODO: create your own bool?
 
 ///////////////////////////////
 // NOTE: Basic Constants

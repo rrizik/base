@@ -13,15 +13,14 @@
 #define MIN(a,b) (((a)<=(b))?(a):(b))
 #define MAX(a,b) (((a)>=(b))?(a):(b))
 #define CLAMP(a,x,b) (((x)<(a))?(a):((x)>(b))?(b):(x))
-#define ABS(x) ((x)<0?-(x):(x))
 #define AlignUpPow2(x,p) (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
 global f32 PI_f32 = 3.14159265359f;
 global f64 PI_f64 = 3.14159265359;
 global f32 RAD_f32 = 0.0174533f;
-//TODO: Add RAD_f32 RAD_f64
-//TODO IMPORTANT: Change all angle stuff to 64 bit
+// TODO: Add RAD_f64
+// TODO IMPORTANT: Include f64 angle stuff
 
 static f32
 deg_to_rad(f32 degree){
@@ -184,13 +183,13 @@ clamp_f32_s32(f32 left, f32 value, f32 right){
 }
 
 static f32
-lerp(f32 a, f32 t, f32 b){
+lerp(f32 a, f32 b, f32 t){
     f32 x = ((a + ((b - a) * t)));
     return(x);
 }
 
 static f32
-unlerp(f32 a, f32 at, f32 b){
+unlerp(f32 a, f32 b, f32 at){
     f32 t = 0.0f;
     if(a != b){
         t = (at - a) / (b - a);
@@ -198,16 +197,16 @@ unlerp(f32 a, f32 at, f32 b){
     return(t);
 }
 
-// UNTESTED: idk what to even test because I dont understand what this is doing
-// NOTE: Sphere linear interpolation
+// UNTESTED:
+// NOTE: Spherical linear interpolation
 static f32
-slerp_rad(f32 a, f32 t, f32 b) {
+slerp_rad(f32 a, f32 b, f32 t) {
     f32 difference = fmodf(b - a, 2 * PI_f32);
     f32 distance = fmodf(2.0f * difference, 2 * PI_f32) - difference;
     return a + distance * t;
 }
 
-// UNTESTED: idk what to even test because I dont understand what this is doing
+// UNTESTED:
 static v2
 slerp_v2(v2 a, f32 t, v2 b) {
     f32 inner = inner_product_v2(a, b);
@@ -217,6 +216,18 @@ slerp_v2(v2 a, f32 t, v2 b) {
     v2 relative_vector = normalized_v2(b - a * inner);
     v2 result = (a * cos_f32(theta)) + (relative_vector * sin_f32(theta));
     return(result);
+}
+
+static f32
+smoothstep(f32 t){
+    f32 value1 = t * t;
+    f32 value2 = 1.0f - (1.0f - t) * (1.0f - t);
+    return(lerp(value1, value2, t));
+}
+
+static f32
+ease_out(f32 t){
+    return(sqrt(1 - pow(t - 1, 4)));
 }
 
 #endif
