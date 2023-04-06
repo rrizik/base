@@ -54,133 +54,148 @@ static v2s32 make_v2s32(s32 x, s32 y){
 ///////////////////////////////
 
 #if STANDARD_CPP
-static v2s32 operator+(const v2s32& a, const v2s32& b){
+static v2s32 operator+(v2s32 a, v2s32 b){
     v2s32 result = {a.x + b.x, a.y + b.y};
     return(result);
 }
 
-static v2 operator+(const v2& a, const v2& b){
+static v2 operator+(v2 a, v2 b){
     v2 result = {a.x + b.x, a.y + b.y};
     return(result);
 }
 
-static v3 operator+(const v3& a, const v3& b){
+static v3 operator+(v3 a, v3 b){
     v3 result = {a.x + b.x, a.y + b.y, a.z + b.z};
     return(result);
 }
 
-static v4 operator+(const v4& a, const v4& b){
+static v4 operator+(v4 a, v4 b){
     v4 result = {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
     return(result);
 }
 
-static RGBA operator+(const RGBA& a, const RGBA& b){
+static RGBA operator+(RGBA a, RGBA b){
     RGBA result = {a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a};
     return(result);
 }
 
-static v2s32 operator-(const v2s32& a, const v2s32& b){
+static v2s32 operator-(v2s32 a){
+    v2s32 result = {-a.x, -a.y};
+    return(result);
+}
+
+static v2s32 operator-(v2s32 a, v2s32 b){
     v2s32 result = {a.x - b.x, a.y - b.y};
     return(result);
 }
 
-static v2 operator-(const v2& a, const v2& b){
+static v2 operator-(v2 a){
+    v2 result = {-a.x, -a.y};
+    return(result);
+}
+
+static v2 operator-(v2 a, v2 b){
     v2 result = {a.x - b.x, a.y - b.y};
     return(result);
 }
 
-static v3 operator-(const v3& a, const v3& b){
+static v3 operator-(v3 a, v3 b){
     v3 result = {a.x - b.x, a.y - b.y, a.z - b.z};
     return(result);
 }
 
-static v4 operator-(const v4& a, const v4& b){
+static v4 operator-(v4 a, v4 b){
     v4 result = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
     return(result);
 }
 
-static RGBA operator-(const RGBA& a, const RGBA& b){
+static RGBA operator-(RGBA a, RGBA b){
     RGBA result = {a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a};
     return(result);
 }
 
-static v2s32 operator*(const v2s32& a, const s32 b){
+static v2s32 operator*(v2s32 a, s32 b){
     v2s32 result = {a.x * b, a.y * b};
     return(result);
 }
 
-static v3 operator*(const v3& b, const f32& a){
+static v3 operator*(v3 b, f32 a){
     v3 result = {b.x * a, b.y * a, b.z * a};
     return(result);
 }
 
-static v4 operator*(const v4& b, const f32& a){
+static v4 operator*(v4 b, f32 a){
     v4 result = {b.x * a, b.y * a, b.z * a, b.w * a};
     return(result);
 }
 
-static v2s32 operator*(const s32& a, const v2s32& b){
+static v2s32 operator*(s32 a, v2s32 b){
     v2s32 result = {b.x * a, b.y * a};
     return(result);
 }
 
-static v2 operator*(const v2& b, const f32& a){
+static v2 operator*(v2 b, f32 a){
     v2 result = {b.x * a, b.y * a};
     return(result);
 }
 
-static v2 operator*(const f32& a, const v2& b){
+static v2 operator*(f32 a, v2 b){
     v2 result = {b.x * a, b.y * a};
     return(result);
 }
 
-static v3 operator*(const f32& a, const v3& b){
+static v3 operator*(f32 a, v3 b){
     v3 result = {b.x * a, b.y * a, b.z * a};
     return(result);
 }
 
-static v4 operator*(const f32& a, const v4& b){
+static v4 operator*(f32 a, v4 b){
     v4 result = {b.x * a, b.y * a, b.z * a, b.w * a};
     return(result);
 }
 
-static bool operator==(const v2s32& a, const v2s32& b){
+static RGBA operator*(f32 a, RGBA b){
+    RGBA result = {b.r * a, b.g * a, b.b * a, b.a * a};
+    return(result);
+}
+
+static bool operator==(v2s32 a, v2s32 b){
     return((a.x == b.x) && (a.y == b.y));
 }
 
-static bool operator==(const v2& a, const v2& b){
+static bool operator==(v2 a, v2 b){
     return((a.x == b.x) && (a.y == b.y));
 }
 
-static bool operator==(const v3& a, const v3& b){
+static bool operator==(v3 a, v3 b){
     return((a.x == b.x) && (a.y == b.y) && (a.z == b.z));
 }
 
-static bool operator==(const v4& a, const v4& b){
+static bool operator==(v4 a, v4 b){
     return((a.x == b.x) && (a.y == b.y && (a.z == b.z) && (a.w == b.w)));
 }
 
-static bool operator==(const RGBA& a, const RGBA& b){
+static bool operator==(RGBA a, RGBA b){
     return((a.r == b.r) && (a.g == b.g && (a.b == b.b) && (a.a == b.a)));
 }
 
-static bool operator!=(const v2s32& a, const v2s32& b){
+static bool operator!=(v2s32 a, v2s32 b){
     return(!(a == b));
 }
 
-static bool operator!=(const v2& a, const v2& b){
+static bool operator!=(v2 a, v2 b){
     return(!(a == b));
 }
 
-static bool operator!=(const v3& a, const v3& b){
+static bool operator!=(v3 a, v3 b){
     return(!(a == b));
 }
 
-static bool operator!=(const v4& a, const v4& b){
+static bool operator!=(v4 a, v4 b){
     return(!(a == b));
 }
 
-static bool operator!=(const RGBA& a, const RGBA& b){
+static bool operator!=(RGBA a, RGBA b){
     return(!(a == b));
 }
 
@@ -348,6 +363,7 @@ round_v2_v2s32(v2 value){
     return(result);
 }
 
+#define dot_v2(a, b) inner_product_v2(a, b)
 static f32
 inner_product_v2(v2 a, v2 b){
     return((a.x * b.x) + (a.y * b.y));
@@ -412,6 +428,14 @@ project_v2(v2 a, v2 b){
     return(result);
 }
 
+// UNTESTED
+#define perp(a) perpendicular(a)
+static v2
+perpendicular(v2 a){
+    v2 result = {-a.y, a.x};
+    return(result);
+}
+
 static v2
 perpendicular_v2(v2 a, v2 b){
     v2 result = a - project_v2(a, b);
@@ -426,6 +450,7 @@ reflection_v2(v2 a, v2 normal){
 }
 
 // Vector3
+#define dot_v3(a, b) inner_product_v3(a, b)
 static f32
 inner_product_v3(v3 a, v3 b){
     return((a.x * b.x) + (a.y * b.y) + (a.z * b.z));

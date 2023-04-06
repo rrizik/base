@@ -25,7 +25,7 @@ static bool os_virtual_free(void* base){
     return(result);
 }
 
-static Arena* os_alloc_arena(size_t size){
+static Arena* os_make_arena(size_t size){
     void* memory = os_virtual_alloc((size + sizeof(Arena)));
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);

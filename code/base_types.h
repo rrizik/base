@@ -30,7 +30,7 @@
 # define COMPILER_CL 1
 #endif
 
-// Archatecture
+// Architecture
 #if defined(_M_AMD64) || defined(__amd64__)
 # define ARCH_AMD64 1
 #elif defined(_M_I86) || defined(__i386)
@@ -51,6 +51,7 @@
 // NOTE: Helper Macros
 ///////////////////////////////
 
+// lots of yuck with assert
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
 # define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
@@ -67,6 +68,9 @@
 # define assert(cond)
 # define assert_hr(cond)
 #endif
+
+#define invalid_code_path assert(!(bool)"invalid_code_path")
+#define invalid_default_case default: {invalid_code_path;} break
 
 #define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
 #define ArrayLength(x) ArrayCount(x)
@@ -101,6 +105,7 @@
 // NOTE: Defer
 ///////////////////////////////
 
+#if STANDARD_CPP
 template <typename F> struct Defer {
     Defer(F f) : f(f) {}
     ~Defer() { f(); }
@@ -114,6 +119,7 @@ template <typename F> Defer<F> MakeDefer(F f) {
 #define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
 #define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
 #define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){code;})
+#endif
 
 ///////////////////////////////
 // NOTE: Basic Types

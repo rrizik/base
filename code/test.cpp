@@ -244,7 +244,8 @@ s32 main(s32 argc, char** argv){
 
         // lerp stuff
         eval(lerp(0.0f, 0.5f, 1.0f) == 0.5f);
-        eval(unlerp(0.0f, 0.5f, 1.0f) == 0.5f);
+        eval(lerp(0.0f, 0.2f, 10.0f) == 2.0f);
+        eval(unlerp(0.0f, 1.0f, 0.2f) == 0.2f);
 
         // NOTE: I think I know what this is now.
         // TODO: I use this, but dont understand it.
@@ -257,7 +258,7 @@ s32 main(s32 argc, char** argv){
         typedef struct Test{ s32 a; s32 b; f32 d; } Test; // size 12
 
         // arena allocation
-        eval(alloc_arena(10)->size == 10);
+        eval(make_arena(10)->size == 10);
 
         // arena init
         void* base = malloc(MB(1));
@@ -284,7 +285,7 @@ s32 main(s32 argc, char** argv){
 
         // pop_array
         {
-            Arena* arena = os_alloc_arena(100);
+            Arena* arena = os_make_arena(100);
             push_array(arena, u32, 20);
             pop_array(arena, u32, 10);
             eval(arena->used == 40);
@@ -327,7 +328,7 @@ s32 main(s32 argc, char** argv){
         typedef struct Data{ u32 id; } Data;
 
         // default node creation
-        Arena* arena = alloc_arena(MB(1));
+        Arena* arena = make_arena(MB(1));
         Node* sentinel = push_node(arena);
         eval(sentinel->next == sentinel);
         eval(sentinel->prev == sentinel);
@@ -420,7 +421,7 @@ s32 main(s32 argc, char** argv){
     // win32_memory.h
     {
         // os arena allocation
-        eval(os_alloc_arena(10)->size == 10);
+        eval(os_make_arena(10)->size == 10);
     }
 
     // win32_file.h

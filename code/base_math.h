@@ -4,6 +4,7 @@
 #include <math.h>
 #include "base_types.h"
 #include "base_vector.h"
+// UNTESTED: re test all the rounding/trunct/floor/ceil
 
 ///////////////////////////////
 // NOTE: Math Functions
@@ -114,20 +115,20 @@ round_f64(f64 value){
 
 static s32
 round_f32_s32(f32 value){
-    s32 result = (s32)(value + 0.5f);
+    s32 result = (s32)roundf(value);
     return(result);
 }
 
 static s64
 round_f64_s64(f64 value){
-    s64 result = (s64)(value + 0.5);
+    s64 result = (s64)roundl(value);
     return(result);
 }
 
 // TODO: Does this even make sense?
 static u32
 round_f32_u32(f32 value){
-    u32 result = (u32)(value + 0.5f);
+    u32 result = (u32)roundf(value);
     return(result);
 }
 
@@ -171,7 +172,7 @@ static f32
 clamp_f32(f32 left, f32 value, f32 right){
     if(value < left) { value = left; }
     if(value > right) { value = right; }
-    return((s32)value);
+    return(value);
 }
 
 // UNTESTED:
@@ -179,13 +180,25 @@ static s32
 clamp_f32_s32(f32 left, f32 value, f32 right){
     if(value < left) { value = left; }
     if(value > right) { value = right; }
-    return(value);
+    return((s32)value);
 }
 
 static f32
 lerp(f32 a, f32 b, f32 t){
-    f32 x = ((a + ((b - a) * t)));
-    return(x);
+    f32 result = ((1.0f - t) * a) + (t * b);
+    return(result);
+}
+
+static v4
+lerp(v4 a, v4 b, f32 t){
+    v4 result = ((1.0f - t) * a) + (t * b);
+    return(result);
+}
+
+static RGBA
+lerp(RGBA a, RGBA b, f32 t){
+    RGBA result = ((1.0f - t) * a) + (t * b);
+    return(result);
 }
 
 static f32
@@ -227,7 +240,7 @@ smoothstep(f32 t){
 
 static f32
 ease_out(f32 t){
-    return(sqrt(1 - pow(t - 1, 4)));
+    return(sqrtf(1 - powf(t - 1, 4)));
 }
 
 #endif

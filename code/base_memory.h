@@ -35,8 +35,8 @@ typedef struct Arena{
     size_t used;
 } Arena;
 
-// CONSIDER: not sure if I need this, if I have os_alloc_arena()
-static Arena* alloc_arena(size_t size){
+// CONSIDER: not sure if I need this, if I have os_make_arena()
+static Arena* make_arena(size_t size){
     void* memory = calloc((size + sizeof(Arena)), 1); // 0 initialized
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
@@ -111,7 +111,7 @@ begin_scratch(u32 index){
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = alloc_arena(DEFAULT_RESERVE_SIZE);
+            Arena* arena = make_arena(DEFAULT_RESERVE_SIZE);
             *scratch_slot = arena;
         }
     }
@@ -128,7 +128,7 @@ _begin_scratch(Arena **conflict_array, u32 count){
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = alloc_arena(DEFAULT_RESERVE_SIZE);
+            Arena* arena = make_arena(DEFAULT_RESERVE_SIZE);
             *scratch_slot = arena;
         }
     }

@@ -262,7 +262,7 @@ cofactor(f32* result, f32* minor, u32 rows, u32 cols) {
         for(u32 j=0; j<cols; ++j){
             u32 t = cols * j + i;
             u32 s = cols * j + i;
-            f32 sign = powf(-1.0f, i + j);
+            f32 sign = powf(-1.0f, (f32)i + (f32)j);
             result[t] = minor[s] * sign;
         }
     }

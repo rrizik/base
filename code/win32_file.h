@@ -26,7 +26,7 @@ static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
     fgets((char*)str, KB(1), stdin);
-    u64 length = str_length((char*)str);
+    u32 length = str_length((char*)str);
     pop_array(arena, u8, (KB(1)-length-1));
     String8 result = str8(str, length);
 
@@ -42,11 +42,11 @@ read_stdin(Arena* arena){
 // TODO: need none OS dependant version of this in string file
 static String16
 os_utf8_utf16(Arena* arena, String8 utf8_string){
-    u32 utf16_size = MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, utf8_string.size, 0, 0);
+    u32 utf16_size = (u32)MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, (s32)utf8_string.size, 0, 0);
     u16* str = (u16*)push_array(arena, u16, utf16_size + 1);
     String16 result = {str, utf16_size};
 
-    u32 size = MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, utf8_string.size, (wchar*)result.str, result.size);
+    s32 size = MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, (s32)utf8_string.size, (wchar*)result.str, (s32)result.size);
 
     u16* null_char = result.str + result.size;
     *null_char = 0;
@@ -59,11 +59,11 @@ os_utf8_utf16(Arena* arena, String8 utf8_string){
 // TODO: need none OS dependant version of this in string file
 static String8
 os_utf16_utf8(Arena* arena, String16 utf16_string){
-    u32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, 0, 0, 0, 0);
-    u8* utf8_str = (u8*)push_array(arena, u8, utf8_size + 1);
-    String8 result = {utf8_str, utf8_size};
+    s32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, (s32)utf16_string.size, 0, 0, 0, 0);
+    u8* utf8_str = (u8*)push_array(arena, u8, (u32)(utf8_size + 1));
+    String8 result = {utf8_str, (u64)utf8_size};
 
-    u32 size = WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, utf16_string.size, (char*)result.str, result.size, 0, 0);
+    s32 size = WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, (s32)utf16_string.size, (char*)result.str, (s32)result.size, 0, 0);
 
     u8* null_char = result.str + result.size;
     *null_char = 0;
@@ -80,7 +80,9 @@ os_get_cwd(Arena* arena){
     length = GetCurrentDirectoryW(length, buffer);
     String16 utf16_string = {(u16*)buffer, length};
 
-    String8 result = os_utf16_utf8(arena, utf16_string);
+    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
+    String8 slash = str8_literal("\\");
+    String8 result = str8_concatenate(arena, utf8_string, slash);
     end_scratch(scratch);
     return(result);
 }
@@ -103,22 +105,26 @@ typedef struct FileData{
 // TODO: Better error handling on failures? Maybe include a DWORD error in FileData, maybe pass in FileData and only return DWORD, maybe think about overall better logging? assert? idk have to ask
 static FileData
 os_file_read(Arena* arena, String8 dir, String8 file_name){
-    FileData result = ZERO_INIT;
+    FileData result = {0};
+
     ScratchArena scratch = begin_scratch(0);
     String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
+    u32 err = 0;
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
-        DWORD err = GetLastError();
-        print("os_file_read: failed to create file handle - error: %d\n", err);
+        err = GetLastError();
+        print("os_file_read: failed to create file handle - error code: %d\n", err);
         return(result);
     }
+    defer(CloseHandle(file_handle));
+    end_scratch(scratch);
 
     LARGE_INTEGER LARGE_file_size;
     if(!GetFileSizeEx(file_handle, &LARGE_file_size)){
-        print("os_file_read: failed to get file size\n");
-        CloseHandle(file_handle);
+        err = GetLastError();
+        print("os_file_read: failed to get file size - error code; %d\n", err);
         return(result);
     }
 
@@ -126,20 +132,18 @@ os_file_read(Arena* arena, String8 dir, String8 file_name){
     result.base = push_array(arena, u8, file_size);
     DWORD bytes_read;
     if(!ReadFile(file_handle, result.base, file_size, &bytes_read, 0)){
-        print("os_file_read: failed to read file\n");
-        CloseHandle(file_handle);
+        err = GetLastError();
+        print("os_file_read: failed to read file - error code: %d\n", err);
         return(result);
     }
 
     if(bytes_read != file_size){
-        print("os_file_read: bytes_read != file_size\n");
-        CloseHandle(file_handle);
+        err = GetLastError();
+        print("os_file_read: bytes_read != file_size - error code: %b\n", err);
         return(result);
     }
 
     result.size = file_size;
-    CloseHandle(file_handle);
-    end_scratch(scratch);
     return(result);
 }
 
@@ -162,7 +166,7 @@ os_file_write(FileData data, String8 dir, String8 file_name, u64 offset){
         .Offset = (DWORD)(offset & 0x00000000FFFFFFFF),
         .OffsetHigh = (DWORD)(offset >> 32)
     };
-    if(!WriteFile(file_handle, data.base, data.size, &bytes_written, &overlapped)){
+    if(!WriteFile(file_handle, data.base, (DWORD)data.size, &bytes_written, &overlapped)){
         DWORD err = GetLastError();
         print("os_file_write: failed to write data to file\n");
         CloseHandle(file_handle);
