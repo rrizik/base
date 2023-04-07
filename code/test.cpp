@@ -9,24 +9,24 @@ Arena* fail_arena = {};
 static void
 push_message(s32 line, const char* message, u32 size){
     s32 line_length = snprintf(0, 0, "%d", line); // get string length of line
-    u8* message_string = (u8*)push_array(fail_arena, u8, size + line_length + 6);
+    u8* message_string = (u8*)push_array(fail_arena, u8, size + (u32)line_length + 6);
 
     *message_string++ = ' ';
     *message_string++ = ' ';
-    snprintf((char*)message_string, line_length + 1, "%d", line); // write line string to message_string
+    snprintf((char*)message_string, (u32)line_length + 1, "%d", line); // write line string to message_string
     message_string += line_length; // incrememnt by length of line string
     *message_string++ = ' ';
     *message_string++ = '-';
     *message_string++ = ' ';
     for(s32 i = 0; i < size; ++i){
-        *message_string++ = *message++;
+        *message_string++ = (u8)*message++;
     }
     *message_string++ = '\n';
 }
 
 
 u32 fail_count = 0;
-static void check(bool cond, s32 line, const char* msg, size_t size){
+static void check(bool cond, s32 line, const char* msg, u32 size){
     if(!(cond)){
         fail_count++;
         push_message(line, msg, size);
@@ -165,8 +165,8 @@ s32 main(s32 argc, char** argv){
         eval(angle_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == PI_f32/2);
         eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, 1.0f}) == (PI_f32)/4);
         eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, -1.0f}) == (PI_f32)/4);
-        eval(project_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.707, 0.0f}));
-        eval(perpendicular_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.0, 0.707}));
+        eval(project_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.707f, 0.0f}));
+        eval(perpendicular_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.0f, 0.707f}));
         eval(reflection_v2((v2){-1.0f, -1.0f}, (v2){1.0f, 0.0f}) == ((v2){1.0, -1.0}));
         eval(reflection_v2((v2){0.0f, 1.0f}, (v2){1.0f, 0.0f}) == ((v2){0.0, 1.0})); // QUESTION: but why
         eval(reflection_v2((v2){1.0f, 0.0f}, (v2){1.0f, 0.0f}) == ((v2){-1.0, 0.0}));
@@ -191,7 +191,7 @@ s32 main(s32 argc, char** argv){
         eval(angle_v3((v3){1.0f, 1.0f, 0.0f}, (v3){1.0f, 1.0f, 1.0f}) == 0.615479767f);
         eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, -1.0f, 1.0f}) == 0.955316603f);
         eval(project_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.0f, 0.0f}) == ((v3){0.707f, 0.0f, 0.0f}));
-        eval(perpendicular_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.5f, 0.0f}) == ((v3){0.0f, 0.0f, 0.707}));
+        eval(perpendicular_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.5f, 0.0f}) == ((v3){0.0f, 0.0f, 0.707f}));
         eval(reflection_v3((v3){-1.0f, -1.0f, 0.0f}, (v3){1.0f, 0.0f}) == ((v3){1.0f, -1.0f, 0.0f}));
         eval(reflection_v3((v3){0.0f, 1.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){0.0f, 1.0f, 0.0f})); // QUESTION: but why
         eval(reflection_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){-1.0f, 0.0f, 0.0f}));

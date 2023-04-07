@@ -27,7 +27,7 @@ typedef struct String32{
 
 #define str8(str, size) str8_((u8*)str, size)
 #define str8_literal(str) str8_((u8*)str, (sizeof(str) - 1))
-static String8 str8_(u8* str, u32 size){
+static String8 str8_(u8* str, u64 size){
     String8 result = {str, size};
     return(result);
 }
@@ -48,7 +48,7 @@ static String8 str8_cstring(u8* cstr){
 }
 
 #define str16(str, size) str16_((u16*)str, size)
-static String16 str16_(u16* str, u32 size){
+static String16 str16_(u16* str, u64 size){
     String16 result = {str, size};
     return(result);
 }
