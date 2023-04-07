@@ -1,9 +1,9 @@
 #include "base_inc.h"
 #include "win32_base_inc.h"
 
-bool PRINT_ALL = 0;
+static bool PRINT_ALL = 0;
 
-Arena* fail_arena = {};
+static Arena* fail_arena = {};
 
 // maybe push String8 instead, not sure
 static void
@@ -18,14 +18,14 @@ push_message(s32 line, const char* message, u32 size){
     *message_string++ = ' ';
     *message_string++ = '-';
     *message_string++ = ' ';
-    for(s32 i = 0; i < size; ++i){
+    for(u32 i = 0; i < size; ++i){
         *message_string++ = (u8)*message++;
     }
     *message_string++ = '\n';
 }
 
 
-u32 fail_count = 0;
+static u32 fail_count = 0;
 static void check(bool cond, s32 line, const char* msg, u32 size){
     if(!(cond)){
         fail_count++;
@@ -213,7 +213,7 @@ s32 main(s32 argc, char** argv){
 
         eval(round_f64_s64(sin_f64((PI_f64/2))) == 1);
         eval(round_f64_s64(cos_f64((PI_f64*2))) == 1);
-        eval(round_f64_s64(tan_f64(PI_f32)) == 0);
+        eval(round_f64_s64(tan_f64(PI_f64)) == 0);
         eval(atan_f64(0, 0) == 0); // not sure if this is a good test
 
         eval(rad_to_dir(0) == ((v2){1, 0}));
