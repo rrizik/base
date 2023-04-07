@@ -115,10 +115,10 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
     u8* str = (u8*)push_array(arena, u8, (left.size + right.size));
     String8 result = {str, (left.size + right.size)};
 
-    for(s32 i = 0; i < left.size; ++i){
+    for(u32 i = 0; i < left.size; ++i){
         *str++ = *left.str++;
     }
-    for(s32 i = 0; i < right.size; ++i){
+    for(u32 i = 0; i < right.size; ++i){
         *str++ = *right.str++;
     }
 

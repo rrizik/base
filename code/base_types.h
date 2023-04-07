@@ -106,6 +106,8 @@
 ///////////////////////////////
 
 #if STANDARD_CPP
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-copy-dtor"
 template <typename F> struct Defer {
     Defer(F f) : f(f) {}
     ~Defer() { f(); }
@@ -114,11 +116,12 @@ template <typename F> struct Defer {
 
 template <typename F> Defer<F> MakeDefer(F f) {
     return Defer<F>(f);
-};
+}
 
 #define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
 #define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
 #define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){code;})
+#pragma clang diagnostic pop
 #endif
 
 ///////////////////////////////

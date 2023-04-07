@@ -45,9 +45,9 @@ static f32 cos_f32(f32 theta){
     return(result);
 }
 static f32 tan_f32(f32 theta){
-    f32 result = tanf(theta);
-    f32 r = sin_f32(theta)/cos_f32(theta);
-    f32 rr = rad_to_deg(r);
+    //f32 result = tanf(theta);
+    //f32 r = sin_f32(theta)/cos_f32(theta);
+    //f32 rr = rad_to_deg(r);
     return(sin_f32(theta)/cos_f32(theta));
 }
 static f32 cot_f32(f32 theta){ return(cos_f32(theta)/sin_f32(theta)); }
@@ -65,7 +65,7 @@ static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
 
 static v2
 rad_to_dir(f32 rad){
-    return((v2){cos_f32(rad), sin_f32(rad)});
+    return(make_v2(cos_f32(rad), sin_f32(rad)));
 }
 
 static f32

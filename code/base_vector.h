@@ -39,12 +39,22 @@ typedef union RGBA{
 ///////////////////////////////
 
 static v2 make_v2(f32 x, f32 y){
-    v2 result = {x, y};
+    v2 result = {{x, y}};
     return(result);
 }
 
 static v2s32 make_v2s32(s32 x, s32 y){
     v2s32 result = {x, y};
+    return(result);
+}
+
+static v3 make_v3(f32 x, f32 y, f32 z){
+    v3 result = {{x, y, z}};
+    return(result);
+}
+
+static v4 make_v4(f32 x, f32 y, f32 z, f32 w){
+    v4 result = {{x, y, z, w}};
     return(result);
 }
 

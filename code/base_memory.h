@@ -16,7 +16,7 @@ mem_set(void *base, int source, size_t size) {
 
 // UNTESTED:
 static void*
-mem_copy(void *base_to, void const *base_from, size_t size) {
+mem_copy(void *base_to, void *base_from, size_t size) {
     unsigned char *base_to_ref = (unsigned char *)base_to;
     unsigned char *base_from_ref = (unsigned char *)base_from;
     while(size--) *base_to_ref++ = *base_from_ref++;
@@ -96,7 +96,7 @@ typedef struct ScratchArena{
 
 #define DEFAULT_RESERVE_SIZE GB(1)
 #define SCRATCH_POOL_COUNT 3
-__thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
+global __thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 
 static ScratchArena get_scratch(Arena* arena){
     ScratchArena result;

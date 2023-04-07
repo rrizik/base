@@ -2,7 +2,7 @@
 #define WIN32_FILE_H
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 #include "base_types.h"
 #include "base_memory.h"
 #include "base_string.h"

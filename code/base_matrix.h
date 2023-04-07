@@ -1,6 +1,8 @@
 #ifndef BASE_MATRIX_H
 #define BASE_MATRIX_H
 
+#include "base_vector.h"
+
 ///////////////////////////////
 // NOTE: Matrix Types
 ///////////////////////////////
@@ -573,9 +575,9 @@ multiply_m4_v(v3 v, m4 m){
 static v3
 multiply_m3_v(v3 v, m3 m){
     v3 result = ZERO_INIT;
-    result.x = inner_product_v3(v, (v3){m._11, m._21, m._31});
-    result.y = inner_product_v3(v, (v3){m._12, m._22, m._32});
-    result.z = inner_product_v3(v, (v3){m._13, m._23, m._33});
+    result.x = inner_product_v3(v, make_v3(m._11, m._21, m._31));
+    result.y = inner_product_v3(v, make_v3(m._12, m._22, m._32));
+    result.z = inner_product_v3(v, make_v3(m._13, m._23, m._33));
     return(result);
 }
 
