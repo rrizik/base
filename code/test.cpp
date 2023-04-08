@@ -58,9 +58,9 @@ s32 main(s32 argc, char** argv){
 
     // base_types.h
     {
-        //ArrayCount
+        //array_count
         s32 array[10];
-        eval(ArrayCount(array) == 10);
+        eval(array_count(array) == 10);
 
         // MIN - do I need to test every type?
         eval(MIN(1, 2) == 1);

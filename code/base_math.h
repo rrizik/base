@@ -35,16 +35,31 @@ rad_to_deg(f32 rad){
     return(result);
 }
 
-static f32 sqrt_f32(f32 x){ return(sqrtf(x)); }
-static f32 sin_f32(f32 theta){
+static f32
+square_f32(f32 value){
+    f32 result = value * value;
+    return(result);
+}
+
+static f32
+sqrt_f32(f32 x){
+    return(sqrtf(x));
+}
+
+static f32
+sin_f32(f32 theta){
     f32 result = sinf(theta);
     return(result);
 }
-static f32 cos_f32(f32 theta){
+
+static f32
+cos_f32(f32 theta){
     f32 result = cosf(theta);
     return(result);
 }
-static f32 tan_f32(f32 theta){
+
+static f32
+tan_f32(f32 theta){
     //f32 result = tanf(theta);
     //f32 r = sin_f32(theta)/cos_f32(theta);
     //f32 rr = rad_to_deg(r);

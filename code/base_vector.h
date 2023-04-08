@@ -31,6 +31,9 @@ typedef union v2s32{
 //UNTESTED:
 typedef union RGBA{
     struct{ f32 r; f32 g; f32 b; f32 a; };
+    union{
+        v3 rgb;
+    };
     f32 e[4];
 } RGBA;
 
@@ -131,6 +134,11 @@ static v2s32 operator*(v2s32 a, s32 b){
 
 static v3 operator*(v3 b, f32 a){
     v3 result = {b.x * a, b.y * a, b.z * a};
+    return(result);
+}
+
+static v3 operator*=(v3 &result, f32 a){
+    result = {result.x * a, result.y * a, result.z * a};
     return(result);
 }
 

@@ -26,8 +26,6 @@
 # define OS_MAC 1
 #elif defined(__gnu_linux__)
 # define OS_LINUX 1
-#elif defined(_MSC_VER)
-# define COMPILER_CL 1
 #endif
 
 // Architecture
@@ -51,20 +49,11 @@
 // NOTE: Helper Macros
 ///////////////////////////////
 
-// lots of yuck with assert
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
-# define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define ASSERT_HR(hr) ASSERT(SUCCEEDED(hr))
-# define Assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define AssertHr(hr) Assert(SUCCEEDED(hr))
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
 # define assert_hr(hr) assert(SUCCEEDED(hr))
 #else
-# define ASSERT(cond)
-# define ASSERT_HR(cond)
-# define Assert(cond)
-# define AssertHr(cond)
 # define assert(cond)
 # define assert_hr(cond)
 #endif
@@ -72,10 +61,7 @@
 #define invalid_code_path assert(!(bool)"invalid_code_path")
 #define invalid_default_case default: {invalid_code_path;} break
 
-#define ArrayCount(x) (sizeof(x)/sizeof(*(x)))
-#define ArrayLength(x) ArrayCount(x)
 #define array_count(x) (sizeof(x)/sizeof(*(x)))
-#define array_length(x) ArrayCount(x)
 
 #if STANDARD_CPP
     #define ZERO_INIT {}
