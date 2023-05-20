@@ -238,9 +238,14 @@ s32 main(s32 argc, char** argv){
         eval(floor_f32_s32(1.110293f) == 1);
         eval(ceil_f32(1.910293f) == 2.0f);
         eval(ceil_f32_s32(1.110293f) == 1);
-        eval(clamp_f32(1.0f, 3.0f, 2.0f) == 2.0f);
-        eval(clamp_f32(1.0f, 0.5f, 2.0f) == 1.0f);
-        eval(clamp_f32(1.0f, 2.0f, 3.0f) == 2.0f);
+        f32 value = 2.0f;
+        clamp_f32(1.0f, 3.0f, &value);
+        eval(value == 2.0f);
+        clamp_f32(1.0f, 0.5f, &value);
+        eval(value == 1.0f);
+        value = 3.0f;
+        clamp_f32(1.0f, 2.0f, &value);
+        eval(value == 2.0f);
 
         // lerp stuff
         eval(lerp(0.0f, 0.5f, 1.0f) == 0.5f);
@@ -325,21 +330,19 @@ s32 main(s32 argc, char** argv){
 
     // base_linkedlist.h
     {
-        typedef struct Data{ u32 id; } Data;
-
         // default node creation
         Arena* arena = make_arena(MB(1));
-        Node* sentinel = push_node(arena);
+        String8Node* sentinel = push_str8_node(arena);
         eval(sentinel->next == sentinel);
         eval(sentinel->prev == sentinel);
 
-        Node* n0 = push_node(arena);
-        Node* n1 = push_node(arena);
-        Node* n2 = push_node(arena);
+        String8Node* n0 = push_str8_node(arena);
+        String8Node* n1 = push_str8_node(arena);
+        String8Node* n2 = push_str8_node(arena);
 
-        n0->data = (Data*)push_struct(arena, Data);
-        n1->data = (Data*)push_struct(arena, Data);
-        n2->data = (Data*)push_struct(arena, Data);
+        n0->str = str8_literal("one");
+        n1->str = str8_literal("two");
+        n2->str = str8_literal("three");
 
         dll_push_front(sentinel, n0);
         dll_push_back(sentinel, n1);
@@ -355,7 +358,7 @@ s32 main(s32 argc, char** argv){
         eval(sentinel->next == n1);
         dll_pop_back(sentinel);
         eval(sentinel->prev == n1);
-        dll_remove(sentinel, n1);
+        dll_remove(n1);
         eval(sentinel->next == sentinel);
         eval(sentinel->prev == sentinel);
 
@@ -363,7 +366,7 @@ s32 main(s32 argc, char** argv){
         dll_push_front(sentinel, n0);
         dll_push_back(sentinel, n1);
         dll_push_back(sentinel, n2);
-        reset_sentinel(sentinel);
+        dll_clear(sentinel);
         eval(sentinel->next == sentinel);
         eval(sentinel->prev == sentinel);
     }
@@ -416,6 +419,48 @@ s32 main(s32 argc, char** argv){
         eval(str8_starts_with(source, sub2) == true);
         eval(str8_starts_with(source, sub3) == false);
         eval(str8_starts_with(source, sub4) == false);
+
+
+        // str8_join
+        {
+            scratch = begin_scratch(0);
+            String8Node* sentinel = push_str8_node(scratch.arena);
+            String8Node* node;
+
+            String8 one =   str8_literal("one");
+            str8_list_push_back(scratch.arena, sentinel, one);
+            String8 two =   str8_literal("two");
+            str8_list_push_back(scratch.arena, sentinel, two);
+            String8 three = str8_literal("three");
+            str8_list_push_back(scratch.arena, sentinel, three);
+            String8 four =  str8_literal("four");
+            str8_list_push_back(scratch.arena, sentinel, four);
+            String8 five =  str8_literal("five");
+            str8_list_push_back(scratch.arena, sentinel, five);
+
+            String8Join join_options = {
+                str8_literal("1"),
+                str8_literal("\\"),
+                str8_literal("8"),
+            };
+            String8 result = str8_join(scratch.arena, sentinel, join_options);
+            eval(str8_cmp(result, str8_literal("1one\\two\\three\\four\\five8")) == true);
+            end_scratch(scratch);
+        }
+
+        //str8_split
+        {
+            ScratchArena scratch = begin_scratch(0);
+            String8 string = str8_literal("1one\\two\\three\\four\\five8");
+            String8Node result = str8_split(scratch.arena, string, '\\');
+            eval(str8_cmp(result.next->str, str8_literal("1one")));
+            eval(str8_cmp(result.next->next->str, str8_literal("two")));
+            eval(str8_cmp(result.next->next->next->str, str8_literal("three")));
+            eval(str8_cmp(result.next->next->next->next->str, str8_literal("four")));
+            eval(str8_cmp(result.next->next->next->next->next->str, str8_literal("five8")));
+            end_scratch(scratch);
+        }
+
     }
 
     // win32_memory.h
@@ -449,29 +494,48 @@ s32 main(s32 argc, char** argv){
         String8 dir_build = str8_concatenate(arena, cwd, str8_literal("\\build\\"));
         String8 test_file = str8_literal("test_file.bin");
         {
+            eval(os_file_exists(dir_build, test_file) == false);
+            eval(os_file_create(dir_build, test_file, 0) == true);
+            eval(os_file_exists(dir_build, test_file) == true);
+            eval(os_file_create(dir_build, test_file, 0) == false);
+            eval(os_file_create(dir_build, test_file, 1) == true);
+            eval(os_file_delete(dir_build, test_file) == true);
+        }
+        {
             String8 write_data_string8 = str8_literal("Some random data that I want in the file\n");
             FileData write_data = {write_data_string8.str, write_data_string8.size};
+            os_file_create(dir_build, test_file, 0);
             os_file_write(write_data, dir_build, test_file, 0);
 
-            FileData read_data = os_file_read(arena, dir_build, test_file);
+            FileData read_data;
+            os_file_read(&read_data, arena, dir_build, test_file);
             String8 read_data_string8 = str8(read_data.base, read_data.size);
             eval(read_data_string8 == write_data_string8);
+            os_file_delete(dir_build, test_file);
         }
 
         {
             v4 write_data_v4 = {1.0f, 0.5f, 0.2f, 1.0f};
             FileData write_data = {&write_data_v4, sizeof(write_data_v4)};
+            os_file_create(dir_build, test_file, 0);
             os_file_write(write_data, dir_build, test_file, 0);
 
-            FileData read_data = os_file_read(arena, dir_build, test_file);
+            FileData read_data;
+            os_file_read(&read_data, arena, dir_build, test_file);
             v4* read_data_v4 = (v4*)read_data.base;
             eval(write_data_v4 == *read_data_v4);
+            os_file_delete(dir_build, test_file);
         }
 
         // file_move + file_delete
-        String8 new_test_file = str8_literal("new_test_file.bin");
-        eval(os_file_move(dir_build, test_file, dir_build, new_test_file) == true);
-        eval(os_file_delete(dir_build, new_test_file) == true);
+        {
+            String8 new_test_file = str8_literal("new_test_file.bin");
+            eval(os_file_exists(dir_build, test_file) == false);
+            eval(os_file_create(dir_build, test_file, 0) == true);
+            eval(os_file_exists(dir_build, test_file) == true);
+            eval(os_file_move(dir_build, test_file, dir_build, new_test_file) == true);
+            eval(os_file_delete(dir_build, new_test_file) == true);
+        }
 
         // dir_create + dir_delete
         String8 new_dir = str8_literal("\\new_dir");

@@ -6,22 +6,24 @@
 #include "base_math.h"
 
 // UNTESTED:
+#define memory_set(base, src, size) mem_copy(base, src, size)
 static void*
-mem_set(void *base, int source, size_t size) {
+mem_set(void *base, int src, size_t size) {
     u8* base_ref = (u8*)base;
-    while(size--) *base_ref++ = (u8)source;
+    while(size--) *base_ref++ = (u8)src;
 
     return(base);
 }
 
 // UNTESTED:
+#define memory_copy(dst, src, size) mem_copy(dst, src, size)
 static void*
-mem_copy(void *base_to, void *base_from, size_t size) {
-    unsigned char *base_to_ref = (unsigned char *)base_to;
-    unsigned char *base_from_ref = (unsigned char *)base_from;
-    while(size--) *base_to_ref++ = *base_from_ref++;
+mem_copy(void *dst, void *src, size_t size) {
+    unsigned char *base_dst_ref = (unsigned char *)dst;
+    unsigned char *base_src_ref = (unsigned char *)src;
+    while(size--) *base_dst_ref++ = *base_src_ref++;
 
-    return(base_to);
+    return(dst);
 }
 
 ///////////////////////////////

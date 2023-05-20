@@ -183,19 +183,17 @@ ceil_f32_s32(f32 value){
     return(result);
 }
 
-static f32
-clamp_f32(f32 left, f32 value, f32 right){
-    if(value < left) { value = left; }
-    if(value > right) { value = right; }
-    return(value);
+static void
+clamp_f32(f32 left, f32 right, f32* value){
+    if(*value < left) { *value = left; }
+    if(*value > right) { *value = right; }
 }
 
 // UNTESTED:
-static s32
-clamp_f32_s32(f32 left, f32 value, f32 right){
-    if(value < left) { value = left; }
-    if(value > right) { value = right; }
-    return((s32)value);
+static void
+clamp_f32_s32(f32 left, f32 right, f32* value){
+    if(*value < left) { *value = left; }
+    if(*value > right) { *value = right; }
 }
 
 static f32
@@ -238,7 +236,7 @@ slerp_rad(f32 a, f32 b, f32 t) {
 static v2
 slerp_v2(v2 a, f32 t, v2 b) {
     f32 inner = inner_product_v2(a, b);
-    inner = clamp_f32(-1.0, inner, 1.0);
+    clamp_f32(-1.0, 1.0, &inner);
 
     f32 theta = acosf(inner) * t;
     v2 relative_vector = normalized_v2(b - a * inner);

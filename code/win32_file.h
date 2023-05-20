@@ -9,8 +9,7 @@
 
 // TODO: This probably needs to be part if an print logging file
 #include <stdio.h>
-static void
-print(char* format, ...) {
+static void print(char* format, ...) {
     char buffer[4096] = {};
     va_list args;
     va_start(args, format);
@@ -81,10 +80,10 @@ os_get_cwd(Arena* arena){
     String16 utf16_string = {(u16*)buffer, length};
 
     String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
-    String8 slash = str8_literal("\\");
-    String8 result = str8_concatenate(arena, utf8_string, slash);
+    //String8 slash = str8_literal("\\");
+    //String8 result = str8_concatenate(arena, utf8_string, slash);
     end_scratch(scratch);
-    return(result);
+    return(utf8_string);
 }
 
 // path to binary/.exe
@@ -101,21 +100,20 @@ typedef struct FileData{
 } FileData;
 
 // TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
-// TODO: If I give an empty dir, it uses CWD.
 // TODO: Better error handling on failures? Maybe include a DWORD error in FileData, maybe pass in FileData and only return DWORD, maybe think about overall better logging? assert? idk have to ask
-static FileData
-os_file_read(Arena* arena, String8 dir, String8 file_name){
-    FileData result = {0};
+static bool
+os_file_read(FileData* data, Arena* arena, String8 dir, String8 filename){
+    bool result = false;
 
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
+    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     u32 err = 0;
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, 0, 0);
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
         err = GetLastError();
-        print("os_file_read: failed to create file handle - error code: %d\n", err);
+        print("os_file_read: failed to create file handle - filename: %s - error code: %d\n", filename.str, err);
         return(result);
     }
     defer(CloseHandle(file_handle));
@@ -129,33 +127,37 @@ os_file_read(Arena* arena, String8 dir, String8 file_name){
     }
 
     u32 file_size = (u32)LARGE_file_size.QuadPart;
-    result.base = push_array(arena, u8, file_size);
+    data->base = push_array(arena, u8, file_size);
     DWORD bytes_read;
-    if(!ReadFile(file_handle, result.base, file_size, &bytes_read, 0)){
+    if(!ReadFile(file_handle, data->base, file_size, &bytes_read, 0)){
         err = GetLastError();
         print("os_file_read: failed to read file - error code: %d\n", err);
         return(result);
     }
+    data->size = file_size;
 
-    if(bytes_read != file_size){
+    result = (bytes_read == file_size);
+    if(!result){
         err = GetLastError();
         print("os_file_read: bytes_read != file_size - error code: %b\n", err);
         return(result);
     }
-
-    result.size = file_size;
     return(result);
 }
+//typedef struct FileData{
+//    void* base;
+//    u64 size;
+//} FileData;
 
 // UNTESTED: offset untested
 static bool
-os_file_write(FileData data, String8 dir, String8 file_name, u64 offset){
+os_file_write(FileData data, String8 dir, String8 filename, u64 offset){
     bool result = false;
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
+    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, 0, 0);
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
     if(file_handle == INVALID_HANDLE_VALUE){
         print("os_file_write: failed to create file handle\n");
         return(result);
@@ -185,11 +187,59 @@ os_file_write(FileData data, String8 dir, String8 file_name, u64 offset){
 //
 // TODO: file exists
 // TODO: list out files in directroy
+// UNTESTED
+static bool
+os_file_create(String8 dir, String8 filename, bool overwrite){
+    bool result = false;
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+
+    DWORD action;
+    if(overwrite){
+        action = CREATE_ALWAYS;
+    }
+    else{
+        action = CREATE_NEW;
+    }
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, action, 0, 0);
+    if(file_handle == INVALID_HANDLE_VALUE){
+        print("os_file_write: failed to create file handle\n");
+        return(result);
+    }
+    CloseHandle(file_handle);
+
+    result = true;
+    return(result);
+}
+
+// INCOMPLETE
+static bool
+os_file_exists(String8 dir, String8 filename){
+    bool result = false;
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    if(file_handle == INVALID_HANDLE_VALUE){
+        print("os_file_write: failed to create file handle\n");
+        return(result);
+    }
+    CloseHandle(file_handle);
+
+    result = true;
+    return(result);
+}
 
 static bool
-os_file_delete(String8 dir, String8 file_name){
+os_file_delete(String8 dir, String8 filename){
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, file_name);
+    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);

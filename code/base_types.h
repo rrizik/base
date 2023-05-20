@@ -52,16 +52,19 @@
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define assert_hr(hr) assert(SUCCEEDED(hr))
+# define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
+# define assert_hr(hr) assert(SUCCEEDED(hr)) // DX assert macro?
 #else
 # define assert(cond)
+# define ASSERT(cond)
 # define assert_hr(cond)
 #endif
 
-#define invalid_code_path assert(!(bool)"invalid_code_path")
-#define invalid_default_case default: {invalid_code_path;} break
+#define invalid_code_path               assert(!(bool)"invalid_code_path");
+#define invalid_default_case default: { assert(!(bool)"invalid_code_path"); } break;
 
 #define array_count(x) (sizeof(x)/sizeof(*(x)))
+#define ArrayCount(x) array_count(x)
 
 #if STANDARD_CPP
     #define ZERO_INIT {}
@@ -73,7 +76,7 @@
 #define STR(x) STR_(x)
 #define GLUE(a,b) a##b
 
-#define KB(x) (x * 1024LL)
+#define KB(x) ((x) * 1024LL)
 #define MB(x) (KB(x) * 1024LL)
 #define GB(x) (MB(x) * 1024LL)
 #define TB(x) (GB(x) * 1024LL)
