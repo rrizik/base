@@ -276,15 +276,16 @@ push_string(Arena* arena, String8 value){
 static void
 str8_list_push_back(Arena* arena, String8Node* str8_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
-    string_node->str = string;
+    string_node->str.str = string.str;
+    string_node->str.size = string.size;
     dll_push_back(str8_sentinel, string_node);
 }
 
 static String8Node
 str8_split(Arena* arena, String8 string, char byte){
-    String8Node result = {};
-    result.next = &result;
-    result.prev = &result;
+    String8Node parts = {};
+    parts.next = &parts;
+    parts.prev = &parts;
 
     u8* ptr =   string.str;
     u8* first = string.str;
@@ -297,17 +298,17 @@ str8_split(Arena* arena, String8 string, char byte){
 
         if(is_split_byte){
             if(first < ptr){
-                str8_list_push_back(arena, &result, str8_range(first, ptr));
+                str8_list_push_back(arena, &parts, str8_range(first, ptr));
             }
             first = ptr + 1;
         }
     }
 
     if(first < ptr){
-        str8_list_push_back(arena, &result, str8_range(first, ptr));
+        str8_list_push_back(arena, &parts, str8_range(first, ptr));
     }
 
-    return(result);
+    return(parts);
 }
 
 static String8
@@ -316,7 +317,6 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 
     // calc total size
     size += join_opts.pre.size;
-    //size += (join_opts.mid.size * (str8_sentinel->count - 1));
     size += join_opts.post.size;
     for(String8Node* node = str8_sentinel->next; node != str8_sentinel; node = node->next){
         size += node->str.size;
@@ -359,6 +359,24 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
     return(result);
 }
 
+
+// UNTESTED:
+// TODO: Maybe pass in String8Join?
+static String8
+str8_path_append(Arena* arena, String8 path, String8 value){
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String8Node parts = str8_split(arena, path, '\\');
+    str8_list_push_back(arena, &parts, value);
+    String8Join join = {0};
+    join.mid = str8_literal("\\");
+    String8 result = str8_join(arena, &parts, join);
+
+    return(result);
+}
+
+
 // copy str8
 // str_in:
 // char_in:
@@ -373,6 +391,10 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 // str_ends_with:
 // str_range:
 // append:
+// str8_chop_last_period()
+// str8_skip_last_period()
+// str8_chop_last_lash()
+// str8_skip_last_lash()
 
 #if STANDARD_CPP
 static bool operator==(const String8& a, const String8& b){

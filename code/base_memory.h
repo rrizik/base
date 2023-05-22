@@ -31,7 +31,6 @@ mem_copy(void *dst, void *src, size_t size) {
 ///////////////////////////////
 
 typedef struct Arena{
-    // head
     void* base;
     size_t size;
     size_t used;

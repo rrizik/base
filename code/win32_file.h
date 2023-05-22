@@ -73,16 +73,15 @@ os_utf16_utf8(Arena* arena, String16 utf16_string){
 static String8
 os_get_cwd(Arena* arena){
     ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
     u32 length = GetCurrentDirectoryW(0, 0);
     wchar* buffer = push_array(scratch.arena, wchar, length);
 
     length = GetCurrentDirectoryW(length, buffer);
     String16 utf16_string = {(u16*)buffer, length};
 
-    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
-    //String8 slash = str8_literal("\\");
-    //String8 result = str8_concatenate(arena, utf8_string, slash);
-    end_scratch(scratch);
+    String8 utf8_string = os_utf16_utf8(arena, utf16_string);
     return(utf8_string);
 }
 
@@ -106,7 +105,7 @@ os_file_read(FileData* data, Arena* arena, String8 dir, String8 filename){
     bool result = false;
 
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     u32 err = 0;
@@ -154,7 +153,7 @@ static bool
 os_file_write(FileData data, String8 dir, String8 filename, u64 offset){
     bool result = false;
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
@@ -194,7 +193,7 @@ os_file_create(String8 dir, String8 filename, bool overwrite){
     ScratchArena scratch = begin_scratch(0);
     defer(end_scratch(scratch));
 
-    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     DWORD action;
@@ -222,7 +221,7 @@ os_file_exists(String8 dir, String8 filename){
     ScratchArena scratch = begin_scratch(0);
     defer(end_scratch(scratch));
 
-    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
@@ -239,7 +238,7 @@ os_file_exists(String8 dir, String8 filename){
 static bool
 os_file_delete(String8 dir, String8 filename){
     ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_concatenate(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);
@@ -250,8 +249,8 @@ os_file_delete(String8 dir, String8 filename){
 static bool
 os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 dest_file){
     ScratchArena scratch = begin_scratch(0);
-    String8 source_string = str8_concatenate(scratch.arena, source_dir, source_file);
-    String8 dest_string = str8_concatenate(scratch.arena, dest_dir, dest_file);
+    String8 source_string = str8_path_append(scratch.arena, source_dir, source_file);
+    String8 dest_string = str8_path_append(scratch.arena, dest_dir, dest_file);
     String16 source_wide = os_utf8_utf16(scratch.arena, source_string);
     String16 dest_wide = os_utf8_utf16(scratch.arena, dest_string);
 
@@ -263,7 +262,7 @@ os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 
 static bool
 os_dir_create(String8 dir, String8 new_dir){
     ScratchArena scratch = begin_scratch(0);
-    String8 dir_path = str8_concatenate(scratch.arena, dir, new_dir);
+    String8 dir_path = str8_path_append(scratch.arena, dir, new_dir);
     String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
     bool result = CreateDirectoryW((wchar*)wide_path.str, 0);
@@ -274,7 +273,7 @@ os_dir_create(String8 dir, String8 new_dir){
 static bool
 os_dir_delete(String8 dir, String8 delete_dir){
     ScratchArena scratch = begin_scratch(0);
-    String8 dir_path = str8_concatenate(scratch.arena, dir, delete_dir);
+    String8 dir_path = str8_path_append(scratch.arena, dir, delete_dir);
     String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
     bool result = RemoveDirectoryW((wchar*)wide_path.str);

@@ -491,9 +491,13 @@ s32 main(s32 argc, char** argv){
         eval(cwd == cwd_literal);
 
         // os_file_read/os_file_write
-        String8 dir_build = str8_concatenate(arena, cwd, str8_literal("\\build\\"));
+        String8 dir_build = str8_path_append(arena, cwd, str8_literal("build"));
         String8 test_file = str8_literal("test_file.bin");
         {
+            if(os_file_exists(dir_build, test_file)){
+                os_file_delete(dir_build, test_file);
+            }
+            eval(os_file_delete(dir_build, test_file) == false);
             eval(os_file_exists(dir_build, test_file) == false);
             eval(os_file_create(dir_build, test_file, 0) == true);
             eval(os_file_exists(dir_build, test_file) == true);
@@ -529,7 +533,7 @@ s32 main(s32 argc, char** argv){
 
         // file_move + file_delete
         {
-            String8 new_test_file = str8_literal("new_test_file.bin");
+            String8 new_test_file = str8_literal("test_file.bin");
             eval(os_file_exists(dir_build, test_file) == false);
             eval(os_file_create(dir_build, test_file, 0) == true);
             eval(os_file_exists(dir_build, test_file) == true);
