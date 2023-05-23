@@ -490,6 +490,16 @@ s32 main(s32 argc, char** argv){
         String8 cwd_literal = str8_literal("C:\\sh1tz\\apesticks\\cc++\\base");
         eval(cwd == cwd_literal);
 
+        // os_dir_files
+        String8 dir_code = str8_path_append(arena, cwd, str8_literal("code"));
+        {
+            String8Node node = {0};
+            node.next = &node;
+            node.prev = &node;
+            bool succeed = os_dir_files(arena, &node, dir_code);
+            u32 a = 1;
+        }
+
         // os_file_read/os_file_write
         String8 dir_build = str8_path_append(arena, cwd, str8_literal("build"));
         String8 test_file = str8_literal("test_file.bin");
@@ -512,7 +522,7 @@ s32 main(s32 argc, char** argv){
             os_file_write(write_data, dir_build, test_file, 0);
 
             FileData read_data;
-            os_file_read(&read_data, arena, dir_build, test_file);
+            os_file_read(arena, &read_data, dir_build, test_file);
             String8 read_data_string8 = str8(read_data.base, read_data.size);
             eval(read_data_string8 == write_data_string8);
             os_file_delete(dir_build, test_file);
@@ -525,7 +535,7 @@ s32 main(s32 argc, char** argv){
             os_file_write(write_data, dir_build, test_file, 0);
 
             FileData read_data;
-            os_file_read(&read_data, arena, dir_build, test_file);
+            os_file_read(arena, &read_data, dir_build, test_file);
             v4* read_data_v4 = (v4*)read_data.base;
             eval(write_data_v4 == *read_data_v4);
             os_file_delete(dir_build, test_file);

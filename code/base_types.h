@@ -61,7 +61,8 @@
 #endif
 
 #define invalid_code_path               assert(!(bool)"invalid_code_path");
-#define invalid_default_case default: { assert(!(bool)"invalid_code_path"); } break;
+#define invalid_default_case default: { assert(!(bool)"invalid_code_path"); } break
+#define INVALID_DEFAULT_CASE invalid_default_case
 
 #define array_count(x) (sizeof(x)/sizeof(*(x)))
 #define ArrayCount(x) array_count(x)

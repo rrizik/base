@@ -11,24 +11,30 @@
 // out of convenience, although not optimal. SLL stack should
 // have only 1 next pointer
 
-#define dll_push_front(list, node) (((node->prev)=(list)),\
-                                    ((node->next)=(list->next)),\
-                                    ((node->prev->next)=(node)),\
-                                    ((node->next->prev)=(node)))
-#define dll_push_back(list, node) (((node->prev)=(list->prev)),\
-                                   ((node->next)=(list)),\
-                                   ((node->prev->next)=(node)),\
-                                   ((node->next->prev)=(node)))
-#define dll_pop_front(list) (((list->next->next->prev)=(list)),\
-                             ((list->next)=(list->next->next)))
-#define dll_pop_back(list) (((list->prev->prev->next)=(list)),\
-                            ((list->prev)=(list->prev->prev)))
-#define dll_remove(node) (((node->prev->next)=(node->next)),\
-                          ((node->next->prev)=(node->prev)),\
-                          ((node->next)=(node)),\
-                          ((node->prev)=(node)))
-#define dll_clear(list) (((list->next)=(list)),\
-                         ((list->prev)=(list)))
+// TODO: Make is that you don't have to initialize next prev as part of the macros
+#define dll_push_front(list, node) ((((node)->prev)=(list)),\
+                                    (((node)->next)=((list)->next)),\
+                                    (((node)->prev->next)=(node)),\
+                                    (((node)->next->prev)=(node)))
+
+#define dll_push_back(list, node) ((((node)->prev)=((list)->prev)),\
+                                   (((node)->next)=(list)),\
+                                   (((node)->prev->next)=(node)),\
+                                   (((node)->next->prev)=(node)))
+
+#define dll_pop_front(list) ((((list)->next->next->prev)=(list)),\
+                             (((list)->next)=((list)->next->next)))
+
+#define dll_pop_back(list) ((((list)->prev->prev->next)=(list)),\
+                            (((list)->prev)=((list)->prev->prev)))
+
+#define dll_remove(node) ((((node)->prev->next)=((node)->next)),\
+                          (((node)->next->prev)=((node)->prev)),\
+                          (((node)->next)=(node)),\
+                          (((node)->prev)=(node)))
+
+#define dll_clear(list) ((((list)->next)=(list)),\
+                         (((list)->prev)=(list)))
 
 //typedef struct Node{
 //    struct Node* next;

@@ -17,7 +17,6 @@ typedef struct String8{
     u64 size;
 } String8;
 
-
 typedef struct String8Node{
     String8Node* next;
     String8Node* prev;
@@ -113,7 +112,7 @@ str8_split_right(String8 str, u64 idx){
 
 //UNTESTED:
 static String8
-str8_advance(String8 str, u32 count){
+str8_advance(String8 str, u64 count){
     str.str = str.str + count;
     str.size -= count;
     return(str);
@@ -135,6 +134,18 @@ str8_char_from_left(String8 str, u8 character){
     u64 idx = 0;
     while(str.size){
         if(str.str[0] == character){ break; }
+        str = str8_advance(str, 1);
+        idx++;
+    }
+    return(idx);
+}
+
+// UNTESTED:
+static u64
+str8_next_white_space(String8 str){
+    u64 idx = 0;
+    while(str.size){
+        if(str.str[0] == ' '){ break; }
         str = str8_advance(str, 1);
         idx++;
     }
@@ -257,6 +268,18 @@ str8_contains(String8 source_string, String8 sub_string){
 // otherwise we will be pointing to the end of the string
 #define str_length(str) str_length_((char*)str)
 static u32 str_length_(char* str){
+    u32 count = 0;
+    while(*str++){
+        ++count;
+    }
+    return(count);
+}
+
+// UNTESTED:
+// I think we need to reset the str pointer here?
+// otherwise we will be pointing to the end of the string
+#define wstr_length(str) wstr_length_((wchar*)str)
+static u64 wstr_length_(wchar* str){
     u32 count = 0;
     while(*str++){
         ++count;

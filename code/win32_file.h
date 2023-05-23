@@ -7,6 +7,8 @@
 #include "base_memory.h"
 #include "base_string.h"
 
+// TODO: WIN32_FILE_ATTRIBUTE_DATA to get file attributes
+
 // TODO: This probably needs to be part if an print logging file
 #include <stdio.h>
 static void print(char* format, ...) {
@@ -25,7 +27,7 @@ static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
     fgets((char*)str, KB(1), stdin);
-    u32 length = str_length((char*)str);
+    u64 length = str_length((char*)str);
     pop_array(arena, u8, (KB(1)-length-1));
     String8 result = str8(str, length);
 
@@ -101,7 +103,7 @@ typedef struct FileData{
 // TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
 // TODO: Better error handling on failures? Maybe include a DWORD error in FileData, maybe pass in FileData and only return DWORD, maybe think about overall better logging? assert? idk have to ask
 static bool
-os_file_read(FileData* data, Arena* arena, String8 dir, String8 filename){
+os_file_read(Arena* arena, FileData* data, String8 dir, String8 filename){
     bool result = false;
 
     ScratchArena scratch = begin_scratch(0);
@@ -278,6 +280,35 @@ os_dir_delete(String8 dir, String8 delete_dir){
 
     bool result = RemoveDirectoryW((wchar*)wide_path.str);
     end_scratch(scratch);
+    return(result);
+}
+
+static bool
+os_dir_files(Arena* arena, String8Node* node, String8 dir){
+    bool result = false;
+
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+    String8 dir_slash = str8_concatenate(scratch.arena, dir, str8_literal("\\*"));
+    String16 dir_utf16 = os_utf8_utf16(scratch.arena, dir_slash);
+
+    WIN32_FIND_DATAW data = {0};
+    HANDLE file_handle = FindFirstFileW((wchar*)dir_utf16.str, &data);
+    if(file_handle == INVALID_HANDLE_VALUE){
+        DWORD err = GetLastError();
+        print("os_dir_files: failed to create file handle - dir: %s - error code: %d\n", dir.str, err);
+        return(result);
+    }
+    defer(CloseHandle(file_handle));
+    result = true;
+
+    do{
+        u64 length = wstr_length(data.cFileName);
+        String16 string_utf16 = {(u16*)data.cFileName, length};
+        String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // TODO: test this
+        str8_list_push_back(arena, node, string_utf8);
+        print("FILE: %s\n", string_utf8.str);
+    }while(FindNextFileW(file_handle, &data));
     return(result);
 }
 
