@@ -11,7 +11,12 @@
 // out of convenience, although not optimal. SLL stack should
 // have only 1 next pointer
 
-// TODO: Make is that you don't have to initialize next prev as part of the macros
+// TODO: Make it so that you don't have to initialize next prev as part of the macros
+#define sll_push_front(list, node) (((node)->next)=(list->next),\
+                                    ((list)->next)=(node))
+
+#define sll_pop_front(list) ((((list)->next)=((list)->next->next)))
+
 #define dll_push_front(list, node) ((((node)->prev)=(list)),\
                                     (((node)->next)=((list)->next)),\
                                     (((node)->prev->next)=(node)),\

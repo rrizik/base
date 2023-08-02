@@ -8,6 +8,7 @@
 #include "base_string.h"
 
 // TODO: WIN32_FILE_ATTRIBUTE_DATA to get file attributes
+// TODO: UNTESTED: Retest this entire file
 
 // TODO: This probably needs to be part if an print logging file
 #include <stdio.h>
@@ -22,7 +23,7 @@ static void print(char* format, ...) {
     OutputDebugStringA(buffer);
 }
 
-// TODO: This probably needs to be part if an IO file, maybe win32_file? idk.
+// TODO: This probably needs to be part if an IO file, maybe win32_io? idk.
 static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
@@ -35,7 +36,7 @@ read_stdin(Arena* arena){
 }
 
 ///////////////////////////////
-// NOTE: Win32 File Paths
+// NOTE: Win32 UTF8-16
 ///////////////////////////////
 
 // UNTESTED: test this with a malloc so its not zero'ed out
@@ -72,6 +73,22 @@ os_utf16_utf8(Arena* arena, String16 utf16_string){
     return(result);
 }
 
+// path to binary/.exe
+// path for user config/data
+// path where temporary files can go
+
+///////////////////////////////
+// NOTE: Win32 File I/O
+///////////////////////////////
+
+// TODO: Get rid of this. Use String8 instead so that you can write out String8 Nodes, none contegious memory.
+
+typedef struct File{
+    HANDLE handle;
+    DWORD error;
+    u64 size;
+} File;
+
 static String8
 os_get_cwd(Arena* arena){
     ScratchArena scratch = begin_scratch(0);
@@ -87,111 +104,87 @@ os_get_cwd(Arena* arena){
     return(utf8_string);
 }
 
-// path to binary/.exe
-// path for user config/data
-// path where temporary files can go
-
-///////////////////////////////
-// NOTE: Win32 File I/O
-///////////////////////////////
-
-typedef struct FileData{
-    void* base;
-    u64 size;
-} FileData;
-
 // TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
-// TODO: Better error handling on failures? Maybe include a DWORD error in FileData, maybe pass in FileData and only return DWORD, maybe think about overall better logging? assert? idk have to ask
-static bool
-os_file_read(Arena* arena, FileData* data, String8 dir, String8 filename){
-    bool result = false;
-
-    ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-
-    u32 err = 0;
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-    if(file_handle == INVALID_HANDLE_VALUE){
-        err = GetLastError();
-        print("os_file_read: failed to create file handle - filename: %s - error code: %d\n", filename.str, err);
-        return(result);
-    }
-    defer(CloseHandle(file_handle));
-    end_scratch(scratch);
+// TODO: Better error handling on failures? Maybe include a DWORD error in File, maybe pass in File and only return DWORD, maybe think about overall better logging? assert? idk have to ask
+static String8
+os_file_read(Arena* arena, File* file){
+    String8 result = {0};
 
     LARGE_INTEGER LARGE_file_size;
-    if(!GetFileSizeEx(file_handle, &LARGE_file_size)){
-        err = GetLastError();
-        print("os_file_read: failed to get file size - error code; %d\n", err);
+    if(!GetFileSizeEx(file->handle, &LARGE_file_size)){
+        file->error = GetLastError();
+        print("os_file_read: failed to get file size - error code; %d\n", file->error);
         return(result);
     }
 
-    u32 file_size = (u32)LARGE_file_size.QuadPart;
-    data->base = push_array(arena, u8, file_size);
-    DWORD bytes_read;
-    if(!ReadFile(file_handle, data->base, file_size, &bytes_read, 0)){
-        err = GetLastError();
-        print("os_file_read: failed to read file - error code: %d\n", err);
+    result.size = (u64)LARGE_file_size.QuadPart;
+    result.str = push_array(arena, u8, result.size);
+    DWORD bytes_read = 0;
+    if(!ReadFile(file->handle, result.str, (DWORD)result.size, &bytes_read, 0)){
+        file->error = GetLastError();
+        print("os_file_read: failed to read file - error code: %d\n", file->error);
         return(result);
     }
-    data->size = file_size;
 
-    result = (bytes_read == file_size);
-    if(!result){
-        err = GetLastError();
-        print("os_file_read: bytes_read != file_size - error code: %b\n", err);
+    bool match = (bytes_read == result.size);
+    if(!match){
+        file->error = GetLastError();
+        print("os_file_read: bytes_read != file_size - error code: %b\n", file->error);
         return(result);
     }
     return(result);
 }
-//typedef struct FileData{
-//    void* base;
-//    u64 size;
-//} FileData;
 
-// UNTESTED: offset untested
+// UNTESTED:
 static bool
-os_file_write(FileData data, String8 dir, String8 filename, u64 offset){
+os_file_write(File* file, void* base, u64 size){
     bool result = false;
-    ScratchArena scratch = begin_scratch(0);
-    String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-    if(file_handle == INVALID_HANDLE_VALUE){
-        print("os_file_write: failed to create file handle\n");
-        return(result);
-    }
 
     DWORD bytes_written;
     OVERLAPPED overlapped = {
-        .Offset = (DWORD)(offset & 0x00000000FFFFFFFF),
-        .OffsetHigh = (DWORD)(offset >> 32)
+        .Offset = (DWORD)(file->size & 0x00000000FFFFFFFF),
+        .OffsetHigh = (DWORD)(file->size >> 32)
     };
-    if(!WriteFile(file_handle, data.base, (DWORD)data.size, &bytes_written, &overlapped)){
-        DWORD err = GetLastError();
-        print("os_file_write: failed to write data to file\n");
-        CloseHandle(file_handle);
+    if(!WriteFile(file->handle, base, (DWORD)size, &bytes_written, &overlapped)){
+        file->error = GetLastError();
+        print("os_file_write: failed to write data to file - error code: %d\n", file->error);
         return(result);
     }
 
-    result = (data.size == bytes_written);
-    CloseHandle(file_handle);
-    end_scratch(scratch);
+    if(size == bytes_written){
+        result = true;
+        file->size += size;
+    }
     return(result);
 }
 
-///////////////////////////////
-// NOTE: Win32 File Operations
-///////////////////////////////
-//
-// TODO: file exists
-// TODO: list out files in directroy
 // UNTESTED
 static bool
-os_file_create(String8 dir, String8 filename, bool overwrite){
+os_file_create(String8 dir, String8 filename){
     bool result = false;
+
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String8 full_path = str8_path_append(scratch.arena, dir, filename);
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if(file_handle == INVALID_HANDLE_VALUE){
+        DWORD err = GetLastError();
+        print("os_file_create: failed to create file handle - err: %d\n", err);
+        return(result);
+    }
+    CloseHandle(file_handle);
+
+    result = true;
+    return(result);
+}
+
+// UNTESTED do I need to pass back a pointer? Its not clear if this data will persist outside this scope
+static File
+os_file_open(String8 dir, String8 filename, bool overwrite = 0){
+    File result = {0};
     ScratchArena scratch = begin_scratch(0);
     defer(end_scratch(scratch));
 
@@ -203,17 +196,31 @@ os_file_create(String8 dir, String8 filename, bool overwrite){
         action = CREATE_ALWAYS;
     }
     else{
-        action = CREATE_NEW;
+        action = OPEN_ALWAYS;
     }
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, action, 0, 0);
-    if(file_handle == INVALID_HANDLE_VALUE){
-        print("os_file_write: failed to create file handle\n");
+
+    result.handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, action, 0, 0);
+    if(result.handle == INVALID_HANDLE_VALUE){
+        result.error = GetLastError();
+        print("os_file_open: failed to create file handle - error code: %d\n", result.error);
         return(result);
     }
-    CloseHandle(file_handle);
 
-    result = true;
+    LARGE_INTEGER LARGE_file_size;
+    if(!GetFileSizeEx(result.handle, &LARGE_file_size)){
+        result.error = GetLastError();
+        print("os_file_read: failed to get file size - error code: %d\n", result.error);
+        return(result);
+    }
+
+    result.size = (u64)LARGE_file_size.QuadPart;
     return(result);
+}
+
+static void
+os_file_close(File* file){
+    CloseHandle(file->handle);
+    file->size = 0;
 }
 
 // INCOMPLETE
@@ -226,12 +233,12 @@ os_file_exists(String8 dir, String8 filename){
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
-    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    defer(CloseHandle(file_handle));
+
     if(file_handle == INVALID_HANDLE_VALUE){
-        print("os_file_write: failed to create file handle\n");
         return(result);
     }
-    CloseHandle(file_handle);
 
     result = true;
     return(result);
@@ -244,7 +251,7 @@ os_file_delete(String8 dir, String8 filename){
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);
-    end_scratch(scratch);
+    defer(end_scratch(scratch));
     return(result);
 }
 
@@ -283,6 +290,7 @@ os_dir_delete(String8 dir, String8 delete_dir){
     return(result);
 }
 
+// UNTESTED
 static bool
 os_dir_files(Arena* arena, String8Node* node, String8 dir){
     bool result = false;
@@ -303,7 +311,7 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
     result = true;
 
     do{
-        u64 length = wstr_length(data.cFileName);
+        u64 length = str_length(data.cFileName);
         String16 string_utf16 = {(u16*)data.cFileName, length};
         String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // TODO: test this
         str8_list_push_back(arena, node, string_utf8);

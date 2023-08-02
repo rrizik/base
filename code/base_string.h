@@ -56,8 +56,9 @@ static String8 str8_(u8* str, u64 size){
 
 #include <stdio.h>
 #include <stdarg.h>
+#define str8_format(arena, format, ...) str8_formatted(arena, format, ...)
 static String8
-str8_format(Arena* arena, char* format, ...) {
+str8_formatted(Arena* arena, char* format, ...) {
     char buffer[4096] = {};
     va_list args;
     va_start(args, format);
@@ -78,6 +79,20 @@ str8_format(Arena* arena, char* format, ...) {
 //    String8 result = str8_range(cstr, ptr);
 //    return(result);
 //}
+//
+// UNTESTED:
+static bool
+str8_copy(String8* from, String8* to){
+    if(from->size != to->size){
+        return(false);
+    }
+
+    for(u32 i=0; i < from->size; ++i){
+        u8* character = to->str + i;
+        *character = *(from->str + i);
+    }
+    return(true);
+}
 
 // UNTESTED:
 static String8
@@ -113,19 +128,44 @@ str8_split_right(String8 str, u64 idx){
 //UNTESTED:
 static String8
 str8_advance(String8 str, u64 count){
-    str.str = str.str + count;
-    str.size -= count;
+    if(str.size > 0){
+        str.str = str.str + count;
+        str.size -= count;
+    }
     return(str);
 }
 
+//UNTESTED:
+static void
+str8_advance(String8* str, u64 count){
+    str->str = str->str + count;
+    str->size -= count;
+}
+
 // UNTESTED:
+// CONSIDER: Maybe this should return u64 count, to tell you how many u8's it ate.
+// CONSIDER: Maybe have other functions like this, like eat_digits, eat_number, eat_string, ...
 static String8
-str8_eat_spaces(String8 str){
+str8_eat_whitespace(String8 str){
     while(str.size){
-        if(str.str[0] != ' '){ break; }
+        if((str.str[0] != ' ') && (str.str[0] != '\t') && (str.str[0] != '\n') && (str.str[0] != '\r')){ return(str); }
         str = str8_advance(str, 1);
     }
     return(str);
+}
+
+static u64
+str8_eat_whitespace(String8* str){
+    u64 count = 0;
+    while(str->size){
+        if((str->str[0] != ' ') && (str->str[0] != '\t') && (str->str[0] != '\n') && (str->str[0] != '\r')){
+            u32 a = 1;
+            break;
+        }
+        str8_advance(str, 1);
+        count++;
+    }
+    return(count);
 }
 
 // UNTESTED:
@@ -145,7 +185,7 @@ static u64
 str8_next_white_space(String8 str){
     u64 idx = 0;
     while(str.size){
-        if(str.str[0] == ' '){ break; }
+        if(str.str[0] == ' ' || str.str[0] == '\t' || str.str[0] == '\n' || str.str[0] == '\r'){ break; }
         str = str8_advance(str, 1);
         idx++;
     }
@@ -211,6 +251,22 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
     return(result);
 }
 
+static String8
+str8_null_terminate(Arena* arena, String8 input){
+    u8* str = push_array(arena, u8, input.size + 1);
+    memory_copy(str, input.str, input.size + 1);
+
+    String8 result = {
+        .str = str,
+        .size = input.size + 1,
+    };
+
+    u8* last = str + input.size;
+    *last = 0;
+
+    return(result);
+}
+
 #define str8_cmp(left, right) str8_compare(left, right)
 static bool
 str8_compare(String8 left, String8 right){
@@ -229,8 +285,14 @@ str8_compare(String8 left, String8 right){
 
 // UNTESTED:
 static bool
-str8_char_is_slash(u8 c){
+str8_is_slash(u8 c){
     return(c == '\\' || c == '/');
+}
+
+static bool
+str8_is_digit(u8 c){
+    bool result = ((c >= '0') && (c <= '9'));
+    return(result);
 }
 
 // UNTESTED:
@@ -278,8 +340,7 @@ static u32 str_length_(char* str){
 // UNTESTED:
 // I think we need to reset the str pointer here?
 // otherwise we will be pointing to the end of the string
-#define wstr_length(str) wstr_length_((wchar*)str)
-static u64 wstr_length_(wchar* str){
+static u64 str_length_(wchar* str){
     u32 count = 0;
     while(*str++){
         ++count;
@@ -387,6 +448,7 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 // TODO: Maybe pass in String8Join?
 static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
+    // CLEANUP: why am I calling scratch arena here?
     ScratchArena scratch = begin_scratch(0);
     defer(end_scratch(scratch));
 
@@ -420,18 +482,21 @@ str8_path_append(Arena* arena, String8 path, String8 value){
 // str8_skip_last_lash()
 
 #if STANDARD_CPP
-static bool operator==(const String8& a, const String8& b){
-    u8* a_string = (u8*)a.str;
-    u8* b_string = (u8*)b.str;
-    if(a.size != b.size){
-        return(false);
-    }
-    for(u32 i = 0; i < a.size; ++i){
-        if(*a_string++ != *b_string++){
-            return(false);
-        }
-    }
-    return(true);
+//static bool operator==(const String8& a, const String8& b){
+static bool operator==(String8 a, String8 b){
+    bool result = str8_compare(a, b);
+    //u8* a_string = (u8*)a.str;
+    //u8* b_string = (u8*)b.str;
+    //if(a.size != b.size){
+    //    return(false);
+    //}
+    //for(u32 i = 0; i < a.size; ++i){
+    //    if(*a_string++ != *b_string++){
+    //        return(false);
+    //    }
+    //}
+    //return(true);
+    return(result);
 }
 
 static bool operator==(String16 a, String16 b){
@@ -466,6 +531,5 @@ static String32 str32_(u32* str, u32 size){
     String32 result = {str, size};
     return(result);
 }
-
 
 #endif //BASE_STRING_H

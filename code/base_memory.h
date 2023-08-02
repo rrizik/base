@@ -6,9 +6,9 @@
 #include "base_math.h"
 
 // UNTESTED:
-#define memory_set(base, src, size) mem_copy(base, src, size)
+#define mem_set(base, src, size) memory_copy(base, src, size)
 static void*
-mem_set(void *base, int src, size_t size) {
+memory_set(void *base, int src, size_t size) {
     u8* base_ref = (u8*)base;
     while(size--) *base_ref++ = (u8)src;
 
@@ -16,12 +16,12 @@ mem_set(void *base, int src, size_t size) {
 }
 
 // UNTESTED:
-#define memory_copy(dst, src, size) mem_copy(dst, src, size)
+#define mem_copy(dst, src, size) memory_copy(dst, src, size)
 static void*
-mem_copy(void *dst, void *src, size_t size) {
-    unsigned char *base_dst_ref = (unsigned char *)dst;
-    unsigned char *base_src_ref = (unsigned char *)src;
-    while(size--) *base_dst_ref++ = *base_src_ref++;
+memory_copy(void *dst, void *src, size_t size) {
+    unsigned char *d = (unsigned char *)dst;
+    unsigned char *s = (unsigned char *)src;
+    while(size--) *d++ = *s++;
 
     return(dst);
 }
@@ -33,7 +33,10 @@ mem_copy(void *dst, void *src, size_t size) {
 typedef struct Arena{
     void* base;
     size_t size;
-    size_t used;
+    union {
+        size_t used;
+        size_t at;
+    };
 } Arena;
 
 // CONSIDER: not sure if I need this, if I have os_make_arena()

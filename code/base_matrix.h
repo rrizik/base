@@ -139,6 +139,7 @@ static m4 operator*(const m4& matrix, f32 scalar){
     return(result);
 }
 
+// TODO: Reduce this into something linear and more understandable
 static bool
 matrix_multiply(f32* result, const f32* mA, u32 rowsA, u32 colsA, const f32* mB, u32 rowsB, u32 colsB){
     if(colsA != rowsB){

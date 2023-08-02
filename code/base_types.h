@@ -54,6 +54,7 @@
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
 # define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
 # define assert_hr(hr) assert(SUCCEEDED(hr)) // DX assert macro?
+# define assert_fh(fh) do { if (((fh).handle) == INVALID_HANDLE_VALUE) __debugbreak(); } while (0) // assert file handle
 #else
 # define assert(cond)
 # define ASSERT(cond)
@@ -110,7 +111,9 @@ template <typename F> Defer<F> MakeDefer(F f) {
 
 #define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
 #define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
-#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){code;})
+//#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){(code);})
+#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([&](){(code);})
+//#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){(code);})
 #pragma clang diagnostic pop
 #endif
 

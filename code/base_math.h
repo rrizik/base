@@ -18,7 +18,7 @@
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
 global f32 PI_f32 = 3.14159265359f;
-global f64 PI_f64 = 3.14159265359;
+global f64 PI_f64 = 3.141592653589793;
 global f32 RAD_f32 = 0.0174533f;
 // TODO: Add RAD_f64
 // TODO IMPORTANT: Include f64 angle stuff
@@ -26,6 +26,13 @@ global f32 RAD_f32 = 0.0174533f;
 static f32
 deg_to_rad(f32 degree){
     f32 result = ((PI_f32/180.0f) * degree);
+    return(result);
+}
+
+// TODO: Clean this up
+static f64
+deg_to_rad_f64(f64 degree){
+    f64 result = ((PI_f64/180.0) * degree);
     return(result);
 }
 
@@ -38,6 +45,12 @@ rad_to_deg(f32 rad){
 static f32
 square_f32(f32 value){
     f32 result = value * value;
+    return(result);
+}
+
+static f64
+square_f64(f64 value){
+    f64 result = value * value;
     return(result);
 }
 
