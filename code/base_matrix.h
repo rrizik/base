@@ -182,7 +182,7 @@ static m4 operator*(const m4& mA, const m4& mB){
 // TODO: profile these and make sure they dont take too long
 
 static void
-transpose_matrix(f32* src, f32* dst, u32 rows, u32 cols){
+matrix_tranpose(f32* src, f32* dst, u32 rows, u32 cols){
     for(u32 i=0; i < rows * cols; ++i){
         u32 row = i / rows;
         u32 col = i % rows;
@@ -191,42 +191,42 @@ transpose_matrix(f32* src, f32* dst, u32 rows, u32 cols){
 }
 
 static m2
-transpose_m2(m2 m){
+m2_transpose(m2 m){
     m2 result = ZERO_INIT;
-    transpose_matrix(m.array, result.array, 2, 2);
+    matrix_tranpose(m.array, result.array, 2, 2);
     return(result);
 }
 
 static m3
-transpose_m3(m3 m){
+m3_transpose(m3 m){
     m3 result = ZERO_INIT;
-    transpose_matrix(m.array, result.array, 3, 3);
+    matrix_tranpose(m.array, result.array, 3, 3);
     return(result);
 }
 
 static m4
-transpose_m4(m4 m){
+m4_transpose(m4 m){
     m4 result = ZERO_INIT;
-    transpose_matrix(m.array, result.array, 4, 4);
+    matrix_tranpose(m.array, result.array, 4, 4);
     return(result);
 }
 
 // NOTE: abs(determinant) is the scale factor of the transformation (2D area)
 static float
-determinant_m2(m2 m){
+m2_determinant(m2 m){
     float result = (m._11 * m._22) - (m._12 * m._21);
     return(result);
 }
 
 // QUESTION: I dont think I need this
 static bool
-has_inverse_m2(m2 m){
-    bool result = determinant_m2(m) > 0 ? true : false;
+m2_has_inverse(m2 m){
+    bool result = m2_determinant(m) > 0 ? true : false;
     return(result);
 }
 
 static m2
-cut_m3(m3 m, u32 row, u32 col){
+m3_cut(m3 m, u32 row, u32 col){
     m2 result = ZERO_INIT;
     u32 index = 0;
 
@@ -242,25 +242,25 @@ cut_m3(m3 m, u32 row, u32 col){
 }
 
 static m2
-minor_m2(m2 m){
+m2_minor(m2 m){
     m2 result = {m._22, m._21,
                  m._12, m._11};
     return(result);
 }
 
 static m3
-minor_m3(m3 m){
+m3_minor(m3 m){
     m3 result = ZERO_INIT;
     for(u32 i=0; i<3; ++i){
         for(u32 j=0; j<3; ++j){
-            result[i][j] = determinant_m2(cut_m3(m, i, j));
+            result[i][j] = m2_determinant(m3_cut(m, i, j));
         }
     }
     return(result);
 }
 
 static void
-cofactor(f32* result, f32* minor, u32 rows, u32 cols) {
+matrix_cofactor(f32* result, f32* minor, u32 rows, u32 cols) {
     for(u32 i=0; i<rows; ++i){
         for(u32 j=0; j<cols; ++j){
             u32 t = cols * j + i;
@@ -272,23 +272,23 @@ cofactor(f32* result, f32* minor, u32 rows, u32 cols) {
 }
 
 static m2
-cofactor_m2(m2 m){
+m2_cofactor(m2 m){
     m2 result = ZERO_INIT;
-    cofactor(result.array, minor_m2(m).array, 2, 2);
+    matrix_cofactor(result.array, m2_minor(m).array, 2, 2);
     return(result);
 }
 
 static m3
-cofactor_m3(m3 m){
+m3_cofactor(m3 m){
     m3 result = ZERO_INIT;
-    cofactor(result.array, minor_m3(m).array, 3, 3);
+    matrix_cofactor(result.array, m3_minor(m).array, 3, 3);
     return(result);
 }
 
 static f32
-determinant_m3(m3 m) {
+m3_determinant(m3 m) {
     f32 result = 0.0f;
-    m3 cof = cofactor_m3(m);
+    m3 cof = m3_cofactor(m);
     for(u32 j = 0; j < 3; ++j){
         u32 index = 3 * 0 + j;
         result += m.array[index] * cof[0][j];
@@ -297,7 +297,7 @@ determinant_m3(m3 m) {
 }
 
 static m3
-cut_m4(m4 m, u32 row, u32 col){
+m4_cut(m4 m, u32 row, u32 col){
     m3 result = ZERO_INIT;
     u32 index = 0;
 
@@ -315,27 +315,27 @@ cut_m4(m4 m, u32 row, u32 col){
 }
 
 static m4
-minor_m4(m4 m){
+m4_minor(m4 m){
     m4 result = ZERO_INIT;
     for(u32 i=0; i<4; ++i){
         for(u32 j=0; j<4; ++j){
-            result[i][j] = determinant_m3(cut_m4(m, i, j));
+            result[i][j] = m3_determinant(m4_cut(m, i, j));
         }
     }
     return(result);
 }
 
 static m4
-cofactor_m4(m4 m){
+m4_cofactor(m4 m){
     m4 result = ZERO_INIT;
-    cofactor(result.array, minor_m4(m).array, 4, 4);
+    matrix_cofactor(result.array, m4_minor(m).array, 4, 4);
     return(result);
 }
 
 static f32
-determinant_m4(m4 m){
+m4_determinant(m4 m){
     f32 result = 0.0f;
-    m4 cof = cofactor_m4(m);
+    m4 cof = m4_cofactor(m);
     for(u32 j=0; j<4; ++j) {
         result += m.array[4 * 0 + j] * cof[0][j];
     }
@@ -343,53 +343,53 @@ determinant_m4(m4 m){
 }
 
 static m2
-adjugate_m2(m2 m){
-    m2 result = transpose_m2(cofactor_m2(m));
+m2_adjugate(m2 m){
+    m2 result = m2_transpose(m2_cofactor(m));
     return(result);
 }
 
 static m3
-adjugate_m3(m3 m){
-    m3 result = transpose_m3(cofactor_m3(m));
+m3_adjugate(m3 m){
+    m3 result = m3_transpose(m3_cofactor(m));
     return(result);
 }
 
 static m4
-adjugate_m4(m4 m){
-    m4 result = transpose_m4(cofactor_m4(m));
+m4_adjugate(m4 m){
+    m4 result = m4_transpose(m4_cofactor(m));
     return(result);
 }
 
 static m2
-inverse_m2(m2 m){
+m2_inverse(m2 m){
     m2 result = ZERO_INIT;
-    f32 det = determinant_m2(m);
+    f32 det = m2_determinant(m);
     if(det == 0.0f){
         return(result);
     }
-    result = adjugate_m2(m) * (1.0f / det);
+    result = m2_adjugate(m) * (1.0f / det);
     return(result);
 }
 
 static m3
-inverse_m3(m3 m){
+m3_inverse(m3 m){
     m3 result = ZERO_INIT;
-    f32 det = determinant_m3(m);
+    f32 det = m3_determinant(m);
     if(det == 0.0f){
         return(result);
     }
-    result = adjugate_m3(m) * (1.0f / det);
+    result = m3_adjugate(m) * (1.0f / det);
     return(result);
 }
 
 static m4
-inverse_m4(m4 m){
+m4_inverse(m4 m){
     m4 result = ZERO_INIT;
-    f32 det = determinant_m4(m);
+    f32 det = m4_determinant(m);
     if(det == 0.0f){
         return(result);
     }
-    result = adjugate_m4(m) * (1.0f / det);
+    result = m4_adjugate(m) * (1.0f / det);
     return(result);
 }
 
@@ -398,7 +398,7 @@ inverse_m4(m4 m){
 ///////////////////////////////
 
 static m4
-translate_m4(v3 pos){
+m4_translate(v3 pos){
     m4 result = {
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
@@ -409,13 +409,13 @@ translate_m4(v3 pos){
 }
 
 static v3
-get_translation_m4(m4 m){
+m4_get_translation(m4 m){
     v3 result = {m._41, m._42, m._43};
     return(result);
 }
 
 static m4
-scale_m4(v3 pos){
+m4_scale(v3 pos){
     m4 result = {
         pos.x, 0.0f, 0.0f, 0.0f,
         0.0f, pos.y, 0.0f, 0.0f,
@@ -426,13 +426,13 @@ scale_m4(v3 pos){
 }
 
 static v3
-get_scaled_m4(m4 m){
+m4_get_scaled(m4 m){
     v3 result = {m._11, m._22, m._33};
     return(result);
 }
 
 static m3
-rotate_x_m3(f32 degree){
+m3_rotate_x(f32 degree){
     f32 rad = deg_to_rad(degree);
     m3 result = {
         1.0f,  0.0f,         0.0f,
@@ -443,7 +443,7 @@ rotate_x_m3(f32 degree){
 }
 
 static m4
-rotate_x_m4(f32 degree){
+m4_rotate_x(f32 degree){
     f32 rad = deg_to_rad(degree);
     m4 result = {
         1.0f,  0.0f,         0.0f,         0.0f,
@@ -455,7 +455,7 @@ rotate_x_m4(f32 degree){
 }
 
 static m3
-rotate_y_m3(f32 degree){
+m3_rotate_y(f32 degree){
     f32 rad = deg_to_rad(degree);
     m3 result = {
         cos_f32(rad), 0.0f, -sin_f32(rad),
@@ -465,7 +465,8 @@ rotate_y_m3(f32 degree){
     return(result);
 }
 
-static m4 rotate_z_m4(f32 degree){
+static m4
+m4_rotate_z(f32 degree){
     f32 rad = deg_to_rad(degree);
     m4 result = {
         cos_f32(rad), sin_f32(rad), 0.0f, 0.0f,
@@ -477,7 +478,7 @@ static m4 rotate_z_m4(f32 degree){
 }
 
 static m3
-rotate_z_m3(f32 degree){
+m3_rotate_z(f32 degree){
     f32 rad = deg_to_rad(degree);
     m3 result = {
         cos_f32(rad), sin_f32(rad), 0.0f,
@@ -488,7 +489,7 @@ rotate_z_m3(f32 degree){
 }
 
 static m4
-rotate_y_m4(f32 degree){
+m4_rotate_y(f32 degree){
     f32 rad = deg_to_rad(degree);
     m4 result = {
         cos_f32(rad), 0.0f, -sin_f32(rad), 0.0f,
@@ -499,23 +500,24 @@ rotate_y_m4(f32 degree){
     return(result);
 }
 
-static m4 rotate_euler_m4(f32 pitch, f32 yaw, f32 roll){
-    m4 result = rotate_z_m4(roll) *
-                rotate_x_m4(pitch) *
-                rotate_y_m4(yaw);
+static m4
+m4_rotate_euler(f32 pitch, f32 yaw, f32 roll){
+    m4 result = m4_rotate_z(roll) *
+                m4_rotate_x(pitch) *
+                m4_rotate_y(yaw);
     return(result);
 }
 
 static m3
-rotate_euler_m3(f32 pitch, f32 yaw, f32 roll){
-    m3 result = rotate_z_m3(roll) *
-                rotate_x_m3(pitch) *
-                rotate_y_m3(yaw);
+m3_rotate_euler(f32 pitch, f32 yaw, f32 roll){
+    m3 result = m3_rotate_z(roll) *
+                m3_rotate_x(pitch) *
+                m3_rotate_y(yaw);
     return(result);
 }
 
 static m4
-rotate_axis_m4(v3 axis, f32 deg){
+m4_rotate_axis(v3 axis, f32 deg){
     f32 rad = deg_to_rad(deg);
     f32 c = cos_f32(rad);
     f32 s = sin_f32(rad);
@@ -534,7 +536,8 @@ rotate_axis_m4(v3 axis, f32 deg){
     return(result);
 }
 
-static m3 rotate_axis_m3(v3 axis, f32 deg){
+static m3
+m3_rotate_axis(v3 axis, f32 deg){
     f32 rad = deg_to_rad(deg);
     f32 c = cos_f32(rad);
     f32 s = sin_f32(rad);
@@ -553,7 +556,7 @@ static m3 rotate_axis_m3(v3 axis, f32 deg){
 }
 
 static v3
-multiply_m4_point(v3 point, m4 m){
+m4_multiply_point(v3 point, m4 m){
     v3 result = ZERO_INIT;
     result.x = point.x * m._11 + point.y * m._21 +
                point.z * m._31 + 1.0f * m._41;
@@ -565,7 +568,7 @@ multiply_m4_point(v3 point, m4 m){
 }
 
 static v3
-multiply_m4_v(v3 v, m4 m){
+m4_multiply_v(v3 v, m4 m){
     v3 result = ZERO_INIT;
     result.x = v.x * m._11 + v.y * m._21 + v.z * m._31 + 0.0f * m._41;
     result.y = v.x * m._12 + v.y * m._22 + v.z * m._32 + 0.0f * m._42;
@@ -574,7 +577,7 @@ multiply_m4_v(v3 v, m4 m){
 }
 
 static v3
-multiply_m3_v(v3 v, m3 m){
+m3_multiply_v(v3 v, m3 m){
     v3 result = ZERO_INIT;
     result.x = inner_product_v3(v, make_v3(m._11, m._21, m._31));
     result.y = inner_product_v3(v, make_v3(m._12, m._22, m._32));
@@ -583,25 +586,25 @@ multiply_m3_v(v3 v, m3 m){
 }
 
 static m4
-transform_euler(v3 scale, v3 rotation, v3 translation){
-    m4 result = scale_m4(scale) *
-                rotate_euler_m4(rotation.x,
+m4_transform_euler(v3 translation, v3 rotation, v3 scale){
+    m4 result = m4_scale(scale) *
+                m4_rotate_euler(rotation.x,
                                 rotation.y,
                                 rotation.z) *
-                translate_m4(translation);
+                m4_translate(translation);
     return(result);
 }
 
 static m4
-transform(v3 scale, v3 rotation, f32 deg, v3 translation){
-    m4 result = scale_m4(scale) *
-                rotate_axis_m4(rotation, deg) *
-                translate_m4(translation);
+m4_transform(v3 translation, v3 axis, f32 deg, v3 scale){
+    m4 result = m4_scale(scale) *
+                m4_rotate_axis(axis, deg) *
+                m4_translate(translation);
     return(result);
 }
 
 static m4
-view_matrix(v3 position, v3 target, v3 up){
+m4_view_matrix(v3 position, v3 target, v3 up){
     v3 forward = normalized_v3(target - position);
     v3 right = normalized_v3(cross_product_v3(up, forward));
     v3 new_up = cross_product_v3(forward, right);
@@ -618,7 +621,7 @@ view_matrix(v3 position, v3 target, v3 up){
 }
 
 static m4
-projection(f32 fov, f32 aspect, f32 near, f32 far){
+m4_projection(f32 fov, f32 aspect, f32 near, f32 far){
     f32 tan_half_fov = tan_f32(deg_to_rad((fov * 0.5f)));
     f32 fov_y = 1.0f / tan_half_fov;
     f32 fov_x = fov_y / aspect;
@@ -634,7 +637,7 @@ projection(f32 fov, f32 aspect, f32 near, f32 far){
 }
 
 static m4
-orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far){
+m4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far){
     f32 _11 = 2.0f / (right - left);
     f32 _22 = 2.0f / (top - bottom);
     f32 _33 = 1.0f / (far - near);

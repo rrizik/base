@@ -254,7 +254,7 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
 static String8
 str8_null_terminate(Arena* arena, String8 input){
     u8* str = push_array(arena, u8, input.size + 1);
-    memory_copy(str, input.str, input.size + 1);
+    mem_copy(str, input.str, input.size + 1);
 
     String8 result = {
         .str = str,
@@ -360,7 +360,8 @@ push_string(Arena* arena, String8 value){
 static void
 str8_list_push_back(Arena* arena, String8Node* str8_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
-    string_node->str.str = string.str;
+    string_node->str.str = push_array(arena, u8, string.size);
+    mem_copy(string_node->str.str, string.str, string.size);
     string_node->str.size = string.size;
     dll_push_back(str8_sentinel, string_node);
 }
@@ -408,6 +409,7 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
     }
 	size -= join_opts.mid.size;
 
+    // allocate size
     u8* str = push_array(arena, u8, size + 1);
     u8* ptr = str;
 
@@ -435,9 +437,8 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
     mem_copy(ptr, join_opts.post.str, join_opts.post.size);
     ptr += join_opts.post.size;
 
-    // write zero
+    // write zero, why? Because OS functions expect null terminated strings.
     *ptr = 0;
-
 
     String8 result = {str, size};
     return(result);
@@ -448,15 +449,14 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 // TODO: Maybe pass in String8Join?
 static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
-    // CLEANUP: why am I calling scratch arena here?
     ScratchArena scratch = begin_scratch(0);
-    defer(end_scratch(scratch));
 
-    String8Node parts = str8_split(arena, path, '\\');
-    str8_list_push_back(arena, &parts, value);
+    String8Node parts = str8_split(scratch.arena, path, '\\');
+    str8_list_push_back(scratch.arena, &parts, value);
     String8Join join = {0};
     join.mid = str8_literal("\\");
     String8 result = str8_join(arena, &parts, join);
+    end_scratch(scratch);
 
     return(result);
 }
@@ -485,17 +485,6 @@ str8_path_append(Arena* arena, String8 path, String8 value){
 //static bool operator==(const String8& a, const String8& b){
 static bool operator==(String8 a, String8 b){
     bool result = str8_compare(a, b);
-    //u8* a_string = (u8*)a.str;
-    //u8* b_string = (u8*)b.str;
-    //if(a.size != b.size){
-    //    return(false);
-    //}
-    //for(u32 i = 0; i < a.size; ++i){
-    //    if(*a_string++ != *b_string++){
-    //        return(false);
-    //    }
-    //}
-    //return(true);
     return(result);
 }
 

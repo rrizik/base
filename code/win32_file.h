@@ -320,5 +320,25 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
     return(result);
 }
 
-// list out the files in a directory
+static String8
+os_get_exe_path(Arena* arena) {
+    String8 result = {0};
+
+    wchar buff[1024];
+    u32 size = GetModuleFileNameW(0, buff, 1024); // size doesn't include null terminated character
+
+    String16 utf16_string = {0};
+    utf16_string.str = (u16*)buff;
+    utf16_string.size = size;
+
+    ScratchArena scratch = begin_scratch(0);
+    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
+    result.str = push_array(arena, u8, size + 1); // +1 to include null terminated character
+    result.size = size;
+    memory_copy(result.str, utf8_string.str, size);
+    end_scratch(scratch);
+
+    return(result);
+}
+
 #endif

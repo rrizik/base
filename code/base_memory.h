@@ -17,13 +17,13 @@ memory_set(void *base, int src, size_t size) {
 
 // UNTESTED:
 #define mem_copy(dst, src, size) memory_copy(dst, src, size)
-static void*
+static void
 memory_copy(void *dst, void *src, size_t size) {
-    unsigned char *d = (unsigned char *)dst;
-    unsigned char *s = (unsigned char *)src;
-    while(size--) *d++ = *s++;
-
-    return(dst);
+    u8* d = (u8*)dst;
+    u8* s = (u8*)src;
+    while(size--) {
+        *d++ = *s++;
+    }
 }
 
 ///////////////////////////////

@@ -52,12 +52,17 @@ static v2s32 make_v2s32(s32 x, s32 y){
 }
 
 static v3 make_v3(f32 x, f32 y, f32 z){
-    v3 result = {{x, y, z}};
+    v3 result = {x, y, z};
     return(result);
 }
 
 static v4 make_v4(f32 x, f32 y, f32 z, f32 w){
-    v4 result = {{x, y, z, w}};
+    v4 result = {x, y, z, w};
+    return(result);
+}
+
+static RGBA make_RGBA(f32 r, f32 g, f32 b, f32 a){
+    RGBA result = {r, g, b, a};
     return(result);
 }
 
