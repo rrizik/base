@@ -1,11 +1,7 @@
 #ifndef PCG_BASIC_H_INCLUDED
 #define PCG_BASIC_H_INCLUDED 1
 
-// UNTESTED
-// UNTESTED
-// UNTESTED
-// UNTESTED
-// UNTESTED
+// NOTE: PCG_CPP Random number generator. I renamed the functions so they make more sense to me and are a bit more readable.
 
 #include <inttypes.h>
 
@@ -35,7 +31,6 @@ static pcg32_random_t pcg32_global = PCG32_INITIALIZER;
 ///////////////////////////////
 
 // Generate a uniformly distributed 32-bit random number
-// EXAMPLE: random()
 // call me once, shame on me. call me twice, u64.
 #define random_u32() random_u32_(&pcg32_global)
 static u32 random_u32_(pcg32_random_t* rng){
@@ -46,6 +41,7 @@ static u32 random_u32_(pcg32_random_t* rng){
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 
+// Generate a uniformly distributed 64-bit random number
 #define random_u64() random_u64_(&pcg32_global)
 static u64 random_u64_(pcg32_random_t* rng){
     u64 value = random_u32_(rng);
@@ -55,12 +51,13 @@ static u64 random_u64_(pcg32_random_t* rng){
 }
 
 // Generate a 32-bit floating point random number
-// EXAMPLE: random_f32()
 static f32 random_f32(){
     u32 x = random_u32();
     return((f32)(u32)(x >> 8) * 0x1.0p-24f);
 }
 
+// Generate a 64-bit floating point random number
+// We use random_u64() to create a 64-bit floating point number
 static f64 random_f64(){
     u64 x = random_u64();
     return((f64)(u64)(x >> 11) * 0x1.0p-53);

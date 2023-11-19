@@ -74,9 +74,10 @@
     #define ZERO_INIT {0}
 #endif
 
-#define STR_(x) #x
-#define STR(x) STR_(x)
-#define GLUE(a,b) a##b
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+#define GLUE_(a,b) a##b
+#define GLUE(a,b) GLUE_(a,b)
 
 #define KB(x) ((x) * 1024LL)
 #define MB(x) (KB(x) * 1024LL)
@@ -110,10 +111,8 @@ template <typename F> Defer<F> MakeDefer(F f) {
 }
 
 #define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
-#define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
-//#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){(code);})
 #define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([&](){(code);})
-//#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([=](){(code);})
+#define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
 #pragma clang diagnostic pop
 #endif
 

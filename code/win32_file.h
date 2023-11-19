@@ -6,22 +6,11 @@
 #include "base_types.h"
 #include "base_memory.h"
 #include "base_string.h"
+#include "win32_logging.h"
 
 // TODO: WIN32_FILE_ATTRIBUTE_DATA to get file attributes
 // TODO: UNTESTED: Retest this entire file
 
-// TODO: This probably needs to be part if an print logging file
-#include <stdio.h>
-static void print(char* format, ...) {
-    char buffer[4096] = {};
-    va_list args;
-    va_start(args, format);
-    s32 result = vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-
-    printf("%s", buffer);
-    OutputDebugStringA(buffer);
-}
 
 // TODO: This probably needs to be part if an IO file, maybe win32_io? idk.
 static String8
@@ -209,7 +198,7 @@ os_file_open(String8 dir, String8 filename, bool overwrite = 0){
     LARGE_INTEGER LARGE_file_size;
     if(!GetFileSizeEx(result.handle, &LARGE_file_size)){
         result.error = GetLastError();
-        print("os_file_read: failed to get file size - error code: %d\n", result.error);
+        print("os_file_open: failed to get file size - error code: %d\n", result.error);
         return(result);
     }
 

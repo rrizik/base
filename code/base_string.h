@@ -6,6 +6,7 @@
 #include "base_memory.h"
 
 // TODO: UNTESTED: Almost nothing in this file is tested or tested correctly.
+// TODO: string_to_float() that returns (value, succeed, remainder)
 // This entire thing needs a full pass.
 
 ///////////////////////////////

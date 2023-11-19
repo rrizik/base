@@ -5,6 +5,7 @@
 // NOTE: Compound Types
 ///////////////////////////////
 //TODO: inline a [] operator for all compoint types
+//TODO: +=
 
 typedef union v2{
     struct{ f32 x; f32 y; };
@@ -425,7 +426,15 @@ distance_v2(v2 a, v2 b){
 
 static v2
 normalized_v2(v2 a){
-    v2 result = v2_mul(a, (1.0f / magnitude_v2(a)));
+    v2 result = {0};
+    f32 magnitude = magnitude_v2(a);
+    if(magnitude != 0){
+        f32 one_over_magnitude = (1.0f / magnitude);
+        result = v2_mul(a, one_over_magnitude);
+    }
+    else{
+        result = {0, 0};
+    }
     return(result);
 }
 
