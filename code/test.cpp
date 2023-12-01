@@ -513,9 +513,8 @@ s32 main(s32 argc, char** argv){
     {
         Arena* arena = make_arena(KB(1));
         String8 cwd = os_get_cwd(arena);
-        String8 dir_code = str8_path_append(arena, cwd, str8_literal("code"));
-        String8 dir_build = str8_path_append(arena, cwd, str8_literal("build"));
-        String8 test_file = str8_literal("test_file.bin");
+        String8 filename = str8_literal("test_file");
+        String8 folder_filename = str8_literal("folder\test_file");
 
         // utf8 to utf16 to utf8
         {
@@ -534,6 +533,35 @@ s32 main(s32 argc, char** argv){
         }
 
 
+        //os_file_open/os_file_close
+        {
+            File file = os_file_open(filename, GENERIC_READ|GENERIC_WRITE, CREATE_ALWAYS);
+            eval(file.handle != INVALID_HANDLE_VALUE);
+            bool succeed = os_file_close(&file);
+            eval(succeed == true);
+        }
+
+        // os_file_read/os_file_write
+        {
+            File file = os_file_open(filename, GENERIC_WRITE, CREATE_ALWAYS);
+            eval(file.handle != INVALID_HANDLE_VALUE);
+
+            String8 write_data = str8_literal("Some random data that I want in the file\n");
+            eval(os_file_write(&file, write_data.str, write_data.size) == 1);
+            os_file_close(&file);
+
+            file = os_file_open(filename, GENERIC_READ, OPEN_EXISTING);
+            String8 data = os_file_read(arena, &file);
+            eval(data.size == write_data.size);
+            os_file_close(&file);
+            //eval(os_file_delete(dir_build, test_file) == false);
+            //eval(os_file_exists(dir_build, test_file) == false);
+            //eval(os_file_create(dir_build, test_file) == true);
+            //eval(os_file_exists(dir_build, test_file) == true);
+            //eval(os_file_create(dir_build, test_file) == false);
+            //eval(os_file_create(dir_build, test_file) == true);
+            //eval(os_file_delete(dir_build, test_file) == true);
+        }
         // os_dir_files
         //{
         //    String8Node node = {0};
@@ -543,16 +571,6 @@ s32 main(s32 argc, char** argv){
         //    u32 a = 1;
         //}
 
-        //// os_file_read/os_file_write
-        //{
-        //    eval(os_file_delete(dir_build, test_file) == false);
-        //    eval(os_file_exists(dir_build, test_file) == false);
-        //    eval(os_file_create(dir_build, test_file) == true);
-        //    eval(os_file_exists(dir_build, test_file) == true);
-        //    eval(os_file_create(dir_build, test_file) == false);
-        //    eval(os_file_create(dir_build, test_file) == true);
-        //    eval(os_file_delete(dir_build, test_file) == true);
-        //}
         //{
         //    String8 write_data = str8_literal("Some random data that I want in the file\n");
         //    File file = os_file_open(dir_build, test_file, 1);

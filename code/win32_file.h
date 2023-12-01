@@ -74,7 +74,6 @@ os_utf16_utf8(Arena* arena, String16 utf16_string){
 
 typedef struct File{
     HANDLE handle;
-    DWORD error;
     u64 size;
 } File;
 
@@ -93,32 +92,70 @@ os_get_cwd(Arena* arena){
     return(utf8_string);
 }
 
+// UNTESTED do I need to pass back a pointer? Its not clear if this data will persist outside this scope
+static File
+os_file_open(String8 path, DWORD access_writes, DWORD operation){
+    File result = {0};
+
+    ScratchArena scratch = begin_scratch(0);
+    String16 wide_path = os_utf8_utf16(scratch.arena, path);
+    defer(end_scratch(scratch));
+
+    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
+    if(result.handle){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    LARGE_INTEGER large_file_size;
+    if(!GetFileSizeEx(result.handle, &large_file_size)){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    result.size = (u64)large_file_size.QuadPart;
+
+    return(result);
+}
+
+static bool
+os_file_close(File* file){
+    bool result = CloseHandle(file->handle);
+    if(!result){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    file->size = 0;
+    return(result);
+}
+
 // TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
 // TODO: Better error handling on failures? Maybe include a DWORD error in File, maybe pass in File and only return DWORD, maybe think about overall better logging? assert? idk have to ask
 static String8
 os_file_read(Arena* arena, File* file){
     String8 result = {0};
 
-    LARGE_INTEGER LARGE_file_size;
-    if(!GetFileSizeEx(file->handle, &LARGE_file_size)){
-        file->error = GetLastError();
-        print("os_file_read: failed to get file size - error code; %d\n", file->error);
+    LARGE_INTEGER large_file_size;
+    if(!GetFileSizeEx(file->handle, &large_file_size)){
+        print_last_error(GetLastError());
         return(result);
     }
 
-    result.size = (u64)LARGE_file_size.QuadPart;
-    result.str = push_array(arena, u8, result.size);
+    size_t size = (u64)large_file_size.QuadPart;
+    result.str = push_array(arena, u8, size);
     DWORD bytes_read = 0;
-    if(!ReadFile(file->handle, result.str, (DWORD)result.size, &bytes_read, 0)){
-        file->error = GetLastError();
-        print("os_file_read: failed to read file - error code: %d\n", file->error);
+    if(!ReadFile(file->handle, result.str, (DWORD)size, &bytes_read, 0)){
+        print_last_error(GetLastError());
         return(result);
     }
 
-    bool match = (bytes_read == result.size);
+    bool match = (bytes_read == size);
+    result.size = match ? size : 0;
+
     if(!match){
-        file->error = GetLastError();
-        print("os_file_read: bytes_read != file_size - error code: %b\n", file->error);
+        print("%s(%i) error(%i): ", __FILE__, __LINE__, match);
+        print("%bytes_read != size: (%i, %i)\n", bytes_read, size);
         return(result);
     }
     return(result);
@@ -135,8 +172,7 @@ os_file_write(File* file, void* base, u64 size){
         .OffsetHigh = (DWORD)(file->size >> 32)
     };
     if(!WriteFile(file->handle, base, (DWORD)size, &bytes_written, &overlapped)){
-        file->error = GetLastError();
-        print("os_file_write: failed to write data to file - error code: %d\n", file->error);
+        print_last_error(GetLastError());
         return(result);
     }
 
@@ -159,57 +195,14 @@ os_file_create(String8 dir, String8 filename){
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-    if(file_handle == INVALID_HANDLE_VALUE){
-        DWORD err = GetLastError();
-        print("os_file_create: failed to create file handle - err: %d\n", err);
+    if(file_handle){
+        print_last_error(GetLastError());
         return(result);
     }
     CloseHandle(file_handle);
 
     result = true;
     return(result);
-}
-
-// UNTESTED do I need to pass back a pointer? Its not clear if this data will persist outside this scope
-static File
-os_file_open(String8 dir, String8 filename, bool overwrite = 0){
-    File result = {0};
-    ScratchArena scratch = begin_scratch(0);
-    defer(end_scratch(scratch));
-
-    String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-
-    DWORD action;
-    if(overwrite){
-        action = CREATE_ALWAYS;
-    }
-    else{
-        action = OPEN_ALWAYS;
-    }
-
-    result.handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, action, 0, 0);
-    if(result.handle == INVALID_HANDLE_VALUE){
-        result.error = GetLastError();
-        print("os_file_open: failed to create file handle - error code: %d\n", result.error);
-        return(result);
-    }
-
-    LARGE_INTEGER LARGE_file_size;
-    if(!GetFileSizeEx(result.handle, &LARGE_file_size)){
-        result.error = GetLastError();
-        print("os_file_open: failed to get file size - error code: %d\n", result.error);
-        return(result);
-    }
-
-    result.size = (u64)LARGE_file_size.QuadPart;
-    return(result);
-}
-
-static void
-os_file_close(File* file){
-    CloseHandle(file->handle);
-    file->size = 0;
 }
 
 // INCOMPLETE
@@ -225,7 +218,7 @@ os_file_exists(String8 dir, String8 filename){
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
     defer(CloseHandle(file_handle));
 
-    if(file_handle == INVALID_HANDLE_VALUE){
+    if(file_handle){
         return(result);
     }
 
@@ -291,7 +284,7 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
 
     WIN32_FIND_DATAW data = {0};
     HANDLE file_handle = FindFirstFileW((wchar*)dir_utf16.str, &data);
-    if(file_handle == INVALID_HANDLE_VALUE){
+    if(file_handle){
         DWORD err = GetLastError();
         print("os_dir_files: failed to create file handle - dir: %s - error code: %d\n", dir.str, err);
         return(result);

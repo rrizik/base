@@ -53,12 +53,11 @@
 #if ENABLE_ASSERT
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
 # define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define assert_hr(hr) assert(SUCCEEDED(hr)) // DX assert macro?
-# define assert_fh(fh) do { if (((fh).handle) == INVALID_HANDLE_VALUE) __debugbreak(); } while (0) // assert file handle
+# define assert_fh(fh) assert((((fh).handle) != (INVALID_HANDLE_VALUE)))
 #else
 # define assert(cond)
 # define ASSERT(cond)
-# define assert_hr(cond)
+# define assert_fh(cond)
 #endif
 
 #define invalid_code_path               assert(!(bool)"invalid_code_path");

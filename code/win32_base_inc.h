@@ -5,7 +5,7 @@
 #include "win32_logging.h"
 #include "win32_file.h"
 
-#define assert_hr(hr) assert(SUCCEEDED(hr))
+#define assert_hr(hr) assert((SUCCEEDED((hr))))
 
 #endif
 
