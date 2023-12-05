@@ -6,6 +6,8 @@
 #include "win32_file.h"
 
 #define assert_hr(hr) assert((SUCCEEDED((hr))))
+global HRESULT hr;
+
 
 #endif
 

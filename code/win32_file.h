@@ -303,24 +303,39 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
 }
 
 static String8
-os_get_exe_path(Arena* arena) {
+os_get_data_path(Arena* arena) {
     String8 result = {0};
-
-    wchar buff[1024];
-    u32 size = GetModuleFileNameW(0, buff, 1024); // size doesn't include null terminated character
-
-    String16 utf16_string = {0};
-    utf16_string.str = (u16*)buff;
-    utf16_string.size = size;
-
     ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String16 utf16_string;
+    utf16_string.str = push_array(scratch.arena, u16, 1024);
+    utf16_string.size = GetModuleFileNameW(0, (wchar*)utf16_string.str, 1024); // note(rr): size doesn't include null terminated character, so we initialize +1 to in the next line to include null terminated character. Memory should be 0 initialized but you don't know if someone else is going to use that byte and change its value.
     String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
-    result.str = push_array(arena, u8, size + 1); // +1 to include null terminated character
-    result.size = size;
-    memory_copy(result.str, utf8_string.str, size);
-    end_scratch(scratch);
+
+    String8Node split_path = str8_split(scratch.arena, utf8_string, '\\');
+    dll_pop_back(&split_path); // remove exe
+    String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
+    result = str8_join(arena, &split_path, opts);
 
     return(result);
 }
 
+static String8
+os_get_exe_path(Arena* arena) {
+    String8 result = {0};
+    ScratchArena scratch = begin_scratch(0);
+    defer(end_scratch(scratch));
+
+    String16 utf16_string;
+    utf16_string.str = push_array(scratch.arena, u16, 1024);
+    utf16_string.size = GetModuleFileNameW(0, (wchar*)utf16_string.str, 1024); // note(rr): size doesn't include null terminated character, so we initialize +1 to in the next line to include null terminated character. Memory should be 0 initialized but you don't know if someone else is going to use that byte and change its value.
+    result.str = push_array(arena, u8, utf16_string.size + 1);
+    result.size = utf16_string.size;
+
+    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
+    memory_copy(result.str, utf8_string.str, utf8_string.size);
+
+    return(result);
+}
 #endif
