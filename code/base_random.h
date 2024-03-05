@@ -38,7 +38,8 @@ static u32 random_u32_(pcg32_random_t* rng){
     rng->state = oldstate * 6364136223846793005ULL + rng->inc;
     u32 xorshifted = (u32)((oldstate >> 18u) ^ oldstate) >> 27u;
     u32 rot = oldstate >> 59u;
-    return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
+
+    return (xorshifted >> rot) | (xorshifted << ((0-rot) & 31));
 }
 
 // Generate a uniformly distributed 64-bit random number
@@ -67,7 +68,7 @@ static f64 random_f64(){
 // EXAMPLE: ((s32)random_range_u32(201) - 100) / 100.0f;
 #define random_range_u32(bound) random_range_u32_r(&pcg32_global, bound)
 static u32 random_range_u32_r(pcg32_random_t* rng, u32 bound){
-    u32 threshold = -bound % bound;
+    u32 threshold = (0-bound) % bound;
 
     for (;;) {
         u32 r = random_u32_(rng);
@@ -78,7 +79,7 @@ static u32 random_range_u32_r(pcg32_random_t* rng, u32 bound){
 
 #define random_range_u64(bound) random_range_u64_(&pcg32_global, bound)
 static u64 random_range_u64_(pcg32_random_t* rng, u64 bound){
-    u64 threshold = -bound % bound;
+    u64 threshold = (0-bound) % bound;
 
     for (;;) {
         u64 r = random_u64_(rng);

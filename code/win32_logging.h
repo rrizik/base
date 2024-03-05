@@ -2,8 +2,9 @@
 #define WIN32_LOGGING
 
 #include <stdio.h>
-static void print(char* format, ...) {
+static void print(const char* format, ...) {
     char buffer[4096] = {};
+
     va_list args;
     va_start(args, format);
     s32 result = vsnprintf(buffer, sizeof(buffer), format, args);
@@ -29,8 +30,7 @@ print_last_error_(DWORD error, s32 line, String8 file_name){
     size_t size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPWSTR) &message, 0, NULL);
 
     String16 result = {(u16*)message, size};
-    print("%s(%i) error(%i): ", file_name.str, line, error);
-    print("%ls\n", result.str);
+    print("%s(%i) error(%i): %ls\n", file_name.str, line, error, result.str);
 }
 
 #endif

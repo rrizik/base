@@ -15,6 +15,7 @@ typedef union v2{
 
 typedef union v3{
     struct{ f32 x; f32 y; f32 z; };
+    struct{ f32 w; f32 h; f32 l; };
     f32 e[3];
 } v3;
 
@@ -64,6 +65,16 @@ static v4 make_v4(f32 x, f32 y, f32 z, f32 w){
 
 static RGBA make_RGBA(f32 r, f32 g, f32 b, f32 a){
     RGBA result = {r, g, b, a};
+    return(result);
+}
+
+static v2 v2_from_v3(v3 v){
+    v2 result = {v.x, v.y};
+    return(result);
+}
+
+static v2 v2_from_v2s32(v2s32 v){
+    v2 result = {(f32)v.x, (f32)v.y};
     return(result);
 }
 
@@ -304,7 +315,7 @@ static v2s32 v2s32_mul(v2s32 a, s32 b){
     return(result);
 }
 
-static v2 v2_mul(v2 a, f32 b){
+static v2 v2_scale(v2 a, f32 b){
     v2 result = {
         a.x * b,
         a.y * b,
@@ -387,6 +398,11 @@ round_v2_v2s32(v2 value){
     return(result);
 }
 
+// NOTE: Dot Product:
+// If positive, the vectors are pointing in the same *general* direction
+// If negative, the vectors point in opposing *general* directions
+// If 0, the vectors are perpendicular important: You can use 0 to face things in the right direction (forward vector, right vector)
+
 #define dot_v2(a, b) inner_product_v2(a, b)
 static f32
 inner_product_v2(v2 a, v2 b){
@@ -410,12 +426,14 @@ static bool opposite_direction_v2(v2 a, v2 b){
 
 static f32
 magnitude_sqrt_v2(v2 a){
-    return(inner_product_v2(a, a));
+    f32 result = inner_product_v2(a, a);
+    return(result);
 }
 
 static f32
 magnitude_v2(v2 a){
-    return(sqrtf(inner_product_v2(a, a)));
+    f32 result = sqrtf(inner_product_v2(a, a));
+    return(result);
 }
 
 static f32
@@ -425,12 +443,12 @@ distance_v2(v2 a, v2 b){
 }
 
 static v2
-normalized_v2(v2 a){
+normalize_v2(v2 a){
     v2 result = {0};
     f32 magnitude = magnitude_v2(a);
     if(magnitude != 0){
         f32 one_over_magnitude = (1.0f / magnitude);
-        result = v2_mul(a, one_over_magnitude);
+        result = v2_scale(a, one_over_magnitude);
     }
     else{
         result = {0, 0};
@@ -440,7 +458,7 @@ normalized_v2(v2 a){
 
 static v2
 direction_v2(v2 a, v2 b){
-    v2 result = normalized_v2(b - a);
+    v2 result = normalize_v2(b - a);
     return(result);
 }
 
@@ -456,7 +474,7 @@ static v2
 project_v2(v2 a, v2 b){
     f32 inner =  inner_product_v2(a, b);
     f32 mag_sqrt = magnitude_sqrt_v2(b);
-    v2 result = v2_mul(b, (inner / mag_sqrt));
+    v2 result = v2_scale(b, (inner / mag_sqrt));
     return(result);
 }
 
@@ -522,14 +540,14 @@ distance_v3(v3 a, v3 b){
 }
 
 static v3
-normalized_v3(v3 a){
+normalize_v3(v3 a){
     v3 result = a * (1.0f / magnitude_v3(a));
     return(result);
 }
 
 static v3
 direction_v3(v3 a, v3 b){
-    v3 result = normalized_v3(b - a);
+    v3 result = normalize_v3(b - a);
     return(result);
 }
 

@@ -1,15 +1,14 @@
 #include "base_inc.h"
 #include "win32_base_inc.h"
 
-static bool PRINT_ALL = 0;
-
-static Arena* fail_arena = {};
+static bool print_verbose = 0;
+static Arena* global_arena = os_make_arena(KB(1));
 
 // maybe push String8 instead, not sure
 static void
 push_message(s32 line, const char* message, u32 size){
     s32 line_length = snprintf(0, 0, "%d", line); // get string length of line
-    u8* message_string = (u8*)push_array(fail_arena, u8, size + (u32)line_length + 6);
+    u8* message_string = (u8*)push_array(global_arena, u8, size + (u32)line_length + 6);
 
     *message_string++ = ' ';
     *message_string++ = ' ';
@@ -31,7 +30,7 @@ static void check(bool cond, s32 line, const char* msg, u32 size){
         fail_count++;
         push_message(line, msg, size);
     }
-    if(PRINT_ALL){
+    if(print_verbose){
         print("%d - %s - %s\n", line, (cond ? "SUCCEED" : " FAILED"), msg);
     }
 }
@@ -45,16 +44,9 @@ s32 main(s32 argc, char** argv){
     if(argc > 1){
         verbos = str8(argv[1], 2);
         if(com_verbos == verbos){
-            PRINT_ALL = 1;
+            print_verbose = 1;
         }
     }
-
-    // init arena for failed messages to print out at the end
-	void* memory = calloc((KB(1) + sizeof(Arena)), 1);
-	fail_arena = (Arena*)memory;
-	fail_arena->base = (u8*)memory + sizeof(Arena);
-	fail_arena->size = KB(1);
-	fail_arena->used = 0;
 
     // base_types.h
     {
@@ -90,8 +82,8 @@ s32 main(s32 argc, char** argv){
         // type_min_max
         eval(s8_min == -128);
         eval(s16_min == -32768);
-        eval(s32_min == -2147483648);
-        eval(s64_min == -9223372036854775808ll);
+        eval(s32_min == -((s64)2147483648));
+        eval(s64_min == -((s64)9223372036854775808ll));
         eval(s8_max == 127);
         eval(s16_max == 32767);
         eval(s32_max == 2147483647);
@@ -99,7 +91,7 @@ s32 main(s32 argc, char** argv){
         eval(u8_max == 255);
         eval(u16_max == 65535);
         eval(u32_max == 4294967295);
-        eval(u64_max == 18446744073709551615ull);
+        eval(u64_max == 18446744073709551615ll);
 
         // defer
         {
@@ -115,86 +107,86 @@ s32 main(s32 argc, char** argv){
     {
         // compound type operators
         v2s32 _v2s32 = {1, 2};
-        eval((_v2s32 + _v2s32) == ((v2s32){2, 4}));
-        eval((_v2s32 - _v2s32) == ((v2s32){0, 0}));
-        eval((3 * _v2s32) == ((v2s32){3, 6}));
-        eval((_v2s32 * 3) == ((v2s32){3, 6}));
+        eval((_v2s32 + _v2s32) == make_v2s32(2, 4));
+        eval((_v2s32 - _v2s32) == make_v2s32(0, 0));
+        eval((3 * _v2s32) == make_v2s32(3, 6));
+        eval((_v2s32 * 3) == make_v2s32(3, 6));
         eval(_v2s32 == _v2s32);
         eval(!(_v2s32 != _v2s32));
 
         v2 _v2 = {1, 2};
-        eval((_v2 + _v2) == ((v2){2, 4}));
-        eval((_v2 - _v2) == ((v2){0, 0}));
-        eval((3 * _v2) == ((v2){3, 6}));
-        eval((_v2 * 3) == ((v2){3, 6}));
+        eval((_v2 + _v2) == make_v2(2, 4));
+        eval((_v2 - _v2) == make_v2(0, 0));
+        eval((3 * _v2) == make_v2(3, 6));
+        eval((_v2 * 3) == make_v2(3, 6));
         eval(_v2 == _v2);
         eval(!(_v2 != _v2));
 
         v3 _v3 = {1, 2, 0.5f};
-        eval((_v3 + _v3) == ((v3){2, 4, 1.0f}));
-        eval((_v3 - _v3) == ((v3){0, 0, 0}));
-        eval((3 * _v3) == ((v3){3, 6, 1.5f}));
-        eval((_v3 * 3) == ((v3){3, 6, 1.5f}));
+        eval((_v3 + _v3) == make_v3(2, 4, 1.0f));
+        eval((_v3 - _v3) == make_v3(0, 0, 0));
+        eval((3 * _v3) == make_v3(3, 6, 1.5f));
+        eval((_v3 * 3) == make_v3(3, 6, 1.5f));
         eval(_v3 == _v3);
         eval(!(_v3 != _v3));
 
         v4 _v4 = {1, 2, 0.5f, 3};
-        eval((_v4 + _v4) == ((v4){2, 4, 1.0f, 6}));
-        eval((_v4 - _v4) == ((v4){0, 0, 0, 0}));
-        eval((3 * _v4) == ((v4){3, 6, 1.5f, 9}));
-        eval((_v4 * 3) == ((v4){3, 6, 1.5f, 9}));
+        eval((_v4 + _v4) == make_v4(2, 4, 1.0f, 6));
+        eval((_v4 - _v4) == make_v4(0, 0, 0, 0));
+        eval((3 * _v4) == make_v4(3, 6, 1.5f, 9));
+        eval((_v4 * 3) == make_v4(3, 6, 1.5f, 9));
         eval(_v4 == _v4);
         eval(!(_v4 != _v4));
 
         // vector2 math
-        eval(round_v2(((v2){1.1f, 1.9f})) == ((v2){1.0f, 2.0f}));
-        eval(round_v2_v2s32(((v2){1.1f, 1.9f})) == ((v2s32){1, 2}));
-        eval(inner_product_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == 0);
-        eval(is_perpendicular_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == 1);
-        eval(right_direction_v2(((v2){1.0f, 0.5f}), ((v2){1.0f, 0.8f})) == 1);
-        eval(same_direction_v2((v2){1.0f, 0.5f}, (v2){1.0f, 0.8f}) == 1);
-        eval(left_direction_v2(((v2){1.0f, 0.5f}), ((v2){-1.0f, 0.8f})) == 1);
-        eval(opposite_direction_v2((v2){1.0f, 0.5f}, (v2){-1.0f, 0.8f}) == 1);
-        eval(magnitude_sqrt_v2((v2){3.0f, 0.0f}) == 9);
-        eval(magnitude_v2((v2){3.0f, 0.0f}) == 3);
-        eval(distance_v2((v2){0.0f, 0.0f}, (v2){3.0f, 3.0f}) == 4.2426405f);
-        eval(distance_v2((v2){0.0f, 0.0f}, (v2){3.0f, 0.0f}) == 3);
-        eval(normalized_v2((v2){100.0f, 200.0f}) == ((v2){0.44721359f, 0.89442718f}));
-        eval(direction_v2((v2){0.0f, 0.0f}, (v2){3.0f, 3.0f}) == ((v2){0.707106829f, 0.707106829f}));
-        eval(angle_v2((v2){1.0f, 0.0f}, (v2){-1.0f, 0.0f}) == PI_f32);
-        eval(angle_v2((v2){1.0f, 0.0f}, (v2){0.0f, 1.0f}) == PI_f32/2);
-        eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, 1.0f}) == (PI_f32)/4);
-        eval(angle_v2((v2){1.0f, 0.0f}, (v2){1.0f, -1.0f}) == (PI_f32)/4);
-        eval(project_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.707f, 0.0f}));
-        eval(perpendicular_v2((v2){0.707f, 0.707f}, (v2){0.5f, 0.0f}) == ((v2){0.0f, 0.707f}));
-        eval(reflection_v2((v2){-1.0f, -1.0f}, (v2){1.0f, 0.0f}) == ((v2){1.0, -1.0}));
-        eval(reflection_v2((v2){0.0f, 1.0f}, (v2){1.0f, 0.0f}) == ((v2){0.0, 1.0})); // QUESTION: but why
-        eval(reflection_v2((v2){1.0f, 0.0f}, (v2){1.0f, 0.0f}) == ((v2){-1.0, 0.0}));
+        eval(round_v2(make_v2(1.1f, 1.9f)) == make_v2(1.0f, 2.0f));
+        eval(round_v2_v2s32(make_v2(1.1f, 1.9f)) == make_v2s32(1, 2));
+        eval(inner_product_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == 0);
+        eval(is_perpendicular_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == 1);
+        eval(right_direction_v2(make_v2(1.0f, 0.5f), make_v2(1.0f, 0.8f)) == 1);
+        eval(same_direction_v2(make_v2(1.0f, 0.5f), make_v2(1.0f, 0.8f)) == 1);
+        eval(left_direction_v2(make_v2(1.0f, 0.5f), make_v2(-1.0f, 0.8f)) == 1);
+        eval(opposite_direction_v2(make_v2(1.0f, 0.5f), make_v2(-1.0f, 0.8f)) == 1);
+        eval(magnitude_sqrt_v2(make_v2(3.0f, 0.0f)) == 9);
+        eval(magnitude_v2(make_v2(3.0f, 0.0f)) == 3);
+        eval(distance_v2(make_v2(0.0f, 0.0f), make_v2(3.0f, 3.0f)) == 4.2426405f);
+        eval(distance_v2(make_v2(0.0f, 0.0f), make_v2(3.0f, 0.0f)) == 3);
+        eval(normalize_v2(make_v2(100.0f, 200.0f)) == make_v2(0.44721359f, 0.89442718f));
+        eval(direction_v2(make_v2(0.0f, 0.0f), make_v2(3.0f, 3.0f)) == make_v2(0.707106829f, 0.707106829f));
+        eval(angle_v2(make_v2(1.0f, 0.0f), make_v2(-1.0f, 0.0f)) == PI_f32);
+        eval(angle_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == PI_f32/2);
+        eval(angle_v2(make_v2(1.0f, 0.0f), make_v2(1.0f, 1.0f)) == (PI_f32)/4);
+        eval(angle_v2(make_v2(1.0f, 0.0f), make_v2(1.0f, -1.0f)) == (PI_f32)/4);
+        eval(project_v2(make_v2(0.707f, 0.707f), make_v2(0.5f, 0.0f)) == (make_v2(0.707f, 0.0f)));
+        eval(perpendicular_v2(make_v2(0.707f, 0.707f), make_v2(0.5f, 0.0f)) == (make_v2(0.0f, 0.707f)));
+        eval(reflection_v2(make_v2(-1.0f, -1.0f), make_v2(1.0f, 0.0f)) == (make_v2(1.0, -1.0)));
+        eval(reflection_v2(make_v2(0.0f, 1.0f), make_v2(1.0f, 0.0f)) == (make_v2(0.0, 1.0))); // QUESTION: but why
+        eval(reflection_v2(make_v2(1.0f, 0.0f), make_v2(1.0f, 0.0f)) == (make_v2(-1.0, 0.0)));
 
         // vector3 math
         //eval(round_v3(((v3){1.1f, 1.9f, 2.5f})) == ((v3){1.0f, 2.0f, 2.0f})); not implemented yet
-        eval(inner_product_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == 0);
-        eval(is_perpendicular_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == 1);
-        eval(right_direction_v3(((v3){1.0f, 0.5f, 0.5f}), ((v3){1.0f, 0.8f, 0.5f})) == 1);
-        eval(same_direction_v3((v3){1.0f, 0.5f, 0.5f}, (v3){1.0f, 0.8f, 0.3f}) == 1);
-        eval(opposite_direction_v3((v3){1.0f, 0.5f, 0.5f}, (v3){-1.0f, 0.8f, 0.5f}) == 1);
-        eval(left_direction_v3(((v3){1.0f, 0.5f, 0.5f}), ((v3){-1.0f, 0.8f, 0.5f})) == 1);
-        eval(magnitude_sqrt_v3((v3){3.0f, 0.0f, 3.0f}) == 18);
-        eval(magnitude_v3((v3){3.0f, 0.0f, 3.0f}) == 4.2426405f);
-        eval(distance_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 3.0f, 3.0f}) == 5.19615221f);
-        eval(distance_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 0.0f, 0.0f}) == 3);
-        eval(normalized_v3((v3){100.0f, 200.0f, 400.0f}) == ((v3){0.218217894f, 0.436435789f, 0.872871578f}));
-        eval(direction_v3((v3){0.0f, 0.0f, 0.0f}, (v3){3.0f, 3.0f, 3.0f}) == ((v3){0.577350259f, 0.577350259f, 0.577350259f}));
-        eval(cross_product_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == ((v3){0.0f, 0.0f, 1.0f}));
-        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){-1.0f, 0.0f, 0.0f}) == PI_f32);
-        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){0.0f, 1.0f, 0.0f}) == PI_f32/2);
-        eval(angle_v3((v3){1.0f, 1.0f, 0.0f}, (v3){1.0f, 1.0f, 1.0f}) == 0.615479767f);
-        eval(angle_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, -1.0f, 1.0f}) == 0.955316603f);
-        eval(project_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.0f, 0.0f}) == ((v3){0.707f, 0.0f, 0.0f}));
-        eval(perpendicular_v3((v3){0.707f, 0.707f, 0.707f}, (v3){0.5f, 0.5f, 0.0f}) == ((v3){0.0f, 0.0f, 0.707f}));
-        eval(reflection_v3((v3){-1.0f, -1.0f, 0.0f}, (v3){1.0f, 0.0f}) == ((v3){1.0f, -1.0f, 0.0f}));
-        eval(reflection_v3((v3){0.0f, 1.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){0.0f, 1.0f, 0.0f})); // QUESTION: but why
-        eval(reflection_v3((v3){1.0f, 0.0f, 0.0f}, (v3){1.0f, 0.0f, 0.0f}) == ((v3){-1.0f, 0.0f, 0.0f}));
+        eval(inner_product_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == 0);
+        eval(is_perpendicular_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == 1);
+        eval(right_direction_v3((make_v3(1.0f, 0.5f, 0.5f)), (make_v3(1.0f, 0.8f, 0.5f))) == 1);
+        eval(same_direction_v3(make_v3(1.0f, 0.5f, 0.5f), make_v3(1.0f, 0.8f, 0.3f)) == 1);
+        eval(opposite_direction_v3(make_v3(1.0f, 0.5f, 0.5f), make_v3(-1.0f, 0.8f, 0.5f)) == 1);
+        eval(left_direction_v3((make_v3(1.0f, 0.5f, 0.5f)), (make_v3(-1.0f, 0.8f, 0.5f))) == 1);
+        eval(magnitude_sqrt_v3(make_v3(3.0f, 0.0f, 3.0f)) == 18);
+        eval(magnitude_v3(make_v3(3.0f, 0.0f, 3.0f)) == 4.2426405f);
+        eval(distance_v3(make_v3(0.0f, 0.0f, 0.0f), make_v3(3.0f, 3.0f, 3.0f)) == 5.19615221f);
+        eval(distance_v3(make_v3(0.0f, 0.0f, 0.0f), make_v3(3.0f, 0.0f, 0.0f)) == 3);
+        eval(normalize_v3(make_v3(100.0f, 200.0f, 400.0f)) == (make_v3(0.218217894f, 0.436435789f, 0.872871578f)));
+        eval(direction_v3(make_v3(0.0f, 0.0f, 0.0f), make_v3(3.0f, 3.0f, 3.0f)) == (make_v3(0.577350259f, 0.577350259f, 0.577350259f)));
+        eval(cross_product_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == (make_v3(0.0f, 0.0f, 1.0f)));
+        eval(angle_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(-1.0f, 0.0f, 0.0f)) == PI_f32);
+        eval(angle_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == PI_f32/2);
+        eval(angle_v3(make_v3(1.0f, 1.0f, 0.0f), make_v3(1.0f, 1.0f, 1.0f)) == 0.615479767f);
+        eval(angle_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(1.0f, -1.0f, 1.0f)) == 0.955316603f);
+        eval(project_v3(make_v3(0.707f, 0.707f, 0.707f), make_v3(0.5f, 0.0f, 0.0f)) == (make_v3(0.707f, 0.0f, 0.0f)));
+        eval(perpendicular_v3(make_v3(0.707f, 0.707f, 0.707f), make_v3(0.5f, 0.5f, 0.0f)) == (make_v3(0.0f, 0.0f, 0.707f)));
+        eval(reflection_v3(make_v3(-1.0f, -1.0f, 0.0f), make_v3(1.0f, 0.0f, 0.0f)) == (make_v3(1.0f, -1.0f, 0.0f)));
+        eval(reflection_v3(make_v3(0.0f, 1.0f, 0.0f), make_v3(1.0f, 0.0f, 0.0f)) == (make_v3(0.0f, 1.0f, 0.0f))); // QUESTION: but why
+        eval(reflection_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(1.0f, 0.0f, 0.0f)) == (make_v3(-1.0f, 0.0f, 0.0f)));
     }
     // base_math.h
     {
@@ -204,8 +196,8 @@ s32 main(s32 argc, char** argv){
 
         // INCOMPLETE IMPORTANT: precision_f32() is preventing a more accurate test. We should
         // test this more robustly later when we put it to good use.
-        eval(deg_to_rad(1) == 0.017453292f);
-        eval(rad_to_deg(RAD_f32) > 0.99f && rad_to_deg(RAD_f32) < 1.01f);
+        eval(rad_from_deg(1) == 0.017453292f);
+        eval(rad_from_deg(RAD_f32) > 0.99f && deg_from_rad(RAD_f32) < 1.01f);
         eval(sin_f32(RAD_f32 * 90.0f) == 1.0f);
         eval(cos_f32(RAD_f32 * 90.0f) > -0.99f && cos_f32(RAD_f32 * 90.0f) < 0.01f);
         eval(atan_f32(0.707f, 0.707f) == 1.0f); // not sure if this is a good test
@@ -216,8 +208,8 @@ s32 main(s32 argc, char** argv){
         eval(round_f64_s64(tan_f64(PI_f64)) == 0);
         eval(atan_f64(0, 0) == 0); // not sure if this is a good test
 
-        eval(rad_to_dir(0) == ((v2){1, 0}));
-        eval(dir_to_rad((v2){1, 0}) == 0);
+        eval(dir_from_rad(0) == make_v2(1, 0));
+        eval(rad_from_dir(make_v2(1, 0)) == 0);
 
         // abs/round/clamp/truncate/floor/ceil/sqrt
         eval(sqrt_f32(16.0f) == 4.0f);
@@ -290,12 +282,12 @@ s32 main(s32 argc, char** argv){
 
         // pop_array
         {
-            Arena* arena = os_make_arena(100);
-            push_array(arena, u32, 20);
-            pop_array(arena, u32, 10);
-            eval(arena->used == 40);
-            pop_array(arena, u32, 10);
-            eval(arena->used == 0);
+            Arena* inner_arena = os_make_arena(100);
+            push_array(inner_arena, u32, 20);
+            pop_array(inner_arena, u32, 10);
+            eval(inner_arena->used == 40);
+            pop_array(inner_arena, u32, 10);
+            eval(inner_arena->used == 0);
         }
 
         // scratch
@@ -490,15 +482,15 @@ s32 main(s32 argc, char** argv){
 
         //str8_split
         {
-            ScratchArena scratch = begin_scratch(0);
+            ScratchArena inner_scratch = begin_scratch(0);
             String8 string = str8_literal("1one\\two\\three\\four\\five8");
-            String8Node result = str8_split(scratch.arena, string, '\\');
+            String8Node result = str8_split(inner_scratch.arena, string, '\\');
             eval(str8_cmp(result.next->str, str8_literal("1one")));
             eval(str8_cmp(result.next->next->str, str8_literal("two")));
             eval(str8_cmp(result.next->next->next->str, str8_literal("three")));
             eval(str8_cmp(result.next->next->next->next->str, str8_literal("four")));
             eval(str8_cmp(result.next->next->next->next->next->str, str8_literal("five8")));
-            end_scratch(scratch);
+            end_scratch(inner_scratch);
         }
 
     }
@@ -537,7 +529,7 @@ s32 main(s32 argc, char** argv){
         {
             File file = os_file_open(filename, GENERIC_READ|GENERIC_WRITE, CREATE_ALWAYS);
             eval(file.handle != INVALID_HANDLE_VALUE);
-            bool succeed = os_file_close(&file);
+            bool succeed = os_file_close(file);
             eval(succeed == true);
         }
 
@@ -547,13 +539,13 @@ s32 main(s32 argc, char** argv){
             eval(file.handle != INVALID_HANDLE_VALUE);
 
             String8 write_data = str8_literal("Some random data that I want in the file\n");
-            eval(os_file_write(&file, write_data.str, write_data.size) == 1);
-            os_file_close(&file);
+            eval(os_file_write(file, write_data.str, write_data.size) == 1);
+            os_file_close(file);
 
             file = os_file_open(filename, GENERIC_READ, OPEN_EXISTING);
-            String8 data = os_file_read(arena, &file);
+            String8 data = os_file_read(arena, file);
             eval(data.size == write_data.size);
-            os_file_close(&file);
+            os_file_close(file);
             //eval(os_file_delete(dir_build, test_file) == false);
             //eval(os_file_exists(dir_build, test_file) == false);
             //eval(os_file_create(dir_build, test_file) == true);
@@ -574,7 +566,7 @@ s32 main(s32 argc, char** argv){
         //{
         //    String8 write_data = str8_literal("Some random data that I want in the file\n");
         //    File file = os_file_open(dir_build, test_file, 1);
-        //    //os_file_write(&file, data);
+        //    //os_file_write(file, data);
 
         //    String8 read_data;
         //    os_file_read(arena, &read_data, dir_build, test_file);
@@ -586,7 +578,7 @@ s32 main(s32 argc, char** argv){
         //    v4 write_data_v4 = {1.0f, 0.5f, 0.2f, 1.0f};
         //    String8 write_data = {(u8*)(&write_data_v4), sizeof(write_data_v4)};
         //    File file = os_file_open(dir_build, test_file, 1);
-        //    //os_file_write(&file, data);
+        //    //os_file_write(file, data);
 
         //    String8 read_data;
         //    bool succeed = os_file_read(arena, &read_data, dir_build, test_file);
@@ -617,8 +609,8 @@ s32 main(s32 argc, char** argv){
     print("------------------\n");
     print("FAILED TESTS (%d)|\n", fail_count);
     print("------------------\n");
-	u8* string = (u8*)fail_arena->base;
-    for(u32 i=0; i < fail_arena->used; ++i){
+	u8* string = (u8*)global_arena->base;
+    for(u32 i=0; i < global_arena->used; ++i){
         print("%c", *string++);
     }
 

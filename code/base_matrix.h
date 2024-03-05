@@ -3,13 +3,39 @@
 
 #include "base_vector.h"
 
-typedef union m4{
-    f32 e[4][4];
+typedef union m2{
+    f32 e[2][2];
 
-    inline m4() {
-        e[0][0] = e[1][1] = e[2][2] = e[3][3] = 1.0f;
+    inline m2() {
+        e[0][0] = e[1][1] = 1.0f;
     }
-} m4;
+} m2;
+
+static m2
+m2_mul(m2 a, m2 b){
+    m2 result;
+    result.e[0][0] = (a.e[0][0] * b.e[0][0]) + (a.e[0][1] * b.e[1][0]);
+    result.e[0][1] = (a.e[0][0] * b.e[0][1]) + (a.e[0][1] * b.e[1][1]);
+    result.e[1][0] = (a.e[1][0] * b.e[0][0]) + (a.e[1][1] * b.e[1][0]);
+    result.e[1][1] = (a.e[1][0] * b.e[0][1]) + (a.e[1][1] * b.e[1][1]);
+    return(result);
+}
+
+static v2
+m2_mul_v2(m2 m, v2 v){
+    v2 result;
+    result.x = (m.e[0][0] * v.x) + (m.e[0][1] * v.y);
+    result.y = (m.e[1][0] * v.x) + (m.e[1][1] * v.y);
+    return(result);
+}
+
+//typedef union m4{
+//    f32 e[4][4];
+//
+//    inline m4() {
+//        e[0][0] = e[1][1] = e[2][2] = e[3][3] = 1.0f;
+//    }
+//} m4;
 
 ///////////////////////////////
 // NOTE: Matrix Types

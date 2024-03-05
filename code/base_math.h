@@ -17,31 +17,6 @@
 #define AlignUpPow2(x,p) (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
-global f32 PI_f32 = 3.14159265359f;
-global f64 PI_f64 = 3.141592653589793;
-global f32 RAD_f32 = 0.0174533f;
-// TODO: Add RAD_f64
-// TODO IMPORTANT: Include f64 angle stuff
-
-static f32
-deg_to_rad(f32 degree){
-    f32 result = ((PI_f32/180.0f) * degree);
-    return(result);
-}
-
-// TODO: Clean this up
-static f64
-deg_to_rad_f64(f64 degree){
-    f64 result = ((PI_f64/180.0) * degree);
-    return(result);
-}
-
-static f32
-rad_to_deg(f32 rad){
-    f32 result = ((180.0f/PI_f32) * rad);
-    return(result);
-}
-
 static f32
 square_f32(f32 value){
     f32 result = value * value;
@@ -75,7 +50,6 @@ static f32
 tan_f32(f32 theta){
     //f32 result = tanf(theta);
     //f32 r = sin_f32(theta)/cos_f32(theta);
-    //f32 rr = rad_to_deg(r);
     return(sin_f32(theta)/cos_f32(theta));
 }
 static f32 cot_f32(f32 theta){ return(cos_f32(theta)/sin_f32(theta)); }
@@ -91,14 +65,47 @@ static f64 tan_f64(f64 x){ return(sin_f64(x)/cos_f64(x)); }
 static f64 cot_f64(f64 x){ return(cos_f64(x)/sin_f64(x)); }
 static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
 
-static v2
-rad_to_dir(f32 rad){
-    return(make_v2(cos_f32(rad), sin_f32(rad)));
+global f32 PI_f32 = 3.14159265359f;
+global f64 PI_f64 = 3.14159265359;
+global f32 RAD_f32 = 0.0174533f;
+global f64 RAD_f64 = 0.0174533;
+
+static f32
+rad_from_deg(f32 deg){
+    f32 result = ((PI_f32/180.0f) * deg);
+    return(result);
 }
 
 static f32
-dir_to_rad(v2 dir){
-    return(atan_f32(dir.y, dir.x));
+deg_from_rad(f32 rad){
+    f32 result = ((180.0f/PI_f32) * rad);
+    return(result);
+}
+
+static v2
+dir_from_rad(f32 rad){
+    v2 result = {cos_f32(rad), sin_f32(rad)};
+    return(result);
+}
+
+static f32
+rad_from_dir(v2 dir){
+    f32 result = atan_f32(dir.y, dir.x);
+    return(result);
+}
+
+static v2
+dir_from_deg(f32 deg){
+    f32 rad = rad_from_deg(deg);
+    v2 result = {cos_f32(rad), sin_f32(rad)};
+    return(result);
+}
+
+static f32
+deg_from_dir(v2 dir){
+    f32 rad = atan_f32(dir.y, dir.x);
+    f32 result = deg_from_rad(rad);
+    return(result);
 }
 
 static f32
@@ -202,12 +209,28 @@ clamp_f32(f32 left, f32 right, f32* value){
     if(*value > right) { *value = right; }
 }
 
+static void
+clamp_u32(u32 left, u32 right, u32* value){
+    if(*value < left) { *value = left; }
+    if(*value > right) { *value = right; }
+}
+
+static void
+clamp_s32(s32 left, s32 right, s32* value){
+    if(*value < left) { *value = left; }
+    if(*value > right) { *value = right; }
+}
+
 // UNTESTED:
 static void
 clamp_f32_s32(f32 left, f32 right, f32* value){
     if(*value < left) { *value = left; }
     if(*value > right) { *value = right; }
 }
+
+///////////////////////////////
+// NOTE: Lerp & Easing
+///////////////////////////////
 
 static f32
 lerp(f32 a, f32 b, f32 t){
@@ -239,7 +262,7 @@ unlerp(f32 a, f32 b, f32 at){
 // UNTESTED:
 // NOTE: Spherical linear interpolation
 static f32
-slerp_rad(f32 a, f32 b, f32 t) {
+slerp_f32(f32 a, f32 b, f32 t) {
     f32 difference = fmodf(b - a, 2 * PI_f32);
     f32 distance = fmodf(2.0f * difference, 2 * PI_f32) - difference;
     return a + distance * t;
@@ -248,11 +271,14 @@ slerp_rad(f32 a, f32 b, f32 t) {
 // UNTESTED:
 static v2
 slerp_v2(v2 a, f32 t, v2 b) {
+    a = normalize_v2(a);
+    b = normalize_v2(b);
+
     f32 inner = inner_product_v2(a, b);
     clamp_f32(-1.0, 1.0, &inner);
 
     f32 theta = acosf(inner) * t;
-    v2 relative_vector = normalized_v2(b - a * inner);
+    v2 relative_vector = normalize_v2(b - a * inner);
     v2 result = (a * cos_f32(theta)) + (relative_vector * sin_f32(theta));
     return(result);
 }
@@ -268,5 +294,39 @@ static f32
 ease_out(f32 t){
     return(sqrtf(1 - powf(t - 1, 4)));
 }
+
+///////////////////////////////
+// NOTE: Other
+///////////////////////////////
+
+static v2
+rotate_point_rad(v2 p, f32 rad, v2 origin){
+    v2 result = {0};
+
+    result.x = (p.x - origin.x) * cos_f32(rad) - (p.y - origin.y) * sin_f32(rad) + origin.x;
+    result.y = (p.x - origin.x) * sin_f32(rad) + (p.y - origin.y) * cos_f32(rad) + origin.y;
+
+    return(result);
+}
+
+static v2
+rotate_point_deg(v2 p, f32 deg, v2 origin){
+    v2 result = {0};
+
+    f32 rad = rad_from_deg(deg);
+    result.x = (p.x - origin.x) * cos_f32(rad) - (p.y - origin.y) * sin_f32(rad) + origin.x;
+    result.y = (p.x - origin.x) * sin_f32(rad) + (p.y - origin.y) * cos_f32(rad) + origin.y;
+
+    return(result);
+}
+
+static v2
+quad_center(v2 min, v2 max){
+    v2 result;
+    result.x = (min.x + max.x) * 0.5f;
+    result.y = (min.y + max.y) * 0.5f;
+    return(result);
+}
+
 
 #endif

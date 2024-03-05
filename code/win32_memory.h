@@ -11,6 +11,7 @@
 // NOTE: Win32 Memory
 ///////////////////////////////
 
+// TODO(rr): make a os_reserve_alloc() os_commit_alloc() to make a distinction between the two operations
 static void* os_virtual_alloc(u64 size){
     // NOTE: VirtualAlloc() && calloc() initializes its allocation to 0, malloc() does not
     void* result = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
@@ -35,4 +36,3 @@ static Arena* os_make_arena(size_t size){
 }
 
 #endif
-

@@ -8,11 +8,12 @@
 #include "base_string.h"
 #include "win32_logging.h"
 
-// TODO: WIN32_FILE_ATTRIBUTE_DATA to get file attributes
-// TODO: UNTESTED: Retest this entire file
+// note: All functions must 0 terminal strings when making allocations
+// todo: Test that all functions 0 terminal strings
+// todo: WIN32_FILE_ATTRIBUTE_DATA to get file attributes
 
 
-// TODO: This probably needs to be part if an IO file, maybe win32_io? idk.
+// todo: This probably needs to be part if an IO file, maybe win32_io? idk.
 static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
@@ -25,12 +26,12 @@ read_stdin(Arena* arena){
 }
 
 ///////////////////////////////
-// NOTE: Win32 UTF8-16
+// note: Win32 UTF8-16
 ///////////////////////////////
 
-// UNTESTED: test this with a malloc so its not zero'ed out
+// untested: test this with a malloc so its not zero'ed out
 // and you can tell that you set a null terminator
-// TODO: need none OS dependant version of this in string file
+// todo: need none OS dependant version of this in string file
 static String16
 os_utf8_utf16(Arena* arena, String8 utf8_string){
     u32 utf16_size = (u32)MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, (s32)utf8_string.size, 0, 0);
@@ -45,9 +46,9 @@ os_utf8_utf16(Arena* arena, String8 utf8_string){
     return(result);
 }
 
-// UNTESTED: test this with a malloc so its not zero'ed out
+// untested: test this with a malloc so its not zero'ed out
 // and you can tell that you set a null terminator
-// TODO: need none OS dependant version of this in string file
+// todo: need none OS dependant version of this in string file
 static String8
 os_utf16_utf8(Arena* arena, String16 utf16_string){
     s32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, (s32)utf16_string.size, 0, 0, 0, 0);
@@ -62,23 +63,18 @@ os_utf16_utf8(Arena* arena, String16 utf16_string){
     return(result);
 }
 
-// path to binary/.exe
-// path for user config/data
-// path where temporary files can go
-
 ///////////////////////////////
-// NOTE: Win32 File I/O
+// note: Win32 File I/O
 ///////////////////////////////
 
-// TODO: Get rid of this. Use String8 instead so that you can write out String8 Nodes, none contegious memory.
+// todo: Get rid of this. Use String8 instead so that you can write out String8 Nodes, none contegious memory.
 
 typedef struct File{
     HANDLE handle;
     u64 size;
 } File;
 
-static String8
-os_get_cwd(Arena* arena){
+static String8 os_get_cwd(Arena* arena){
     ScratchArena scratch = begin_scratch(0);
     defer(end_scratch(scratch));
 
@@ -92,7 +88,65 @@ os_get_cwd(Arena* arena){
     return(utf8_string);
 }
 
-// UNTESTED do I need to pass back a pointer? Its not clear if this data will persist outside this scope
+static String8
+os_application_path(Arena* arena) {
+    String8 result = {0};
+
+    ScratchArena scratch = begin_scratch(0);
+
+    String16 utf16_path;
+    utf16_path.str = push_array(scratch.arena, u16, 1024);
+    utf16_path.size = GetModuleFileNameW(0, (wchar*)utf16_path.str, 1024);
+
+    DWORD error = GetLastError();
+    if(error == ERROR_INSUFFICIENT_BUFFER || utf16_path.size == 0){
+        print_last_error(error);
+        return(result);
+    }
+
+    String8 utf8_path = os_utf16_utf8(scratch.arena, utf16_path);
+
+    String8Node split_path = str8_split(scratch.arena, utf8_path, '\\');
+    dll_pop_back(&split_path); // remove exe
+    //String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
+    String8Join opts = {0};
+    opts.mid = str8_literal("\\");
+    opts.post = str8_literal("\\");
+    result = str8_join(arena, &split_path, opts);
+
+    end_scratch(scratch);
+    return(result);
+}
+
+static File
+os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
+    File result = {0};
+
+    ScratchArena scratch = begin_scratch(0);
+    String8 application_path = os_application_path(scratch.arena);
+    String8 full_path = str8_path_append(scratch.arena, application_path, path);
+
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+    defer(end_scratch(scratch));
+
+    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
+    if(!result.handle){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    LARGE_INTEGER large_file_size;
+    if(!GetFileSizeEx(result.handle, &large_file_size)){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    result.size = (u64)large_file_size.QuadPart;
+
+    return(result);
+}
+
+// untested do I need to pass back a pointer? Its not clear if this data will persist outside this scope
 static File
 os_file_open(String8 path, DWORD access_writes, DWORD operation){
     File result = {0};
@@ -102,7 +156,7 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
     defer(end_scratch(scratch));
 
     result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
-    if(result.handle){
+    if(!result.handle){
         print_last_error(GetLastError());
         return(result);
     }
@@ -119,25 +173,25 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
 }
 
 static bool
-os_file_close(File* file){
-    bool result = CloseHandle(file->handle);
+os_file_close(File file){
+    bool result = CloseHandle(file.handle);
     if(!result){
         print_last_error(GetLastError());
         return(result);
     }
 
-    file->size = 0;
+    file.size = 0;
     return(result);
 }
 
-// TODO IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
-// TODO: Better error handling on failures? Maybe include a DWORD error in File, maybe pass in File and only return DWORD, maybe think about overall better logging? assert? idk have to ask
+// todo IMPORTANT: Currently doesn't support large file sizes. Should fix soon.
+// todo: Better error handling on failures? Maybe include a DWORD error in File, maybe pass in File and only return DWORD, maybe think about overall better logging? assert? idk have to ask
 static String8
-os_file_read(Arena* arena, File* file){
+os_file_read(Arena* arena, File file){
     String8 result = {0};
 
     LARGE_INTEGER large_file_size;
-    if(!GetFileSizeEx(file->handle, &large_file_size)){
+    if(!GetFileSizeEx(file.handle, &large_file_size)){
         print_last_error(GetLastError());
         return(result);
     }
@@ -145,7 +199,7 @@ os_file_read(Arena* arena, File* file){
     size_t size = (u64)large_file_size.QuadPart;
     result.str = push_array(arena, u8, size);
     DWORD bytes_read = 0;
-    if(!ReadFile(file->handle, result.str, (DWORD)size, &bytes_read, 0)){
+    if(!ReadFile(file.handle, result.str, (DWORD)size, &bytes_read, 0)){
         print_last_error(GetLastError());
         return(result);
     }
@@ -155,35 +209,38 @@ os_file_read(Arena* arena, File* file){
 
     if(!match){
         print("%s(%i) error(%i): ", __FILE__, __LINE__, match);
-        print("%bytes_read != size: (%i, %i)\n", bytes_read, size);
+        print("bytes_read != size: (%i, %i)\n", bytes_read, size);
         return(result);
     }
     return(result);
 }
 
-// UNTESTED:
+// untested:
 static bool
-os_file_write(File* file, void* base, u64 size){
+os_file_write(File file, void* base, u64 size){
     bool result = false;
 
     DWORD bytes_written;
-    OVERLAPPED overlapped = {
-        .Offset = (DWORD)(file->size & 0x00000000FFFFFFFF),
-        .OffsetHigh = (DWORD)(file->size >> 32)
-    };
-    if(!WriteFile(file->handle, base, (DWORD)size, &bytes_written, &overlapped)){
+    //OVERLAPPED overlapped = {
+    //    .Offset = (DWORD)(file.size & 0x00000000FFFFFFFF),
+    //    .OffsetHigh = (DWORD)(file.size >> 32)
+    //};
+    OVERLAPPED overlapped = {0};
+    overlapped.Offset = (DWORD)(file.size & 0x00000000FFFFFFFF);
+    overlapped.OffsetHigh = (DWORD)(file.size >> 32);
+    if(!WriteFile(file.handle, base, (DWORD)size, &bytes_written, &overlapped)){
         print_last_error(GetLastError());
         return(result);
     }
 
     if(size == bytes_written){
         result = true;
-        file->size += size;
+        file.size += size;
     }
     return(result);
 }
 
-// UNTESTED
+// untested
 static bool
 os_file_create(String8 dir, String8 filename){
     bool result = false;
@@ -272,7 +329,7 @@ os_dir_delete(String8 dir, String8 delete_dir){
     return(result);
 }
 
-// UNTESTED
+// untested
 static bool
 os_dir_files(Arena* arena, String8Node* node, String8 dir){
     bool result = false;
@@ -295,13 +352,14 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
     do{
         u64 length = str_length(data.cFileName);
         String16 string_utf16 = {(u16*)data.cFileName, length};
-        String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // TODO: test this
+        String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // todo: test this
         str8_list_push_back(arena, node, string_utf8);
         print("FILE: %s\n", string_utf8.str);
     }while(FindNextFileW(file_handle, &data));
     return(result);
 }
 
+// todo(rr): deprecate this
 static String8
 os_get_data_path(Arena* arena) {
     String8 result = {0};
@@ -315,12 +373,16 @@ os_get_data_path(Arena* arena) {
 
     String8Node split_path = str8_split(scratch.arena, utf8_string, '\\');
     dll_pop_back(&split_path); // remove exe
-    String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
+    //String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
+    String8Join opts = {0};
+    opts.mid = str8_literal("\\");
+    opts.post = str8_literal("\\");
     result = str8_join(arena, &split_path, opts);
 
     return(result);
 }
 
+// todo(rr): deprecate this
 static String8
 os_get_exe_path(Arena* arena) {
     String8 result = {0};
@@ -338,4 +400,5 @@ os_get_exe_path(Arena* arena) {
 
     return(result);
 }
+
 #endif

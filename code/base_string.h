@@ -5,12 +5,13 @@
 #include "base_linkedlist.h"
 #include "base_memory.h"
 
-// TODO: UNTESTED: Almost nothing in this file is tested or tested correctly.
-// TODO: string_to_float() that returns (value, succeed, remainder)
-// This entire thing needs a full pass.
+// note: All functions must 0 terminal strings when making allocations
+// todo: Test that all functions 0 terminal strings
+// todo: Get rid of String16 completely and only use wchar_t
+// todo: Get rid of String32 completely
 
 ///////////////////////////////
-// NOTE: String8
+// note: String8
 ///////////////////////////////
 
 typedef struct String8{
@@ -59,7 +60,7 @@ static String8 str8_(u8* str, u64 size){
 #include <stdarg.h>
 #define str8_format(arena, format, ...) str8_formatted(arena, format, ...)
 static String8
-str8_formatted(Arena* arena, char* format, ...) {
+str8_formatted(Arena* arena, const char* format, ...) {
     char buffer[4096] = {};
     va_list args;
     va_start(args, format);
@@ -73,7 +74,7 @@ str8_formatted(Arena* arena, char* format, ...) {
     return(result);
 }
 
-// UNTESTED:
+// untested:
 //static String8 str8_cstring(u8* cstr){
 //    u8* ptr = cstr;
 //    for(;*ptr != 0; ptr+=1);
@@ -81,7 +82,7 @@ str8_formatted(Arena* arena, char* format, ...) {
 //    return(result);
 //}
 //
-// UNTESTED:
+// untested:
 static bool
 str8_copy(String8* from, String8* to){
     if(from->size != to->size){
@@ -95,14 +96,14 @@ str8_copy(String8* from, String8* to){
     return(true);
 }
 
-// UNTESTED:
+// untested:
 static String8
 str8_range(u8* first, u8* opl){
     String8 result = {first, (u64)(opl - first)};
     return(result);
 }
 
-// UNTESTED:
+// untested:
 #define str8_clamp_right(str, size) str8_slice_left(str, size)
 static String8
 str8_slice_right(String8 str, u64 size){
@@ -111,14 +112,14 @@ str8_slice_right(String8 str, u64 size){
     return(result);
 }
 
-// UNTESTED:
+// untested:
 static String8
 str8_split_left(String8 str, u64 idx){
     str.size = idx;
     return(str);
 }
 
-// UNTESTED:
+// untested:
 static String8
 str8_split_right(String8 str, u64 idx){
     str.str = str.str + idx;
@@ -126,7 +127,7 @@ str8_split_right(String8 str, u64 idx){
     return(str);
 }
 
-//UNTESTED:
+//untested:
 static String8
 str8_advance(String8 str, u64 count){
     if(str.size > 0){
@@ -136,14 +137,14 @@ str8_advance(String8 str, u64 count){
     return(str);
 }
 
-//UNTESTED:
+//untested:
 static void
 str8_advance(String8* str, u64 count){
     str->str = str->str + count;
     str->size -= count;
 }
 
-// UNTESTED:
+// untested:
 // CONSIDER: Maybe this should return u64 count, to tell you how many u8's it ate.
 // CONSIDER: Maybe have other functions like this, like eat_digits, eat_number, eat_string, ...
 static String8
@@ -169,9 +170,9 @@ str8_eat_whitespace(String8* str){
     return(count);
 }
 
-// UNTESTED:
+// untested:
 static u64
-str8_char_from_left(String8 str, u8 character){
+str8_char_idx_from_left(String8 str, u8 character){
     u64 idx = 0;
     while(str.size){
         if(str.str[0] == character){ break; }
@@ -181,7 +182,7 @@ str8_char_from_left(String8 str, u8 character){
     return(idx);
 }
 
-// UNTESTED:
+// untested:
 static u64
 str8_next_white_space(String8 str){
     u64 idx = 0;
@@ -193,7 +194,7 @@ str8_next_white_space(String8 str){
     return(idx);
 }
 
-// UNTESTED:
+// untested:
 #define str8_clamp_left(str, size) str8_slice_left(str, size)
 static String8
 str8_slice_left(String8 str, u64 size){
@@ -203,7 +204,7 @@ str8_slice_left(String8 str, u64 size){
     return(result);
 }
 
-// UNTESTED:
+// untested:
 //static String8
 //str8_clamp_right(String8 str, u64 size){
 //    u64 min = MIN(size, str.size);
@@ -212,7 +213,7 @@ str8_slice_left(String8 str, u64 size){
 //    return(result);
 //}
 
-// UNTESTED:
+// untested:
 //static String8
 //str8_clamp_left(String8 str, u64 size){
 //    u64 min = MIN(size, str.size);
@@ -221,7 +222,7 @@ str8_slice_left(String8 str, u64 size){
 //    return(result);
 //}
 
-// UNTESTED:
+// untested:
 static String8
 str8_substr_left(String8 str, u64 start, u64 end){
     u64 clamped_right = MIN(end, str.size);
@@ -230,7 +231,7 @@ str8_substr_left(String8 str, u64 start, u64 end){
     return(result);
 }
 
-// UNTESTED:
+// untested:
 static String8
 str8_substr_left_right(String8 str, u64 start, u64 end){
     String8 result = str8_substr_left(str, start, start + end);
@@ -257,10 +258,13 @@ str8_null_terminate(Arena* arena, String8 input){
     u8* str = push_array(arena, u8, input.size + 1);
     mem_copy(str, input.str, input.size + 1);
 
-    String8 result = {
-        .str = str,
-        .size = input.size + 1,
-    };
+    //String8 result = {
+    //    .str = str,
+    //    .size = input.size + 1,
+    //};
+    String8 result = {0};
+    result.str = str;
+    result.size = input.size + 1;
 
     u8* last = str + input.size;
     *last = 0;
@@ -284,7 +288,7 @@ str8_compare(String8 left, String8 right){
     return(true);
 }
 
-// UNTESTED:
+// untested:
 static bool
 str8_is_slash(u8 c){
     return(c == '\\' || c == '/');
@@ -296,7 +300,7 @@ str8_is_digit(u8 c){
     return(result);
 }
 
-// UNTESTED:
+// untested:
 static bool
 str8_starts_with(String8 source_string, String8 sub_string){
     for(u32 i=0; i < sub_string.size; ++i){
@@ -307,7 +311,7 @@ str8_starts_with(String8 source_string, String8 sub_string){
     return(true);
 }
 
-// UNTESTED:
+// untested:
 static bool
 str8_contains(String8 source_string, String8 sub_string){
     u32 count = 0;
@@ -326,7 +330,7 @@ str8_contains(String8 source_string, String8 sub_string){
     return(false);
 }
 
-// UNTESTED:
+// untested:
 // I think we need to reset the str pointer here?
 // otherwise we will be pointing to the end of the string
 #define str_length(str) str_length_((char*)str)
@@ -338,7 +342,7 @@ static u32 str_length_(char* str){
     return(count);
 }
 
-// UNTESTED:
+// untested:
 // I think we need to reset the str pointer here?
 // otherwise we will be pointing to the end of the string
 static u64 str_length_(wchar* str){
@@ -349,7 +353,7 @@ static u64 str_length_(wchar* str){
     return(count);
 }
 
-// UNTESTED:
+// untested:
 static String8
 push_string(Arena* arena, String8 value){
     u8* str = push_array(arena, u8, value.size + 1);
@@ -446,8 +450,8 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 }
 
 
-// UNTESTED:
-// TODO: Maybe pass in String8Join?
+// untested:
+// todo: Maybe pass in String8Join?
 static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
     ScratchArena scratch = begin_scratch(0);

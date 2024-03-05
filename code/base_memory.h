@@ -60,9 +60,8 @@ static void arena_free(Arena* arena){
     arena->used = 0;
 }
 
-//#define push_size(arena, size) push_size_aligned(arena, size, _Alignof(max_align_t))
-#define push_array(arena, type, count) (type*)push_size_aligned((arena), sizeof(type) * (count), _Alignof(type))
-#define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), _Alignof(type))
+#define push_array(arena, type, count) (type*)push_size_aligned((arena), sizeof(type) * (count), alignof(type))
+#define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), alignof(type))
 static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     size_t used_aligned = AlignUpPow2(arena->used, align);
     assert((used_aligned + size) <= arena->size);
@@ -70,14 +69,6 @@ static void* push_size_aligned(Arena* arena, size_t size, size_t align){
     arena->used = used_aligned + size;
     return(result);
 }
-
-//static void* push_size_aligned(Arena* arena, size_t size, size_t align){
-//    size_t size_aligned = AlignUpPow2(size, align);
-//    assert((arena->used + size_aligned) <= arena->size);
-//    void* result = (u8*)arena->base + arena->used;
-//    arena->used = arena->used + size_aligned;
-//    return(result);
-//}
 
 //UNTESTED:
 #define pop_array(arena, type, count) pop_array_((arena), sizeof(type) * (count))
@@ -100,7 +91,7 @@ typedef struct ScratchArena{
 
 #define DEFAULT_RESERVE_SIZE GB(1)
 #define SCRATCH_POOL_COUNT 3
-global __thread Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
+global THREAD_LOCAL Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 
 static ScratchArena get_scratch(Arena* arena){
     ScratchArena result;

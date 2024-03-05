@@ -14,9 +14,15 @@
 // Compiler
 #if defined(__clang__)
 # define COMPILER_CLANG 1
+# define COMPILER_GCC 0
+# define COMPILER_CL 0
 #elif defined(__GNUC__)
+# define COMPILER_CLANG 0
 # define COMPILER_GCC 1
+# define COMPILER_CL 0
 #elif defined(_MSC_VER)
+# define COMPILER_CLANG 0
+# define COMPILER_GCC 0
 # define COMPILER_CL 1
 #endif
 
@@ -50,6 +56,8 @@
 // NOTE: Helper Macros
 ///////////////////////////////
 
+#define array_count(array) (sizeof(array) / sizeof(*(array)))
+
 #define ENABLE_ASSERT 1
 #if ENABLE_ASSERT
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
@@ -64,9 +72,6 @@
 #define invalid_code_path               assert(!(bool)"invalid_code_path");
 #define invalid_default_case default: { assert(!(bool)"invalid_code_path"); } break
 #define INVALID_DEFAULT_CASE invalid_default_case
-
-#define array_count(x) (sizeof(x)/sizeof(*(x)))
-#define ArrayCount(x) array_count(x)
 
 #if STANDARD_CPP
     #define ZERO_INIT {}
@@ -93,27 +98,42 @@
 #define global static
 #define local static
 
+#if COMPILER_CLANG
+# define THREAD_LOCAL __thread
+#elif COMPILER_CL
+# define THREAD_LOCAL __declspec(thread)
+#else
+# error no THREAD_LOCAL defined for this compiler
+#endif
+
 ///////////////////////////////
 // NOTE: Defer
 ///////////////////////////////
 
 #if STANDARD_CPP
+#if COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-copy-dtor"
-template <typename F> struct Defer {
+#endif
+template <typename F>
+struct Defer {
     Defer(F f) : f(f) {}
     ~Defer() { f(); }
     F f;
 };
 
-template <typename F> Defer<F> MakeDefer(F f) {
+template <typename F>
+Defer<F> make_defer(F f) {
     return Defer<F>(f);
 }
 
-#define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
-#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = MakeDefer([&](){(code);})
 #define DO_STRING_JOIN2(arg1, arg2) arg1 ## arg2
+#define STRING_JOIN2(arg1, arg2) DO_STRING_JOIN2(arg1, arg2)
+#define defer(code) auto STRING_JOIN2(defer_, __LINE__) = make_defer([&](){(code);})
+
+#if COMPILER_CLANG
 #pragma clang diagnostic pop
+#endif
 #endif
 
 ///////////////////////////////
@@ -142,8 +162,10 @@ typedef wchar_t wchar;
 // NOTE: Basic Constants
 ///////////////////////////////
 
-global s8  s8_min  = (s8) 0x80;
-global s16 s16_min = (s16)0x8000;
+//global s8  s8_min  = (s8) 0x80;
+global s8  s8_min  = INT8_MIN;
+//global s16 s16_min = (s16)0x8000;
+global s16 s16_min = INT16_MIN;
 global s32 s32_min = (s32)0x80000000;
 global s64 s64_min = (s64)0x8000000000000000llu;
 
