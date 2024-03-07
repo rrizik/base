@@ -238,12 +238,6 @@ lerp(f32 a, f32 b, f32 t){
     return(result);
 }
 
-static v4
-lerp(v4 a, v4 b, f32 t){
-    v4 result = ((1.0f - t) * a) + (t * b);
-    return(result);
-}
-
 static RGBA
 lerp(RGBA a, RGBA b, f32 t){
     RGBA result = ((1.0f - t) * a) + (t * b);

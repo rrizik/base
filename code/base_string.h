@@ -58,7 +58,7 @@ static String8 str8_(u8* str, u64 size){
 
 #include <stdio.h>
 #include <stdarg.h>
-#define str8_format(arena, format, ...) str8_formatted(arena, format, ...)
+#define str8_format(arena, format) str8_formatted(arena, format, ...)
 static String8
 str8_formatted(Arena* arena, const char* format, ...) {
     char buffer[4096] = {};

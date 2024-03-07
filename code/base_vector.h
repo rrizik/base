@@ -447,8 +447,8 @@ normalize_v2(v2 a){
     v2 result = {0};
     f32 magnitude = magnitude_v2(a);
     if(magnitude != 0){
-        f32 one_over_magnitude = (1.0f / magnitude);
-        result = v2_scale(a, one_over_magnitude);
+        result.x = a.x / magnitude;
+        result.y = a.y / magnitude;
     }
     else{
         result = {0, 0};
