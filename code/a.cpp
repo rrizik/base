@@ -66,8 +66,8 @@ static Arena* arena_init_reserve(Arena* arena, u64 size){
 #endif
 
 #if defined(ENABLE_ASAN)
-   extern "C" void __asan_poison_memory_region(void const volatile *addr, size_t size);
-   extern "C" void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
+   extern "C" void __asan_poison_memory_region(void const volatile *addr, u32 size);
+   extern "C" void __asan_unpoison_memory_region(void const volatile *addr, u32 size);
 #  define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region((addr), (size))
 #  define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region((addr), (size))
 #else
@@ -199,6 +199,13 @@ typedef struct Test_Unaligned{
 } Test_Unaligned;
 
 s32 main(s32 argc, char** argv){
+    u32 a = 100;
+    u32 pos = 0;
+    while(true){
+        u32 v = pos % a;
+        pos++;
+        print("%i\n", v);
+    }
     Arena* arena_a = make_arena(128);
     Test* a1 = push_struct(arena_a, Test);
     if(a1){ print("a1 succeed\n"); }

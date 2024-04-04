@@ -68,7 +68,7 @@ str8_formatted(Arena* arena, const char* format, ...) {
     va_end(args);
 
     u8* str = (u8*)push_array(arena, u8, count);
-    mem_copy(str, buffer, count);
+    memory_copy(str, buffer, (u32)count);
     String8 result = str8(str, count);
 
     return(result);
@@ -256,7 +256,7 @@ str8_concatenate(Arena* arena, String8 left, String8 right){
 static String8
 str8_null_terminate(Arena* arena, String8 input){
     u8* str = push_array(arena, u8, input.size + 1);
-    mem_copy(str, input.str, input.size + 1);
+    memory_copy(str, input.str, input.size + 1);
 
     //String8 result = {
     //    .str = str,
@@ -357,7 +357,7 @@ static u64 str_length_(wchar* str){
 static String8
 push_string(Arena* arena, String8 value){
     u8* str = push_array(arena, u8, value.size + 1);
-    mem_copy(str, value.str, value.size);
+    memory_copy(str, value.str, value.size);
     String8 result = {str, value.size};
     return(result);
 }
@@ -366,7 +366,7 @@ static void
 str8_list_push_back(Arena* arena, String8Node* str8_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
     string_node->str.str = push_array(arena, u8, string.size);
-    mem_copy(string_node->str.str, string.str, string.size);
+    memory_copy(string_node->str.str, string.str, string.size);
     string_node->str.size = string.size;
     dll_push_back(str8_sentinel, string_node);
 }
@@ -419,27 +419,27 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
     u8* ptr = str;
 
     // write pre
-    mem_copy(ptr, join_opts.pre.str, join_opts.pre.size);
+    memory_copy(ptr, join_opts.pre.str, join_opts.pre.size);
     ptr += join_opts.pre.size;
 
     bool is_mid = false;
     for(String8Node* node = str8_sentinel->next; node != str8_sentinel; node = node->next){
         // write mid
         if(is_mid && join_opts.mid.size){
-            mem_copy(ptr, join_opts.mid.str, join_opts.mid.size);
+            memory_copy(ptr, join_opts.mid.str, join_opts.mid.size);
             ptr += join_opts.mid.size;
         }
 
         // write node string
         String8 node_string = node->str;
-        mem_copy(ptr, node_string.str, node_string.size);
+        memory_copy(ptr, node_string.str, node_string.size);
         ptr += node_string.size;
 
         is_mid = true;
     }
 
     // write post
-    mem_copy(ptr, join_opts.post.str, join_opts.post.size);
+    memory_copy(ptr, join_opts.post.str, join_opts.post.size);
     ptr += join_opts.post.size;
 
     // write zero, why? Because OS functions expect null terminated strings.
@@ -454,7 +454,7 @@ str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
 // todo: Maybe pass in String8Join?
 static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
 
     String8Node parts = str8_split(scratch.arena, path, '\\');
     str8_list_push_back(scratch.arena, &parts, value);

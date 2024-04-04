@@ -1,7 +1,10 @@
 #ifndef PCG_BASIC_H_INCLUDED
 #define PCG_BASIC_H_INCLUDED 1
 
-// NOTE: PCG_CPP Random number generator. I renamed the functions so they make more sense to me and are a bit more readable.
+// NOTE: PCG_CPP Random number generator.
+// ----------------------------------------
+// - Functions are renamed from traditional PCG naming scheme so they make more sense to me and are a bit more readable.
+// - All of these functions are exclusive that start at 0.
 
 #include <inttypes.h>
 
@@ -65,9 +68,9 @@ static f64 random_f64(){
 }
 
 // Generate a uniformly distributed number, r, where 0 <= r < bound
-// EXAMPLE: ((s32)random_range_u32(201) - 100) / 100.0f;
-#define random_range_u32(bound) random_range_u32_r(&pcg32_global, bound)
-static u32 random_range_u32_r(pcg32_random_t* rng, u32 bound){
+// EXAMPLE: ((s32)random_range_u32(201) - 100) / 100.0f; // random number from -1.0f:1.0f
+#define random_range_u32(bound) random_range_u32_(&pcg32_global, bound)
+static u32 random_range_u32_(pcg32_random_t* rng, u32 bound){
     u32 threshold = (0-bound) % bound;
 
     for (;;) {

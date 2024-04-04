@@ -142,6 +142,15 @@ round_f32(f32 value){
     return(result);
 }
 
+static v2
+round_f32(v2 value){
+    v2 result = {
+        round_f32(value.x),
+        round_f32(value.y),
+    };
+    return(result);
+}
+
 static f64
 round_f64(f64 value){
     f64 result = (f64)((s64)(value + 0.5));

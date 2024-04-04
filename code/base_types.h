@@ -58,15 +58,16 @@
 
 #define array_count(array) (sizeof(array) / sizeof(*(array)))
 
-#define ENABLE_ASSERT 1
+#ifndef ENABLE_ASSERT
+#define ENABLE_ASSERT 0
+#endif
+
 #if ENABLE_ASSERT
 # define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define ASSERT(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define assert_fh(fh) assert((((fh).handle) != (INVALID_HANDLE_VALUE)))
+# define assert_h(handle) assert(((handle) != (INVALID_HANDLE_VALUE)))
 #else
 # define assert(cond)
-# define ASSERT(cond)
-# define assert_fh(cond)
+# define assert_h(cond)
 #endif
 
 #define invalid_code_path               assert(!(bool)"invalid_code_path");

@@ -20,14 +20,12 @@ fatal_error(const char* message){
     ExitProcess(0);
 }
 
-static String8 log_string;
-
 #define print_last_error(error) print_last_error_(error, __LINE__, str8_literal(__FILE__))
 static void
 print_last_error_(DWORD error, s32 line, String8 file_name){
     LPCWSTR message = NULL;
 
-    size_t size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPWSTR) &message, 0, NULL);
+    u32 size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPWSTR) &message, 0, NULL);
 
     String16 result = {(u16*)message, size};
     print("%s(%i) error(%i): %ls\n", file_name.str, line, error, result.str);

@@ -95,12 +95,12 @@ s32 main(s32 argc, char** argv){
 
         // defer
         {
-            ScratchArena scratch = begin_scratch(0);
+            ScratchArena scratch = begin_scratch();
             defer(end_scratch(scratch));
             push_array(scratch.arena, s32, 100);
             push_array(scratch.arena, s32, 100);
         }
-        eval(scratch_pool[0]->used == 0);
+        eval(scratch_pool[0]->at == 0);
     }
 
     // base_vector.h
@@ -263,20 +263,20 @@ s32 main(s32 argc, char** argv){
         arena_init(arena, ((u8*)base + sizeof(Arena)), (MB(1) - sizeof(Arena)));
         eval(arena->base == ((u8*)base + sizeof(Arena)));
         eval(arena->size == (MB(1) - sizeof(Arena)));
-        eval(arena->used == 0);
+        eval(arena->at == 0);
 
         // push size/type/array
         push_struct(arena, Test);
         push_struct(arena, Test);
-        eval(arena->used == 24);
+        eval(arena->at == 24);
         push_array(arena, Test, 2);
-        eval(arena->used == 48);
+        eval(arena->at == 48);
         arena_free(arena);
-        eval(arena->used == 0);
+        eval(arena->at == 0);
 
         // push_arena
         Arena* new_arena = push_arena(arena, 100);
-        eval(arena->used == 124); // size of arena 24
+        eval(arena->at == 124); // size of arena 24
         eval(new_arena->size == 100);
         arena_free(arena);
 
@@ -285,39 +285,39 @@ s32 main(s32 argc, char** argv){
             Arena* inner_arena = os_make_arena(100);
             push_array(inner_arena, u32, 20);
             pop_array(inner_arena, u32, 10);
-            eval(inner_arena->used == 40);
+            eval(inner_arena->at == 40);
             pop_array(inner_arena, u32, 10);
-            eval(inner_arena->used == 0);
+            eval(inner_arena->at == 0);
         }
 
         // scratch
         push_array(arena, Test, 6);
         ScratchArena scratch = get_scratch(arena);
-        eval(scratch.arena->used == 72);
+        eval(scratch.arena->at == 72);
         push_struct(scratch.arena, Test);
         push_struct(scratch.arena, Test);
-        eval(scratch.arena->used == 96);
+        eval(scratch.arena->at == 96);
         push_array(scratch.arena, Test, 2);
-        eval(scratch.arena->used == 120);
-        eval(scratch.used == 72);
+        eval(scratch.arena->at == 120);
+        eval(scratch.at == 72);
         end_scratch(scratch);
-        eval(scratch.arena->used == 72);
+        eval(scratch.arena->at == 72);
         arena_free(arena);
 
         // begin_scratch
         // CONSIDER: NOTE: not sure if I want to use conflict arena or new version without conflict arena.
         // Need to figure out use case to understand what to test, but maybe for now use
         // no conflict version.
-        ScratchArena scratch1 = begin_scratch(0);
-        ScratchArena scratch2 = begin_scratch(1);
+        ScratchArena scratch1 = begin_scratch();
+        ScratchArena scratch2 = begin_scratch();
         push_array(scratch1.arena, Test, 6);
         push_array(scratch2.arena, Test, 1);
-        eval(scratch1.arena->used == 72);
-        eval(scratch2.arena->used == 12);
+        eval(scratch1.arena->at == 72);
+        eval(scratch2.arena->at == 12);
         end_scratch(scratch1);
         end_scratch(scratch2);
-        eval(scratch1.arena->used == 0);
-        eval(scratch2.arena->used == 0);
+        eval(scratch1.arena->at == 0);
+        eval(scratch2.arena->at == 0);
     }
 
     // base_linkedlist.h
@@ -429,7 +429,7 @@ s32 main(s32 argc, char** argv){
         eval((str16_1 != str16_3));
 
         // str8_concatenate
-        ScratchArena scratch = begin_scratch(0);
+        ScratchArena scratch = begin_scratch();
         String8 left = str8_literal("Hello ");
         String8 middle = str8_literal("World");
         String8 right = str8_literal("!");
@@ -455,7 +455,7 @@ s32 main(s32 argc, char** argv){
 
         // str8_join
         {
-            scratch = begin_scratch(0);
+            scratch = begin_scratch();
             String8Node* sentinel = push_str8_node(scratch.arena);
             String8Node* node;
 
@@ -482,7 +482,7 @@ s32 main(s32 argc, char** argv){
 
         //str8_split
         {
-            ScratchArena inner_scratch = begin_scratch(0);
+            ScratchArena inner_scratch = begin_scratch();
             String8 string = str8_literal("1one\\two\\three\\four\\five8");
             String8Node result = str8_split(inner_scratch.arena, string, '\\');
             eval(str8_cmp(result.next->str, str8_literal("1one")));
@@ -610,7 +610,7 @@ s32 main(s32 argc, char** argv){
     print("FAILED TESTS (%d)|\n", fail_count);
     print("------------------\n");
 	u8* string = (u8*)global_arena->base;
-    for(u32 i=0; i < global_arena->used; ++i){
+    for(u32 i=0; i < global_arena->at; ++i){
         print("%c", *string++);
     }
 

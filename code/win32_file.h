@@ -17,9 +17,11 @@
 static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
+
     fgets((char*)str, KB(1), stdin);
     u64 length = str_length((char*)str);
-    pop_array(arena, u8, (KB(1)-length-1));
+
+    pop_array(arena, u8, (u32)(KB(1)-length-1));
     String8 result = str8(str, length);
 
     return(result);
@@ -75,7 +77,7 @@ typedef struct File{
 } File;
 
 static String8 os_get_cwd(Arena* arena){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
 
     u32 length = GetCurrentDirectoryW(0, 0);
@@ -92,7 +94,7 @@ static String8
 os_application_path(Arena* arena) {
     String8 result = {0};
 
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
 
     String16 utf16_path;
     utf16_path.str = push_array(scratch.arena, u16, 1024);
@@ -110,48 +112,49 @@ os_application_path(Arena* arena) {
     dll_pop_back(&split_path); // remove exe
     //String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
     String8Join opts = {0};
-    opts.mid = str8_literal("\\");
-    opts.post = str8_literal("\\");
+    opts.mid = str8_literal("/");
+    opts.post = str8_literal("/");
     result = str8_join(arena, &split_path, opts);
 
     end_scratch(scratch);
     return(result);
 }
 
-static File
-os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
-    File result = {0};
-
-    ScratchArena scratch = begin_scratch(0);
-    String8 application_path = os_application_path(scratch.arena);
-    String8 full_path = str8_path_append(scratch.arena, application_path, path);
-
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-    defer(end_scratch(scratch));
-
-    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
-    if(!result.handle){
-        print_last_error(GetLastError());
-        return(result);
-    }
-
-    LARGE_INTEGER large_file_size;
-    if(!GetFileSizeEx(result.handle, &large_file_size)){
-        print_last_error(GetLastError());
-        return(result);
-    }
-
-    result.size = (u64)large_file_size.QuadPart;
-
-    return(result);
-}
+// todo: Why does this exist?
+//static File
+//os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
+//    File result = {0};
+//
+//    ScratchArena scratch = begin_scratch(0);
+//    String8 application_path = os_application_path(scratch.arena);
+//    String8 full_path = str8_path_append(scratch.arena, application_path, path);
+//
+//    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+//    defer(end_scratch(scratch));
+//
+//    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
+//    if(!result.handle){
+//        print_last_error(GetLastError());
+//        return(result);
+//    }
+//
+//    LARGE_INTEGER large_file_size;
+//    if(!GetFileSizeEx(result.handle, &large_file_size)){
+//        print_last_error(GetLastError());
+//        return(result);
+//    }
+//
+//    result.size = (u64)large_file_size.QuadPart;
+//
+//    return(result);
+//}
 
 // untested do I need to pass back a pointer? Its not clear if this data will persist outside this scope
 static File
 os_file_open(String8 path, DWORD access_writes, DWORD operation){
     File result = {0};
 
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     String16 wide_path = os_utf8_utf16(scratch.arena, path);
     defer(end_scratch(scratch));
 
@@ -196,7 +199,7 @@ os_file_read(Arena* arena, File file){
         return(result);
     }
 
-    size_t size = (u64)large_file_size.QuadPart;
+    u64 size = (u64)large_file_size.QuadPart;
     result.str = push_array(arena, u8, size);
     DWORD bytes_read = 0;
     if(!ReadFile(file.handle, result.str, (DWORD)size, &bytes_read, 0)){
@@ -245,7 +248,7 @@ static bool
 os_file_create(String8 dir, String8 filename){
     bool result = false;
 
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
 
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
@@ -266,7 +269,7 @@ os_file_create(String8 dir, String8 filename){
 static bool
 os_file_exists(String8 dir, String8 filename){
     bool result = false;
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
 
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
@@ -285,7 +288,7 @@ os_file_exists(String8 dir, String8 filename){
 
 static bool
 os_file_delete(String8 dir, String8 filename){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
     String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
 
@@ -296,7 +299,7 @@ os_file_delete(String8 dir, String8 filename){
 
 static bool
 os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 dest_file){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     String8 source_string = str8_path_append(scratch.arena, source_dir, source_file);
     String8 dest_string = str8_path_append(scratch.arena, dest_dir, dest_file);
     String16 source_wide = os_utf8_utf16(scratch.arena, source_string);
@@ -309,7 +312,7 @@ os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 
 
 static bool
 os_dir_create(String8 dir, String8 new_dir){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     String8 dir_path = str8_path_append(scratch.arena, dir, new_dir);
     String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
@@ -320,7 +323,7 @@ os_dir_create(String8 dir, String8 new_dir){
 
 static bool
 os_dir_delete(String8 dir, String8 delete_dir){
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     String8 dir_path = str8_path_append(scratch.arena, dir, delete_dir);
     String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
 
@@ -334,7 +337,7 @@ static bool
 os_dir_files(Arena* arena, String8Node* node, String8 dir){
     bool result = false;
 
-    ScratchArena scratch = begin_scratch(0);
+    ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
     String8 dir_slash = str8_concatenate(scratch.arena, dir, str8_literal("\\*"));
     String16 dir_utf16 = os_utf8_utf16(scratch.arena, dir_slash);
@@ -356,48 +359,6 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
         str8_list_push_back(arena, node, string_utf8);
         print("FILE: %s\n", string_utf8.str);
     }while(FindNextFileW(file_handle, &data));
-    return(result);
-}
-
-// todo(rr): deprecate this
-static String8
-os_get_data_path(Arena* arena) {
-    String8 result = {0};
-    ScratchArena scratch = begin_scratch(0);
-    defer(end_scratch(scratch));
-
-    String16 utf16_string;
-    utf16_string.str = push_array(scratch.arena, u16, 1024);
-    utf16_string.size = GetModuleFileNameW(0, (wchar*)utf16_string.str, 1024); // note(rr): size doesn't include null terminated character, so we initialize +1 to in the next line to include null terminated character. Memory should be 0 initialized but you don't know if someone else is going to use that byte and change its value.
-    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
-
-    String8Node split_path = str8_split(scratch.arena, utf8_string, '\\');
-    dll_pop_back(&split_path); // remove exe
-    //String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
-    String8Join opts = {0};
-    opts.mid = str8_literal("\\");
-    opts.post = str8_literal("\\");
-    result = str8_join(arena, &split_path, opts);
-
-    return(result);
-}
-
-// todo(rr): deprecate this
-static String8
-os_get_exe_path(Arena* arena) {
-    String8 result = {0};
-    ScratchArena scratch = begin_scratch(0);
-    defer(end_scratch(scratch));
-
-    String16 utf16_string;
-    utf16_string.str = push_array(scratch.arena, u16, 1024);
-    utf16_string.size = GetModuleFileNameW(0, (wchar*)utf16_string.str, 1024); // note(rr): size doesn't include null terminated character, so we initialize +1 to in the next line to include null terminated character. Memory should be 0 initialized but you don't know if someone else is going to use that byte and change its value.
-    result.str = push_array(arena, u8, utf16_string.size + 1);
-    result.size = utf16_string.size;
-
-    String8 utf8_string = os_utf16_utf8(scratch.arena, utf16_string);
-    memory_copy(result.str, utf8_string.str, utf8_string.size);
-
     return(result);
 }
 
