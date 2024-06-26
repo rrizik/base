@@ -7,17 +7,17 @@
 
 // UNTESTED: this entire file
 static void*
-memory_set(void *base, int src, u32 size) {
+memory_set(void *base, int value, u32 size) {
     u8* base_ref = (u8*)base;
-    while(size--) *base_ref++ = (u8)src;
+    while(size--) *base_ref++ = (u8)value;
 
     return(base);
 }
 
 static void*
-memory_set(void *base, int src, u64 size) {
+memory_set(void *base, int value, u64 size) {
     u8* base_ref = (u8*)base;
-    while(size--) *base_ref++ = (u8)src;
+    while(size--) *base_ref++ = (u8)value;
 
     return(base);
 }
@@ -68,6 +68,7 @@ static void arena_init(Arena* arena, void* base, u32 size){
 }
 
 static void arena_free(Arena* arena){
+    memory_set(arena->base, 0, arena->at);
     arena->at = 0;
 }
 

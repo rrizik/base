@@ -76,6 +76,12 @@ rad_from_deg(f32 deg){
     return(result);
 }
 
+static f64
+rad_from_deg_f64(f64 deg){
+    f64 result = ((PI_f32/180.0f) * deg);
+    return(result);
+}
+
 static f32
 deg_from_rad(f32 rad){
     f32 result = ((180.0f/PI_f32) * rad);

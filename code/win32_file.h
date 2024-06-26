@@ -121,33 +121,33 @@ os_application_path(Arena* arena) {
 }
 
 // todo: Why does this exist?
-//static File
-//os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
-//    File result = {0};
-//
-//    ScratchArena scratch = begin_scratch(0);
-//    String8 application_path = os_application_path(scratch.arena);
-//    String8 full_path = str8_path_append(scratch.arena, application_path, path);
-//
-//    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-//    defer(end_scratch(scratch));
-//
-//    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
-//    if(!result.handle){
-//        print_last_error(GetLastError());
-//        return(result);
-//    }
-//
-//    LARGE_INTEGER large_file_size;
-//    if(!GetFileSizeEx(result.handle, &large_file_size)){
-//        print_last_error(GetLastError());
-//        return(result);
-//    }
-//
-//    result.size = (u64)large_file_size.QuadPart;
-//
-//    return(result);
-//}
+static File
+os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
+    File result = {0};
+
+    ScratchArena scratch = begin_scratch();
+    String8 application_path = os_application_path(scratch.arena);
+    String8 full_path = str8_path_append(scratch.arena, application_path, path);
+
+    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+
+    result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
+    if(!result.handle){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    LARGE_INTEGER large_file_size;
+    if(!GetFileSizeEx(result.handle, &large_file_size)){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    result.size = (u64)large_file_size.QuadPart;
+
+    end_scratch(scratch);
+    return(result);
+}
 
 // untested do I need to pass back a pointer? Its not clear if this data will persist outside this scope
 static File
