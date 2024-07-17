@@ -339,6 +339,7 @@ static u32 str_length_(char* str){
     while(*str++){
         ++count;
     }
+    str = str - count;
     return(count);
 }
 
@@ -350,6 +351,7 @@ static u64 str_length_(wchar* str){
     while(*str++){
         ++count;
     }
+    str = str - count;
     return(count);
 }
 

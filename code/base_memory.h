@@ -115,7 +115,7 @@ static ScratchArena get_scratch(Arena* arena){
 
 static ScratchArena
 begin_scratch(){
-    // init on first time
+    // note: init scratch memory on first call
     static s32 index = 0;
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
@@ -124,6 +124,8 @@ begin_scratch(){
             *scratch_slot = arena;
         }
     }
+
+    // note: choose ABAB scratch arena
     ScratchArena result = get_scratch((*(scratch_pool + (scratch_index % 2))));
     scratch_index++;
     return(result);
