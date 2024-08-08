@@ -476,7 +476,7 @@ s32 main(s32 argc, char** argv){
                 str8_literal("8"),
             };
             String8 result = str8_join(scratch.arena, sentinel, join_options);
-            eval(str8_cmp(result, str8_literal("1one\\two\\three\\four\\five8")) == true);
+            eval(str8_compare(result, str8_literal("1one\\two\\three\\four\\five8")) == true);
             end_scratch(scratch);
         }
 
@@ -485,11 +485,11 @@ s32 main(s32 argc, char** argv){
             ScratchArena inner_scratch = begin_scratch();
             String8 string = str8_literal("1one\\two\\three\\four\\five8");
             String8Node result = str8_split(inner_scratch.arena, string, '\\');
-            eval(str8_cmp(result.next->str, str8_literal("1one")));
-            eval(str8_cmp(result.next->next->str, str8_literal("two")));
-            eval(str8_cmp(result.next->next->next->str, str8_literal("three")));
-            eval(str8_cmp(result.next->next->next->next->str, str8_literal("four")));
-            eval(str8_cmp(result.next->next->next->next->next->str, str8_literal("five8")));
+            eval(str8_compare(result.next->str, str8_literal("1one")));
+            eval(str8_compare(result.next->next->str, str8_literal("two")));
+            eval(str8_compare(result.next->next->next->str, str8_literal("three")));
+            eval(str8_compare(result.next->next->next->next->str, str8_literal("four")));
+            eval(str8_compare(result.next->next->next->next->next->str, str8_literal("five8")));
             end_scratch(inner_scratch);
         }
 

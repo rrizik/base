@@ -7,6 +7,7 @@
 ----------------------
 
 add flags -Wconverison -Werror -Wall -Wextra 
+change arena.base to arena.buffer
 
 ----------------------
 --- What I learned ---

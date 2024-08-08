@@ -58,6 +58,7 @@
 
 #define array_count(array) (sizeof(array) / sizeof(*(array)))
 
+#define ENABLE_ASSERT 1
 #ifndef ENABLE_ASSERT
 #define ENABLE_ASSERT 0
 #endif
@@ -179,5 +180,21 @@ global u8  u8_max  = (u8) 0xff;
 global u16 u16_max = (u16)0xffff;
 global u32 u32_max = (u32)0xffffffff;
 global u64 u64_max = (u64)0xffffffffffffffffllu;
+
+typedef enum Month{
+    Month_Jan,
+    Month_Feb,
+    Month_Mar,
+    Month_Apr,
+    Month_May,
+    Month_Jun,
+    Month_Jul,
+    Month_Aug,
+    Month_Sep,
+    Month_Oct,
+    Month_Nov,
+    Month_Dec,
+    Month_Count,
+} Month;
 
 #endif

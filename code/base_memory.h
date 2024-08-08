@@ -6,10 +6,14 @@
 #include "base_math.h"
 
 // UNTESTED: this entire file
+//TODO: arena_resize_align
 static void*
 memory_set(void *base, int value, u32 size) {
     u8* base_ref = (u8*)base;
-    while(size--) *base_ref++ = (u8)value;
+    while(size--){
+        *base_ref = (u8)value;
+        ++base_ref;
+    }
 
     return(base);
 }
@@ -17,7 +21,10 @@ memory_set(void *base, int value, u32 size) {
 static void*
 memory_set(void *base, int value, u64 size) {
     u8* base_ref = (u8*)base;
-    while(size--) *base_ref++ = (u8)value;
+    while(size--){
+        *base_ref = (u8)value;
+        ++base_ref;
+    }
 
     return(base);
 }
@@ -41,7 +48,7 @@ memory_copy(void *dst, void *src, u64 size) {
 }
 
 ///////////////////////////////
-// NOTE: Arena Functions
+// NOTE: Arena
 ///////////////////////////////
 
 typedef struct Arena{
@@ -96,6 +103,10 @@ static Arena* push_arena(Arena *arena, u32 size){
     return(result);
 }
 
+///////////////////////////////
+// NOTE: Scratch Arena
+///////////////////////////////
+
 typedef struct ScratchArena{
     Arena* arena;
     u32 at;
@@ -132,9 +143,86 @@ begin_scratch(){
 }
 
 static void end_scratch(ScratchArena scratch){
+    memory_set(scratch.arena->base, 0, scratch.arena->at);
     scratch.arena->at = scratch.at;
 }
 
-//TODO: arena_resize_align
+///////////////////////////////
+// NOTE: Pool Arena
+///////////////////////////////
+
+typedef struct PoolFreeNode{
+    PoolFreeNode* next;
+} PoolFreeNode;
+
+typedef struct PoolArena{
+    void* base;
+    u32 size;
+    u32 chunk_size;
+
+    PoolFreeNode* head;
+} PoolArena;
+
+static PoolArena*
+make_pool(u32 chunk_size, u32 count){
+    void* memory = calloc((chunk_size * count) + sizeof(PoolArena), 1);
+    PoolArena* result = (PoolArena*)memory;
+    result->base = (u8*)memory + sizeof(PoolArena);
+    result->size = chunk_size * count;
+    result->chunk_size = chunk_size;
+    return(result);
+}
+
+static PoolArena*
+push_pool(Arena* arena, u32 chunk_size, u32 count){
+    PoolArena* result = push_struct(arena, PoolArena);
+    result->base = push_array(arena, u8, (chunk_size * count));
+    result->size = chunk_size * count;
+    result->chunk_size = chunk_size;
+    return(result);
+}
+
+static void
+pool_free_all(PoolArena* p){
+    memory_set(p->base, 0, p->size);
+    s32 chunk_count = (s32)(p->size/p->chunk_size);
+
+    for(s32 i=0; i < chunk_count; ++i){
+        PoolFreeNode* node = (PoolFreeNode*)((u8*)p->base + (i * p->chunk_size));
+
+        node->next = p->head;
+        p->head = node;
+    }
+}
+
+static void
+pool_free(PoolArena* p, void* ptr){
+    if(ptr == 0){
+        assert(0);
+    }
+
+    void* start = p->base;
+    void* end = (u8*)p->base + p->size;
+    if(!(start <= (void*)ptr && (void*)ptr < end)){
+        assert(0);
+    }
+
+    memory_set(ptr, 0, p->chunk_size);
+
+    PoolFreeNode* node = (PoolFreeNode*)ptr;
+    node->next = p->head;
+    p->head = node;
+}
+
+static void*
+pool_next(PoolArena* p){
+    PoolFreeNode* node = p->head;
+
+    assert(node != 0);
+
+    p->head = p->head->next;
+    memory_set(node, 0, p->chunk_size);
+    return(node);
+}
 
 #endif

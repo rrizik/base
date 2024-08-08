@@ -6,6 +6,7 @@
 ///////////////////////////////
 //TODO: inline a [] operator for all compoint types
 //TODO: +=
+//todo:: IMPORTANT: maybe change all the vector stuff to capitalization V2 or Vector2/Vector3
 
 typedef union v2{
     struct{ f32 x; f32 y; };

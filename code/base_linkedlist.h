@@ -41,6 +41,32 @@
 #define dll_clear(list) ((((list)->next)=(list)),\
                          (((list)->prev)=(list)))
 
+// todo: dll_insert(list, node, prev_node)
+
+//#define dll_node_from_idx(list, idx)\
+//    CCategory* c = pm->categories; \
+//    for(s32 i=0; i <= from_idx; ++i){ \
+//        c = c->next; \
+//    } \
+//    return(c);
+
+
+#define dll_swap(n1, n2, Type) \
+    (n1)->prev->next = (n2); \
+    (n2)->prev->next = (n1); \
+                             \
+    Type* prev_node = (n1)->prev; \
+    (n1)->prev = (n2)->prev; \
+    (n2)->prev = prev_node; \
+                            \
+    Type* next_node = (n1)->next; \
+    (n1)->next = (n2)->next; \
+    (n2)->next = next_node; \
+                            \
+    (n1)->next->prev = (n1); \
+    (n2)->next->prev = (n2);
+
+
 //typedef struct Node{
 //    struct Node* next;
 //    struct Node* prev;

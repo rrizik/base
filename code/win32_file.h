@@ -14,12 +14,13 @@
 
 
 // todo: This probably needs to be part if an IO file, maybe win32_io? idk.
+// TODO:: add String8 to File struct
 static String8
 read_stdin(Arena* arena){
     u8* str = push_array(arena, u8, KB(1));
 
     fgets((char*)str, KB(1), stdin);
-    u64 length = str_length((char*)str);
+    u64 length = char_length((char*)str);
 
     pop_array(arena, u8, (u32)(KB(1)-length-1));
     String8 result = str8(str, length);
@@ -224,6 +225,7 @@ os_file_write(File file, void* base, u64 size){
     bool result = false;
 
     DWORD bytes_written;
+    // warning: Why is this commented out? What did I learn here to make me do it? I don't know
     //OVERLAPPED overlapped = {
     //    .Offset = (DWORD)(file.size & 0x00000000FFFFFFFF),
     //    .OffsetHigh = (DWORD)(file.size >> 32)
@@ -353,7 +355,7 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
     result = true;
 
     do{
-        u64 length = str_length(data.cFileName);
+        u64 length = wchar_length(data.cFileName);
         String16 string_utf16 = {(u16*)data.cFileName, length};
         String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // todo: test this
         str8_list_push_back(arena, node, string_utf8);
