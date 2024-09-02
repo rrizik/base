@@ -36,7 +36,7 @@ read_stdin(Arena* arena){
 // and you can tell that you set a null terminator
 // todo: need none OS dependant version of this in string file
 static String16
-os_utf8_utf16(Arena* arena, String8 utf8_string){
+os_utf16_from_utf8(Arena* arena, String8 utf8_string){
     u32 utf16_size = (u32)MultiByteToWideChar(CP_UTF8, 0, (char*)utf8_string.str, (s32)utf8_string.size, 0, 0);
     u16* str = (u16*)push_array(arena, u16, utf16_size + 1);
     String16 result = {str, utf16_size};
@@ -53,7 +53,7 @@ os_utf8_utf16(Arena* arena, String8 utf8_string){
 // and you can tell that you set a null terminator
 // todo: need none OS dependant version of this in string file
 static String8
-os_utf16_utf8(Arena* arena, String16 utf16_string){
+os_utf8_from_utf16(Arena* arena, String16 utf16_string){
     s32 utf8_size =  WideCharToMultiByte(CP_UTF8, 0, (wchar*)utf16_string.str, (s32)utf16_string.size, 0, 0, 0, 0);
     u8* utf8_str = (u8*)push_array(arena, u8, (u32)(utf8_size + 1));
     String8 result = {utf8_str, (u64)utf8_size};
@@ -87,7 +87,7 @@ static String8 os_get_cwd(Arena* arena){
     length = GetCurrentDirectoryW(length, buffer);
     String16 utf16_string = {(u16*)buffer, length};
 
-    String8 utf8_string = os_utf16_utf8(arena, utf16_string);
+    String8 utf8_string = os_utf8_from_utf16(arena, utf16_string);
     return(utf8_string);
 }
 
@@ -107,11 +107,11 @@ os_application_path(Arena* arena) {
         return(result);
     }
 
-    String8 utf8_path = os_utf16_utf8(scratch.arena, utf16_path);
+    String8 utf8_path = os_utf8_from_utf16(scratch.arena, utf16_path);
 
     String8Node split_path = str8_split(scratch.arena, utf8_path, '\\');
     dll_pop_back(&split_path); // remove exe
-    //String8Join opts = { .mid = str8_literal("\\"), .post = str8_literal("\\")};
+
     String8Join opts = {0};
     opts.mid = str8_literal("/");
     opts.post = str8_literal("/");
@@ -130,10 +130,10 @@ os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
     String8 application_path = os_application_path(scratch.arena);
     String8 full_path = str8_path_append(scratch.arena, application_path, path);
 
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, full_path);
 
     result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
-    if(!result.handle){
+    if(result.handle == INVALID_HANDLE_VALUE){
         print_last_error(GetLastError());
         return(result);
     }
@@ -156,11 +156,11 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
     File result = {0};
 
     ScratchArena scratch = begin_scratch();
-    String16 wide_path = os_utf8_utf16(scratch.arena, path);
     defer(end_scratch(scratch));
 
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
-    if(!result.handle){
+    if(result.handle == INVALID_HANDLE_VALUE){
         print_last_error(GetLastError());
         return(result);
     }
@@ -223,6 +223,9 @@ os_file_read(Arena* arena, File file){
 static bool
 os_file_write(File file, void* base, u64 size){
     bool result = false;
+    if(file.handle == INVALID_HANDLE_VALUE){
+        return(result);
+    }
 
     DWORD bytes_written;
     // warning: Why is this commented out? What did I learn here to make me do it? I don't know
@@ -254,14 +257,14 @@ os_file_create(String8 dir, String8 filename){
     defer(end_scratch(scratch));
 
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, full_path);
 
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-    if(file_handle){
+    defer(CloseHandle(file_handle));
+    if(file_handle == INVALID_HANDLE_VALUE){
         print_last_error(GetLastError());
         return(result);
     }
-    CloseHandle(file_handle);
 
     result = true;
     return(result);
@@ -269,18 +272,18 @@ os_file_create(String8 dir, String8 filename){
 
 // INCOMPLETE
 static bool
-os_file_exists(String8 dir, String8 filename){
+os_file_exists(String8 path){
     bool result = false;
+
     ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
 
-    String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
-
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
     defer(CloseHandle(file_handle));
 
-    if(file_handle){
+    if(file_handle == INVALID_HANDLE_VALUE){
+        print_last_error(GetLastError());
         return(result);
     }
 
@@ -291,11 +294,12 @@ os_file_exists(String8 dir, String8 filename){
 static bool
 os_file_delete(String8 dir, String8 filename){
     ScratchArena scratch = begin_scratch();
+    defer(end_scratch(scratch));
+
     String8 full_path = str8_path_append(scratch.arena, dir, filename);
-    String16 wide_path = os_utf8_utf16(scratch.arena, full_path);
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);
-    defer(end_scratch(scratch));
     return(result);
 }
 
@@ -304,8 +308,8 @@ os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 
     ScratchArena scratch = begin_scratch();
     String8 source_string = str8_path_append(scratch.arena, source_dir, source_file);
     String8 dest_string = str8_path_append(scratch.arena, dest_dir, dest_file);
-    String16 source_wide = os_utf8_utf16(scratch.arena, source_string);
-    String16 dest_wide = os_utf8_utf16(scratch.arena, dest_string);
+    String16 source_wide = os_utf16_from_utf8(scratch.arena, source_string);
+    String16 dest_wide = os_utf16_from_utf8(scratch.arena, dest_string);
 
     bool result = MoveFileW((wchar*)source_wide.str, (wchar*)dest_wide.str);
     end_scratch(scratch);
@@ -313,13 +317,12 @@ os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 
 }
 
 static bool
-os_dir_create(String8 dir, String8 new_dir){
+os_dir_create(String8 path){
     ScratchArena scratch = begin_scratch();
-    String8 dir_path = str8_path_append(scratch.arena, dir, new_dir);
-    String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
+    defer(end_scratch(scratch));
 
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     bool result = CreateDirectoryW((wchar*)wide_path.str, 0);
-    end_scratch(scratch);
     return(result);
 }
 
@@ -327,7 +330,7 @@ static bool
 os_dir_delete(String8 dir, String8 delete_dir){
     ScratchArena scratch = begin_scratch();
     String8 dir_path = str8_path_append(scratch.arena, dir, delete_dir);
-    String16 wide_path = os_utf8_utf16(scratch.arena, dir_path);
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, dir_path);
 
     bool result = RemoveDirectoryW((wchar*)wide_path.str);
     end_scratch(scratch);
@@ -341,26 +344,28 @@ os_dir_files(Arena* arena, String8Node* node, String8 dir){
 
     ScratchArena scratch = begin_scratch();
     defer(end_scratch(scratch));
+
     String8 dir_slash = str8_concatenate(scratch.arena, dir, str8_literal("\\*"));
-    String16 dir_utf16 = os_utf8_utf16(scratch.arena, dir_slash);
+    String16 dir_utf16 = os_utf16_from_utf8(scratch.arena, dir_slash);
 
     WIN32_FIND_DATAW data = {0};
     HANDLE file_handle = FindFirstFileW((wchar*)dir_utf16.str, &data);
-    if(file_handle){
-        DWORD err = GetLastError();
-        print("os_dir_files: failed to create file handle - dir: %s - error code: %d\n", dir.str, err);
+    defer(CloseHandle(file_handle));
+
+    if(file_handle == INVALID_HANDLE_VALUE){
+        print_last_error(GetLastError());
         return(result);
     }
-    defer(CloseHandle(file_handle));
-    result = true;
 
     do{
         u64 length = wchar_length(data.cFileName);
         String16 string_utf16 = {(u16*)data.cFileName, length};
-        String8 string_utf8 = os_utf16_utf8(scratch.arena, string_utf16); // todo: test this
+        String8 string_utf8 = os_utf8_from_utf16(scratch.arena, string_utf16); // todo: test this
         str8_list_push_back(arena, node, string_utf8);
         print("FILE: %s\n", string_utf8.str);
     }while(FindNextFileW(file_handle, &data));
+
+    result = true;
     return(result);
 }
 

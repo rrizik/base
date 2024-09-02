@@ -1,7 +1,6 @@
 #ifndef WIN32_LOGGING
 #define WIN32_LOGGING
 
-#include <stdio.h>
 static void print(const char* format, ...) {
     char buffer[4096] = {};
 
@@ -21,14 +20,13 @@ fatal_error(const char* message){
 }
 
 #define print_last_error(error) print_last_error_(error, __LINE__, str8_literal(__FILE__))
-static void
-print_last_error_(DWORD error, s32 line, String8 file_name){
+static void print_last_error_(DWORD error, s32 line_number, String8 path){
     LPCWSTR message = NULL;
 
     u32 size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPWSTR) &message, 0, NULL);
 
-    String16 result = {(u16*)message, size};
-    print("%s(%i) error(%i): %ls\n", file_name.str, line, error, result.str);
+    String8 file = str8_path_file(path);
+    print("%s:%i error:(%i) %ls", file.str, line_number, error, message);
 }
 
 #endif

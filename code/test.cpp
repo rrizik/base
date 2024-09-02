@@ -405,16 +405,15 @@ s32 main(s32 argc, char** argv){
 
     // base_string.h
     {
-        // str8/16/32 creation
+        // str8/str8_literaln
         eval(str8_literal("haha").size == 4);
         eval(*str8_literal("haha").str == 'h');
         eval(str8("haha", 4).size == 4);
         eval(*str8("haha", 4).str == 'h');
 
+        // str16
         eval(str16(L"haha", 4).size == 4);
         eval(*str16(L"haha", 4).str == 'h');
-        eval(str32(U"haha", 4).size == 4);
-        eval(*str32(U"haha", 4).str == 'h');
 
         // == != operators
         String8 str8_1 = str8_literal("Hello World!");
@@ -427,6 +426,53 @@ s32 main(s32 argc, char** argv){
         eval(str8_1 != str8_3);
         eval((str16_1 == str16_2));
         eval((str16_1 != str16_3));
+
+        // str8_index_from_left(string, string)
+        {
+            String8 string = str8_literal("efgw efgh");
+            String8 sub1 = str8_literal("aaaaaefgh efgh");
+            String8 sub2 = str8_literal("efghh");
+            String8 sub3 = str8_literal("123");
+            String8 sub4 = str8_literal("efgh");
+            eval(str8_index_from_left(string, sub1) == -1);
+            eval(str8_index_from_left(string, sub2) == -1);
+            eval(str8_index_from_left(string, sub3) == -1);
+            eval(str8_index_from_left(string, sub3) == -1);
+            eval(str8_index_from_left(string, sub4) == 5);
+        }
+
+        // str8_index_from_right(string, string)
+        {
+            String8 string = str8_literal("efgw efgh");
+            String8 sub1 = str8_literal("aaaaaefgh efgh");
+            String8 sub2 = str8_literal("eefgw");
+            String8 sub3 = str8_literal("123");
+            String8 sub4 = str8_literal("efgw");
+            eval(str8_index_from_right(string, sub1) == -1);
+            eval(str8_index_from_right(string, sub2) == -1);
+            eval(str8_index_from_right(string, sub3) == -1);
+            eval(str8_index_from_right(string, sub4) == 3);
+        }
+
+        // any_index_from_right(string, string)
+        {
+            String8 string = str8_literal("a/b\\c/d");
+            String8 sub1 = str8_literal("\\/");
+            String8 sub2 = str8_literal("/\\");
+            String8 sub3 = str8_literal("123");
+            eval(any_index_from_right(string, sub1) == 3);
+            eval(any_index_from_right(string, sub2) == 5);
+            eval(any_index_from_right(string, sub3) == -1);
+            eval(any_index_from_left(string, sub1) == 3);
+            eval(any_index_from_left(string, sub2) == 1);
+            eval(any_index_from_left(string, sub3) == -1);
+        }
+//str8_split_left(string, index);
+//str8_split_right(string, index);
+//str8_trim_left(string, count);
+//str8_trim_left(string, count);
+//str8_trim_right(string, count);
+//str8_trim_right(string, count);
 
         // str8_concatenate
         ScratchArena scratch = begin_scratch();
@@ -511,9 +557,9 @@ s32 main(s32 argc, char** argv){
         // utf8 to utf16 to utf8
         {
             String8 string8_1 = str8_literal("test_string");
-            String16 string16_1 = os_utf8_utf16(arena, string8_1);
+            String16 string16_1 = os_utf16_from_utf8(arena, string8_1);
             String16 string16_2 = str16(L"test_string", string16_1.size);
-            String8 string8_2 = os_utf16_utf8(arena, string16_1);
+            String8 string8_2 = os_utf8_from_utf16(arena, string16_1);
             eval(string8_1 == string8_2);
             eval(string16_1 == string16_2);
         }

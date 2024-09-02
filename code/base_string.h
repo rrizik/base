@@ -1,3 +1,80 @@
+/*
+static u64 char_length(char* buff);
+static u64 char_copy(char* dst, char* src);
+static u64 wchar_length(wchar* wbuff);
+static u64 wchar_copy(wchar* dst, wchar* src);
+
+#define str8(byte_buffer, count) str8_((u8*)byte_buffer, count)
+#define str8_literal(byte_buffer) str8_((u8*)byte_buffer, (sizeof(byte_buffer) - 1))
+static String8 str8_(u8* byte_buffer, u64 count);
+static String8 str8_format(Arena* arena, const char* format, ...);
+#define str16(string, count) str16_((u16*)string, count)
+static String16 str16_(u16* string, u64 count);
+
+static bool byte_is_slash(u8 byte);
+static bool byte_is_digit(u8 byte);
+static bool byte_is_space(u8 byte);
+static bool byte_is_alpha(u8 byte);
+static bool byte_is_alnum(u8 byte);
+static bool byte_is_upper(u8 byte);
+static bool byte_is_lower(u8 byte);
+static u8   byte_to_upper(u8 byte);
+static u8   byte_to_lower(u8 byte);
+static bool str8_is_upper(String8 string);
+static bool str8_is_lower(String8 string);
+static void str8_to_upper(String8* string);
+static void str8_to_lower(String8* string);
+
+static bool    str8_is_zero_terminated(String8 string);
+static String8 str8_zero_terminate(Arena* arena, String8 string);
+static String8 str8_concatenate(Arena* arena, String8 left, String8 right);
+static u64     str8_replace_byte(String8* string, u8 byte_in, u8 byte_out);
+
+static void    str8_advance(String8* str, u64 count);
+static String8 str8_advance(String8 str, u64 count);
+static u64     str8_eat_spaces(String8* string);
+static String8 str8_eat_spaces(String8 string);
+static String8 str8_eat_word(String8* string);
+static String8 str8_eat_line(String8* string);
+
+static String8 str8_split_left(String8 string, u64 index);
+static String8 str8_split_right(String8 string, u64 index);
+static void    str8_trim_left(String8* string, u64 count);
+static String8 str8_trim_left(String8 string, u64 count);
+static void    str8_trim_right(String8* string, u64 count);
+static String8 str8_trim_right(String8 string, u64 count);
+
+static bool    str8_compare(String8 left, String8 right);
+static bool    str8_compare_nocase(String8 left, String8 right);
+static bool    str8_contains(String8 string, String8 sub_string);
+static bool    str8_contains_byte(String8 string, u8 byte);
+static bool    str8_contains_nocase(String8 string, String8 sub_string);
+static bool    str8_starts_with(String8 string, String8 sub_string);
+static bool    str8_starts_with_nocase(String8 string, String8 sub_string);
+static bool    str8_ends_with(String8 string, String8 sub_string);
+static bool    str8_ends_with_nocase(String8 string, String8 sub_string);
+
+static s64     byte_index_from_left(String8 string, u8 byte);
+static s64     byte_index_from_right(String8 string, u8 byte);
+static s64     str8_index_from_left(String8 string, String8 sub_string);
+static s64     str8_index_from_right(String8 string, String8 sub_string);
+static s64     any_index_from_right(String8 string, String8 any);
+static s64     any_index_from_left(String8 string, String8 any);
+
+static String8     str8_range(u8* first, u8* opl);
+static void        str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string);
+static String8Node str8_split(Arena* arena, String8 string, char byte);
+static String8     str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts);
+static String8     str8_path_append(Arena* arena, String8 path, String8 value);
+static String8     str8_path_pop(Arena* arena, String8 path, char slash);
+static String8     str8_path_file(String8 path);
+static String8     str8_path_filename(String8 path);
+static String8     str8_path_extension(String8 path);
+static void        str8_path_strip_file(String8* path);
+static void        str8_path_strip_extension(String8 path);
+static bool        str8_path_is_absolute(String8 path);
+*/
+
 #ifndef BASE_STRING_H
 #define BASE_STRING_H
 
@@ -5,70 +82,57 @@
 #include "base_linkedlist.h"
 #include "base_memory.h"
 
-/* JB String stuff
-
-to_lower_in_place :: (s: string);
-to_lower_copy :: (s: string, allocator := Basic.temporary_allocator) -> string;
-
-to_upper_in_place :: (s: string);
-to_upper_copy :: (s: string, allocator := Basic.temporary_allocator) -> string;
-
-slice :: inline (s: string, index: s64, count: s64) -> string;
-join :: (inputs: .. string, separator := "", before_first := false, after_last := false, allocator: Allocator = .{}) -> string;
-
-
-split_from_left  :: (s: string, byte: u8) -> (found: bool, left: string, right: string);
-split_from_right :: (s: string, byte: u8) -> (found: bool, left: string, right: string);
-split_from_left  :: (s: string, separator: string) -> (found: bool, left: string, right: string);
-split_from_right :: (s: string, separator: string) -> (found: bool, left: string, right: string);
-split_from_left_by_any  :: (s: string, bytes: string) -> (found: bool, left: string, right: string);
-split_from_right_by_any :: (s: string, bytes: string) -> (found: bool, left: string, right: string);
-split :: (s: string, separator: $T) -> (result: [] string);
-
-stop_at_any :: (s: string, bytes: string) -> string;
-
-eat_trailing_spaces :: (_s: string) -> string;
-
-
-Path routines:
-
-
-path_decomp :: (name: string) -> (path: string, basename: string, extension: string, basename_with_extension: string);
-    Separate the file path 'name' into its compontents.
-path_filename :: (path: string) -> string;
-    path_filename("/home/wizard/rezrov.foo") returns "rezrov.foo".
-path_extension :: (path: string) -> (extension: string, found_extension: bool);
-path_strip_filename :: (path: string) -> string;
-path_strip_extension :: (path: string) -> string;
-path_overwrite_separators :: (path: string, separator: u8 = PATH_SEPARATOR);
-    Modify 'path' in-place to convert one kind of directory separator to another.
-    Any occurrence of #char "\" or #char "/" in 'path' will be replaced by 'separator'.
-
-is_absolute_path :: (path: string) -> bool;
-
-*/
-// todo: Test that all functions 0 terminal strings
-// todo: Get rid of String16 completely and only use wchar_t
-// todo: Get rid of String32 completely
+// todo:: Test that all functions 0 terminal strings
 // todo:: make all paths coming from OS forward slashed
 // todo:: Write a function to_c_string() or equivalent that zero terminates a String8 when I need it. Also is_zero_terminated() function to check
-// todo:: introduce union with data/count, str/size, str/length
-// todo:: make a str8_add()/array_add() helper function
-// consider: this should work only on dynamic arrays, maybe?
+// todo:: make a str8_add()/array_add() helper function consider: this should work only on dynamic arrays, maybe?
+// todo:: other useful helpers
+// to_c_string :: (s: string) -> *u8 { //Allocates memory. }
+//static String8 str8_cstring(u8* cstring){
+//    u8* ptr = cstring;
+//    for(;*ptr != 0; ptr+=1);
+//    String8 result = str8_range(cstring, ptr);
+//    return(result);
+//}
+// string_to_float:: (_arg: string) -> result: $T, success: bool, remainder: string {
+// string_to_int :: (t: string, base := 10, $T := int) -> result: T, success: bool, remainder: string {
+// eat_trailing_spaces :: (_s: string) -> string;
+
+
 
 ///////////////////////////////
 // note: String8
 ///////////////////////////////
 
-// note: All functions must 0 terminal strings when making allocations
 typedef union String8{
     struct{ u8* str; u64 size; };
     struct{ u8* data; u64 count; };
 } String8;
-//typedef struct String8{
-//    u8* str;
-//    u64 size;
-//} String8;
+
+#define str8(byte_buffer, count) str8_((u8*)byte_buffer, count)
+#define str8_literal(byte_buffer) str8_((u8*)byte_buffer, (sizeof(byte_buffer) - 1))
+static String8 str8_(u8* byte_buffer, u64 count){
+    String8 result = {byte_buffer, count};
+    return(result);
+}
+
+#include <stdio.h>
+#include <stdarg.h>
+#define str8_format(arena, format) str8_formatted(arena, format, ...)
+static String8
+str8_formatted(Arena* arena, const char* format, ...){
+    char buffer[4096] = {};
+    va_list args;
+    va_start(args, format);
+    u64 count = (u64)vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    u8* byte_buffer = (u8*)push_array(arena, u8, count);
+    memcpy(byte_buffer, buffer, count);
+    String8 result = str8(byte_buffer, count);
+
+    return(result);
+}
 
 typedef struct String8Node{
     String8Node* next;
@@ -90,117 +154,138 @@ typedef struct String8Join{
     String8 post;
 } String8Join;
 
-typedef struct String16{
-    u16* str;
-    u64 size;
+typedef union String16{
+    struct{ u16* str; u64 size; };
+    struct{ u16* data; u64 count; };
 } String16;
 
-typedef struct String32{
-    u32* str;
-    u64 size;
-} String32;
+#define str16(string, count) str16_((u16*)string, count)
+static String16 str16_(u16* string, u64 count){
+    String16 result = {string, count};
+    return(result);
+}
+
+///////////////////////////////
+// note: Char helpers
+///////////////////////////////
+// important: All functions must 0 terminal strings when making allocations
+
+static u64 char_length(char* buff){
+    u64 count = 0;
+    while(*buff++){
+        ++count;
+    }
+    buff = buff - count;
+    return(count);
+}
+
+static u64 char_copy(char* dst, char* src){
+    u64 count = 0;
+    while(*src){
+        *dst = *src;
+        dst++;
+        src++;
+        count++;
+    }
+    *dst = '\0';
+    src = src - count;
+    dst = dst - count;
+    return(count);
+}
+
+static u64 wchar_length(wchar* wbuff){
+    u64 count = 0;
+    while(*wbuff++){
+        ++count;
+    }
+    wbuff = wbuff - count;
+    return(count);
+}
+
+static u64 wchar_copy(wchar* dst, wchar* src){
+    u64 count = 0;
+    while(*src){
+        *dst = *src;
+        src++;
+        dst++;
+        count++;
+    }
+    *dst = '\0';
+    dst = dst - count;
+    src = src - count;
+    return(count);
+}
 
 
 ///////////////////////////////
 // NOTE: String8 Basic
 ///////////////////////////////
 
-// Allocates memory.
-// to_c_string :: (s: string) -> *u8 {
-//
-// string_to_float:: (_arg: string) -> result: $T, success: bool, remainder: string {
-// string_to_int :: (t: string, base := 10, $T := int) -> result: T, success: bool, remainder: string {
-
-#define str8(byte_buffer, count) str8_((u8*)byte_buffer, count)
-#define str8_literal(byte_buffer) str8_((u8*)byte_buffer, (sizeof(byte_buffer) - 1))
-static String8 str8_(u8* byte_buffer, u64 count){
-    String8 result = {byte_buffer, count};
-    return(result);
+static bool
+byte_is_slash(u8 byte){
+    return(byte == '\\' || byte == '/');
 }
 
-#include <stdio.h>
-#include <stdarg.h>
-#define str8_format(arena, format) str8_formatted(arena, format, ...)
-static String8
-str8_formatted(Arena* arena, const char* format, ...) {
-    char buffer[4096] = {};
-    va_list args;
-    va_start(args, format);
-    u64 count = (u64)vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-
-    u8* byte_buffer = (u8*)push_array(arena, u8, count);
-    memory_copy(byte_buffer, buffer, (u32)count);
-    String8 result = str8(byte_buffer, count);
-
+static bool
+byte_is_digit(u8 byte){
+    bool result = ((byte >= '0') && (byte <= '9'));
     return(result);
 }
 
 static bool
-byte_is_slash(u8 c){
-    return(c == '\\' || c == '/');
-}
-
-static bool
-byte_is_digit(u8 c){
-    bool result = ((c >= '0') && (c <= '9'));
-    return(result);
-}
-
-static bool
-byte_is_space(u8 c){
-    if(c == ' ' || c == '\n' || c == '\t' || c == '\r'){
+byte_is_space(u8 byte){
+    if(byte == ' ' || byte == '\n' || byte == '\t' || byte == '\r'){
         return(true);
     }
     return(false);
 }
 
 static bool
-byte_is_alpha(u8 c){
-    if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')){
+byte_is_alpha(u8 byte){
+    if((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z')){
         return(true);
     }
     return(false);
 }
 
 static bool
-byte_is_alnum(u8 c){
-    if(byte_is_alpha(c) || byte_is_digit(c)){
+byte_is_alnum(u8 byte){
+    if(byte_is_alpha(byte) || byte_is_digit(byte)){
+        return(true);
+    }
+    return(false);
+}
+
+static bool
+byte_is_upper(u8 byte){
+    if(byte >= 'A' && byte <= 'Z'){
+        return(true);
+    }
+    return(false);
+}
+
+static bool
+byte_is_lower(u8 byte){
+    if(byte >= 'a' && byte <= 'z'){
         return(true);
     }
     return(false);
 }
 
 static u8
-byte_to_upper(u8 c){
-    if(c >= 'a' && c <= 'z'){
-        return((u8)(c + ('A' - 'a')));
+byte_to_upper(u8 byte){
+    if(byte >= 'a' && byte <= 'z'){
+        return((u8)(byte + ('A' - 'a')));
     }
-    return(c);
+    return(byte);
 }
 
 static u8
-byte_to_lower(u8 c){
-    if(c >= 'A' && c <= 'Z'){
-        return((u8)(c + 'a' - 'A'));
+byte_to_lower(u8 byte){
+    if(byte >= 'A' && byte <= 'Z'){
+        return((u8)(byte + 'a' - 'A'));
     }
-    return(c);
-}
-
-static bool
-byte_is_upper(u8 c){
-    if(c >= 'A' && c <= 'Z'){
-        return(true);
-    }
-    return(false);
-}
-
-static bool
-byte_is_lower(u8 c){
-    if(c >= 'a' && c <= 'z'){
-        return(true);
-    }
-    return(false);
+    return(byte);
 }
 
 static bool
@@ -223,41 +308,107 @@ str8_is_lower(String8 string){
     return(true);
 }
 
-static String8
-str8_advance(String8 str, u64 count){
-    if(str.count > count){
-        str.str = str.str + count;
-        str.count -= count;
+static void
+str8_to_upper(String8* string){
+    for(s32 i=0; i < string->count; ++i){
+        string->data[i] = byte_to_upper(string->data[i]);
     }
-    return(str);
 }
 
 static void
-str8_advance(String8* str, u64 count){
-    str->str = str->str + count;
-    str->count -= count;
+str8_to_lower(String8* string){
+    for(s32 i=0; i < string->count; ++i){
+        string->data[i] = byte_to_lower(string->data[i]);
+    }
+}
+
+static bool
+str8_is_zero_terminated(String8 string){
+    if(string.data[string.count - 1] == '\0'){
+        return(true);
+    }
+    return(false);
+}
+
+static String8
+str8_zero_terminate(Arena* arena, String8 string){
+    u8* buffer = push_array(arena, u8, string.count + 1);
+    memcpy(buffer, string.data, string.count + 1);
+
+    String8 result = {0};
+    result.data = buffer;
+    result.count = string.count + 1;
+
+    u8* last = buffer + string.count;
+    *last = 0;
+
+    return(result);
+}
+
+static String8
+str8_concatenate(Arena* arena, String8 left, String8 right){
+    u8* buffer = (u8*)push_array(arena, u8, (left.count + right.count));
+    String8 result = {buffer, (left.count + right.count)};
+
+    for(u64 i = 0; i < left.count; ++i){
+        *buffer++ = *(left.data + i);
+    }
+    for(u64 i = 0; i < right.count; ++i){
+        *buffer++ = *right.data++;
+    }
+
+    return(result);
+}
+
+static u64
+str8_replace_byte(String8* string, u8 byte_in, u8 byte_out){
+    u64 count = 0;
+    for(s32 i=0; i < string->count; ++i){
+        if(string->data[i] == byte_in){
+            string->data[i] = byte_out;
+            ++count;
+        }
+    }
+    return(count);
+}
+
+static String8
+str8_advance(String8 string, u64 count){
+    if(string.count >= count){
+        string.data = string.data + count;
+        string.count -= count;
+    }
+    return(string);
+}
+
+static void
+str8_advance(String8* string, u64 count){
+    if(string->count >= count){
+        string->data = string->data + count;
+        string->count -= count;
+    }
 }
 
 // CONSIDER: Maybe have other functions like this, like eat_digits, eat_number, eat_string, ...
 static String8
-str8_eat_spaces(String8 str){
-    while(str.count){
-        if((str.str[0] != ' ') && (str.str[0] != '\t') && (str.str[0] != '\n') && (str.str[0] != '\r') && (str.str[0] != '\v') && (str.str[0] != '\f')){
+str8_eat_spaces(String8 string){
+    while(string.count){
+        if((string.data[0] != ' ') && (string.data[0] != '\t') && (string.data[0] != '\n') && (string.data[0] != '\r') && (string.data[0] != '\v') && (string.data[0] != '\f')){
             break;
         }
-        str = str8_advance(str, 1);
+        string = str8_advance(string, 1);
     }
-    return(str);
+    return(string);
 }
 
 static u64
-str8_eat_spaces(String8* str){
+str8_eat_spaces(String8* string){
     u64 count = 0;
-    while(str->count){
-        if((str->str[0] != ' ') && (str->str[0] != '\t') && (str->str[0] != '\n') && (str->str[0] != '\r') && (str->str[0] != '\v') && (str->str[0] != '\f')){
+    while(string->count){
+        if((string->data[0] != ' ') && (string->data[0] != '\t') && (string->data[0] != '\n') && (string->data[0] != '\r') && (string->data[0] != '\v') && (string->data[0] != '\f')){
             break;
         }
-        str8_advance(str, 1);
+        str8_advance(string, 1);
         count++;
     }
     return(count);
@@ -268,110 +419,81 @@ str8_eat_word(String8* string){
     String8 result = {0};
     str8_eat_spaces(string);
 
-    u32 count = 0;
-    String8* view = string;
-    while(view->count){
-        if(byte_is_space(*view->data)){
+    u64 count = 0;
+    while(string->count){
+        if(byte_is_space(*string->data)){
             break;
         }
-        str8_advance(view, 1);
+        str8_advance(string, 1);
         ++count;
     }
 
-    result = {string->data, count};
+    result = {string->data - count, count};
     return(result);
 }
-
-//static String8
-//str8_eat_word(String8* string){
-//    String8 result = {0};
-//    str8_eat_spaces(string);
-//
-//    u8* ptr = string->str;
-//    u32 count = 0;
-//    if(string->count){
-//        while(!byte_is_space(*ptr) && *ptr != '\0'){
-//            count++;
-//            ptr++;
-//            if(count >= string->count){
-//                result = {string->str, count};
-//                str8_advance(string, count);
-//                return(result);
-//            }
-//        }
-//
-//        result = {string->str, count};
-//        str8_advance(string, count);
-//    }
-//
-//    return(result);
-//}
 
 static String8
 str8_eat_line(String8* string){
     String8 result = {0};
 
-    u32 count = 0;
-    String8* view = string;
-    while(view->count){
-        if(*view->data == '\n'){
-            str8_advance(view, 1);
+    u64 count = 0;
+    while(string->count){
+        if(*string->data == '\n'){
+            str8_advance(string, 1); // consume the \n
             ++count;
             break;
         }
-        str8_advance(view, 1);
+        str8_advance(string, 1);
         ++count;
     }
 
-    result = {string->data, count};
+    result = {string->data - count, count};
     return(result);
 }
 
-//static String8
-//str8_next_line(String8* string){
-//    String8 result = {0};
-//    u8* ptr = string->str;
-//
-//    u32 count = 0;
-//    while(*ptr != '\n' && *ptr != '\0'){
-//        count++;
-//        ptr++;
-//        if(count >= string->count){
-//            result = {string->str, count};
-//            str8_advance(string, count);
-//            return(result);
-//        }
-//    }
-//    // note: include newline in count
-//    if(*ptr == '\n'){
-//        ++ptr; // consume newline char
-//        ++count; // consume newline char
-//    }
-//
-//    result = {string->str, count};
-//    str8_advance(string, count);
-//
-//    return(result);
-//}
-
-// consider: str8_trim_both_sides_at_the_same_time()?
-static bool
-str8_trim_left(String8* string, u64 count){
-    if(string->count > count){
-        string->data = string->data + count;
-        string->count -= count;
-        return(true);
+static String8
+str8_split_left(String8 string, u64 index){
+    if(string.count >= index){
+        string.count = index;
     }
-    return(false);
+    return(string);
 }
 
-static bool
-str8_trim_right(String8* string, u64 count){
-    if(string->count > count){
-        string->count -= count;
-        return(true);
+static String8
+str8_split_right(String8 string, u64 index){
+    if(string.count >= index){
+        string.data = string.data + (index + 1);
+        string.count -= (index + 1);
     }
-    return(false);
+    return(string);
+}
+
+// consider: str8_trim_both_sides_at_the_same_time()? or str8_sub_string()?
+static void
+str8_trim_left(String8* string, u64 count){
+    u64 min = MIN(string->count, count);
+    string->data = string->data + min;
+    string->count -= min;
+}
+
+static String8
+str8_trim_left(String8 string, u64 count){
+    u64 min = MIN(string.count, count);
+    String8 result = {string.data + min, string.count - min};
+    return(result);
+}
+
+static void
+str8_trim_right(String8* string, u64 count){
+    u64 min = MIN(string->count, count);
+    string->count -= min;
+}
+
+static String8
+str8_trim_right(String8 string, u64 count){
+    u64 min = MIN(string.count, count);
+    String8 result = {string.data, string.count - min};
+    return(result);
 }
 
 ///////////////////////////////
@@ -384,8 +506,8 @@ str8_compare(String8 left, String8 right){
         return(false);
     }
 
-    for(u32 i=0; i < left.count; ++i){
-        if(left.str[i] != right.str[i]){
+    for(u64 i=0; i < left.count; ++i){
+        if(left.data[i] != right.data[i]){
             return(false);
         }
     }
@@ -399,8 +521,8 @@ str8_compare_nocase(String8 left, String8 right){
         return(false);
     }
 
-    for(u32 i=0; i < left.count; ++i){
-        if(byte_to_lower(left.str[i]) != byte_to_lower(right.str[i])){
+    for(u64 i=0; i < left.count; ++i){
+        if(byte_to_lower(left.data[i]) != byte_to_lower(right.data[i])){
             return(false);
         }
     }
@@ -410,8 +532,8 @@ str8_compare_nocase(String8 left, String8 right){
 
 static bool
 str8_contains(String8 string, String8 sub_string){
-    u32 count = 0;
-    for(u32 i=0; i < string.count; ++i){
+    u64 count = 0;
+    for(u64 i=0; i < string.count; ++i){
         if(string.data[i] == sub_string.data[count]){
             count++;
         }
@@ -427,9 +549,9 @@ str8_contains(String8 string, String8 sub_string){
 }
 
 static bool
-str8_contains_byte(String8 string, u8 c){
-    for(u32 i=0; i < string.count; ++i){
-        if(string.data[i] == c){
+str8_contains_byte(String8 string, u8 byte){
+    for(u64 i=0; i < string.count; ++i){
+        if(string.data[i] == byte){
             return(true);
         }
     }
@@ -438,8 +560,8 @@ str8_contains_byte(String8 string, u8 c){
 
 static bool
 str8_contains_nocase(String8 string, String8 sub_string){
-    u32 count = 0;
-    for(u32 i=0; i < string.count; ++i){
+    u64 count = 0;
+    for(u64 i=0; i < string.count; ++i){
         if(byte_to_lower(string.data[i]) == byte_to_lower(sub_string.data[count])){
             count++;
         }
@@ -459,8 +581,21 @@ str8_starts_with(String8 string, String8 sub_string){
     if(sub_string.count > string.count){
         return(false);
     }
-    for(u32 i=0; i < sub_string.count; ++i){
+    for(u64 i=0; i < sub_string.count; ++i){
         if(string.data[i] != sub_string.data[i]){
+            return(false);
+        }
+    }
+    return(true);
+}
+
+static bool
+str8_starts_with_nocase(String8 string, String8 sub_string){
+    if(sub_string.count > string.count){
+        return(false);
+    }
+    for(u64 i=0; i < sub_string.count; ++i){
+        if(byte_to_lower(string.data[i]) != byte_to_lower(sub_string.data[i])){
             return(false);
         }
     }
@@ -473,25 +608,12 @@ str8_ends_with(String8 string, String8 sub_string){
         return(false);
     }
 
-    u64 idx = string.count;
+    u64 index = string.count;
     for(u64 i=sub_string.count; i <= sub_string.count; --i){
-        if(string.data[idx] != sub_string.data[i]){
+        if(string.data[index] != sub_string.data[i]){
             return(false);
         }
-        --idx;
-    }
-    return(true);
-}
-
-static bool
-str8_starts_with_nocase(String8 string, String8 sub_string){
-    if(sub_string.count > string.count){
-        return(false);
-    }
-    for(u32 i=0; i < sub_string.count; ++i){
-        if(byte_to_lower(string.data[i]) != byte_to_lower(sub_string.data[i])){
-            return(false);
-        }
+        --index;
     }
     return(true);
 }
@@ -502,148 +624,185 @@ str8_ends_with_nocase(String8 string, String8 sub_string){
         return(false);
     }
 
-    u64 idx = string.count;
+    u64 index = string.count;
     for(u64 i=sub_string.count; i <= sub_string.count; --i){
-        if(byte_to_lower(string.data[idx]) != byte_to_lower(sub_string.data[i])){
+        if(byte_to_lower(string.data[index]) != byte_to_lower(sub_string.data[i])){
             return(false);
         }
-        --idx;
+        --index;
     }
     return(true);
 }
 
-static u64
-str8_replace_chars(String8* string, u8 c_in, u8 c_out){
-    u64 count = 0;
-    for(s32 i=0; i < string->count; ++i){
-        if(string->data[i] == c_in){
-            string->data[i] = c_out;
-            ++count;
+static s64
+byte_index_from_left(String8 string, u8 byte){
+    s64 index = 0;
+    while(index < (s64)string.count){
+        if(string.data[index] == byte){
+            return((s64)index);
         }
-    }
-    return(count);
-}
-
-static u64
-byte_index_from_left(String8 string, u8 c){
-    u64 index = 0;
-    while(string.count){
-        if(string.data[0] == c){ break; }
-        string = str8_advance(string, 1);
         index++;
     }
-    return(index);
+    return(-1);
 }
 
-static u64
+static s64
+byte_index_from_right(String8 string, u8 byte){
+    u64 index = string.count - 1;
+    while(index < string.count){
+        if(string.data[index] == byte){
+            return((s64)index);
+        }
+        --index;
+    }
+    return(-1);
+}
+
+static s64
 str8_index_from_left(String8 string, String8 sub_string){
     if(string.count < sub_string.count){
-        return(0);
+        return(-1);
     }
 
     bool first = true;
-    u32 index = 0;
-    u32 count = 0;
-    for(u32 i=0; i < string.count; ++i){
-        if(string.data[i] == sub_string.data[count]){
-            if(first){
-                index = i;
-                first = false;
+    s64 index = -1;
+    s64 sub_index = 0;
+    for(u64 i=0; i < string.count; ++i){
+        if(string.data[i] == sub_string.data[sub_index]){
+            if(string.count - i < sub_string.count){
+                return(-1);
             }
-            count++;
-        }
-        else{
-            first = true;
-            index = 0;
-            count = 0;
-        }
 
-        if(count == sub_string.count){
-            return(index);
+            index = (s64)i;
+            for(u64 j=0; j < sub_string.count; ++j){
+                if(string.data[i + j] == sub_string.data[sub_index]){
+                    ++sub_index;
+                }
+                else{
+                    index = -1;
+                    sub_index = 0;
+                    break;
+                }
+
+                if(sub_index == (s64)sub_string.count){
+                    return((s64)index);
+                }
+            }
         }
     }
-    return(index);
+    return(-1);
 }
 
-static u64
-byte_index_from_right(String8 string, u8 c){
-    u64 index = 0;
-    while(string.count){
-        if(string.data[string.count - 1 - index] == c){ break; }
-        str8_trim_right(&string, 1);
-        index++;
-    }
-    return(index);
-}
-
-static u64
+static s64
 str8_index_from_right(String8 string, String8 sub_string){
     if(string.count < sub_string.count){
-        return(0);
+        return(-1);
     }
 
     bool first = true;
-    u32 index = 0;
-    u32 count = 0;
-    for(u32 i=0; i < string.count; ++i){
-        if(string.data[string.count - 1 - i] == sub_string.data[sub_string.count - 1 - count]){
-            if(first){
-                index = i;
-                first = false;
+    s64 index = -1;
+    u64 sub_index = sub_string.count - 1;
+    for(u64 i=string.count - 1; i < string.count; --i){
+        if(string.data[i] == sub_string.data[sub_index]){
+            if(string.count - (string.count - i) < sub_string.count - 1){
+                return(-1);
             }
-            count++;
-        }
-        else{
-            first = true;
-            index = 0;
-            count = 0;
-        }
 
-        if(count == sub_string.count){
+            index = (s64)i;
+            for(u64 j=0; j < sub_string.count; ++j){
+                if(string.data[i - j] == sub_string.data[sub_index]){
+                    --sub_index;
+                }
+                else{
+                    index = -1;
+                    sub_index = 0;
+                    break;
+                }
+
+                if(sub_index == -1){
+                    return((s64)index);
+                }
+            }
+        }
+    }
+    return(-1);
+}
+
+static s64
+any_index_from_right(String8 string, String8 any){
+    s64 index = -1;
+    for(u64 i=0; i < any.count; ++i){
+        u8 byte = any.data[i];
+        index = byte_index_from_right(string, byte);
+        if(index != -1){
             return(index);
         }
     }
     return(index);
 }
 
+static s64
+any_index_from_left(String8 string, String8 any){
+    s64 index = -1;
+    for(u64 i=0; i < any.count; ++i){
+        u8 byte = any.data[i];
+        index = byte_index_from_left(string, byte);
+        if(index != -1){
+            return(index);
+        }
+    }
+    return(index);
+}
 
+///////////////////////////////
+// NOTE: String8 Path Helpers
+///////////////////////////////
 
+static String8
+str8_path_file(String8 path){
+    s64 index = any_index_from_right(path, str8_literal("\\/"));
+    path = str8_split_right(path, (u64)index); // include / in split
+    return(path);
+}
 
+static String8
+str8_path_filename(String8 path){
+    path = str8_path_file(path);
+    s64 index = byte_index_from_right(path, '.');
+    path = str8_trim_right(path, path.count - index);
+    return(path);
+}
 
+static String8
+str8_path_extension(String8 path){
+    s64 index = byte_index_from_right(path, '.');
+    path = str8_trim_left(path, (u64)index);
+    return(path);
+}
 
+static void
+str8_path_strip_file(String8* path){
+    s64 index = any_index_from_right(*path, str8_literal("\\/"));
+    str8_trim_right(path, path->count - (u64)index);
+}
 
+static void
+str8_path_strip_extension(String8 path){
+    s64 index = byte_index_from_right(path, '.');
+    str8_trim_right(path, path.count - (u64)index);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//static String8 str8_cstring(u8* cstr){
-//    u8* ptr = cstr;
-//    for(;*ptr != 0; ptr+=1);
-//    String8 result = str8_range(cstr, ptr);
-//    return(result);
-//}
-//
 static bool
-str8_copy(String8* from, String8* to){
-    if(from->count != to->count){
+str8_path_is_absolute(String8 path){
+    if(path.count < 3){
         return(false);
     }
 
-    for(u32 i=0; i < from->count; ++i){
-        u8* character = to->str + i;
-        *character = *(from->str + i);
+    if(path.data[1] == ':' && (path.data[2] == '/' || path.data[2] == '\\')){
+        return(true);
     }
-    return(true);
+
+    return(false);
 }
 
 static String8
@@ -652,182 +811,13 @@ str8_range(u8* first, u8* opl){
     return(result);
 }
 
-#define str8_clamp_right(str, count) str8_slice_left(str, count)
-static String8
-str8_slice_right(String8 str, u64 count){
-    u64 min = MIN(count, str.count);
-    String8 result = {str.str, min};
-    return(result);
-}
-
-// untested:
-static String8
-str8_split_left(String8 str, u64 idx){
-    str.count = idx;
-    return(str);
-}
-
-// untested:
-static String8
-str8_split_right(String8 str, u64 idx){
-    str.str = str.str + idx;
-    str.count = str.count - idx;
-    return(str);
-}
-
-// untested:
-static u64
-str8_next_space_idx(String8 str){
-    u64 idx = 0;
-    while(str.count){
-        if(str.str[0] == ' ' || str.str[0] == '\t' || str.str[0] == '\n' || str.str[0] == '\r'){ break; }
-        str = str8_advance(str, 1);
-        idx++;
-    }
-    return(idx);
-}
-
-// untested:
-#define str8_clamp_left(str, count) str8_slice_left(str, count)
-static String8
-str8_slice_left(String8 str, u64 count){
-    u64 min = MIN(count, str.count);
-    u64 skip_to = str.count - min;
-    String8 result = {str.str + skip_to, min};
-    return(result);
-}
-
-// untested:
-//static String8
-//str8_clamp_right(String8 str, u64 count){
-//    u64 min = MIN(count, str.count);
-//    u64 new_count = str.count - min;
-//    String8 result = {str.str, new_count};
-//    return(result);
-//}
-
-// untested:
-//static String8
-//str8_clamp_left(String8 str, u64 count){
-//    u64 min = MIN(count, str.count);
-//    u64 skip_to = str.count - min;
-//    String8 result = {str.str + skip_to, min};
-//    return(result);
-//}
-
-// untested:
-static String8
-str8_substr_left(String8 str, u64 start, u64 end){
-    u64 clamped_right = MIN(end, str.count);
-    u64 clamped_left = MIN(start, clamped_right);
-    String8 result = {str.str + clamped_left, clamped_right - clamped_left};
-    return(result);
-}
-
-// untested:
-static String8
-str8_substr_left_right(String8 str, u64 start, u64 end){
-    String8 result = str8_substr_left(str, start, start + end);
-    return(result);
-}
-
-static String8
-str8_concatenate(Arena* arena, String8 left, String8 right){
-    u8* str = (u8*)push_array(arena, u8, (left.count + right.count));
-    String8 result = {str, (left.count + right.count)};
-
-    for(u32 i = 0; i < left.count; ++i){
-        *str++ = *(left.str + i);
-    }
-    for(u32 i = 0; i < right.count; ++i){
-        *str++ = *right.str++;
-    }
-
-    return(result);
-}
-
-static String8
-str8_null_terminate(Arena* arena, String8 input){
-    u8* str = push_array(arena, u8, input.count + 1);
-    memory_copy(str, input.str, input.count + 1);
-
-    String8 result = {0};
-    result.str = str;
-    result.count = input.count + 1;
-
-    u8* last = str + input.count;
-    *last = 0;
-
-    return(result);
-}
-
-// untested:
-// I think we need to reset the str pointer here?
-// otherwise we will be pointing to the end of the string
-static u32 char_length(char* str){
-    u32 count = 0;
-    while(*str++){
-        ++count;
-    }
-    str = str - count;
-    return(count);
-}
-
-static u32 char_copy(char* dst, char* src){
-    u32 count = 0;
-    while(*src){
-        *dst = *src;
-        dst++;
-        src++;
-        count++;
-    }
-    *dst = '\0';
-    src = src - count;
-    dst = dst - count;
-    return(count);
-}
-
-// untested:
-// I think we need to reset the str pointer here?
-// otherwise we will be pointing to the end of the string
-static u64 wchar_length(wchar* str){
-    u32 count = 0;
-    while(*str++){
-        ++count;
-    }
-    str = str - count;
-    return(count);
-}
-
-static u64 wchar_copy(wchar* dst, wchar* src){
-    u64 count = 0;
-    while(*src){
-        *dst = *src;
-        src++;
-        dst++;
-        count++;
-    }
-    *dst = '\0';
-    dst = dst - count;
-    src = src - count;
-    return(count);
-}
-// untested:
-static String8
-push_str8(Arena* arena, String8 value){
-    u8* str = push_array(arena, u8, value.count + 1);
-    memory_copy(str, value.str, value.count);
-    String8 result = {str, value.count};
-    return(result);
-}
-
 static void
-str8_list_push_back(Arena* arena, String8Node* str8_sentinel, String8 string){
+str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
-    string_node->str.str = push_array(arena, u8, string.count);
-    memory_copy(string_node->str.str, string.data, string.count);
+    string_node->str.data = push_array(arena, u8, string.count);
+    memcpy(string_node->str.data, string.data, string.count);
     string_node->str.count = string.count;
-    dll_push_back(str8_sentinel, string_node);
+    dll_push_back(str_sentinel, string_node);
 }
 
 static String8Node
@@ -861,56 +851,53 @@ str8_split(Arena* arena, String8 string, char byte){
 }
 
 static String8
-str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts){
+str8_join(Arena* arena, String8Node* str_sentinel, String8Join join_opts){
     u64 count = 0;
 
     // calc total count
     count += join_opts.pre.count;
     count += join_opts.post.count;
-    for(String8Node* node = str8_sentinel->next; node != str8_sentinel; node = node->next){
+    for(String8Node* node = str_sentinel->next; node != str_sentinel; node = node->next){
         count += node->str.count;
 		count += join_opts.mid.count;
     }
 	count -= join_opts.mid.count;
 
     // allocate count
-    u8* str = push_array(arena, u8, count + 1);
-    u8* ptr = str;
+    u8* buffer = push_array(arena, u8, count + 1);
+    u8* ptr = buffer;
 
     // write pre
-    memory_copy(ptr, join_opts.pre.str, join_opts.pre.count);
+    memcpy(ptr, join_opts.pre.data, join_opts.pre.count);
     ptr += join_opts.pre.count;
 
     bool is_mid = false;
-    for(String8Node* node = str8_sentinel->next; node != str8_sentinel; node = node->next){
+    for(String8Node* node = str_sentinel->next; node != str_sentinel; node = node->next){
         // write mid
         if(is_mid && join_opts.mid.count){
-            memory_copy(ptr, join_opts.mid.str, join_opts.mid.count);
+            memcpy(ptr, join_opts.mid.data, join_opts.mid.count);
             ptr += join_opts.mid.count;
         }
 
         // write node string
         String8 node_string = node->str;
-        memory_copy(ptr, node_string.data, node_string.count);
+        memcpy(ptr, node_string.data, node_string.count);
         ptr += node_string.count;
 
         is_mid = true;
     }
 
     // write post
-    memory_copy(ptr, join_opts.post.str, join_opts.post.count);
+    memcpy(ptr, join_opts.post.data, join_opts.post.count);
     ptr += join_opts.post.count;
 
     // write zero, why? Because OS functions expect null terminated strings.
     *ptr = 0;
 
-    String8 result = {str, count};
+    String8 result = {buffer, count};
     return(result);
 }
 
-
-// untested:
-// TODO: IMPORTANT: ADD PARAMETER SLASH CHAR TO SPLIT ON '/' AND '\\'
 static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
     ScratchArena scratch = begin_scratch();
@@ -941,30 +928,8 @@ str8_path_pop(Arena* arena, String8 path, char slash){
     return(result);
 }
 
-// copy str8
-// str_in:
-// char_in:
-// char_replace:
-// str_index:
-// str_upper:
-// str_is_upper:
-// str_lower:
-// str_is_lower:
-// str_strop:
-// str_split:
-// str_ends_with:
-// str_range:
-// append:
-// str8_chop_last_period()
-// str8_skip_last_period()
-// str8_chop_last_lash()
-// str8_skip_last_lash()
-//
-//
-//
-
 /////////////////////////
-// OPERATOR OVERLOADING
+// note: OPERATOR OVERLOADING
 /////////////////////////
 #if STANDARD_CPP
 static bool operator==(String8 a, String8 b){
@@ -976,7 +941,7 @@ static bool operator==(String16 a, String16 b){
     if(a.size != b.size){
         return(false);
     }
-    for(u32 i = 0; i < a.size; ++i){
+    for(u64 i = 0; i < a.size; ++i){
         if(*a.str++ != *b.str++){
             return(false);
         }
@@ -993,16 +958,5 @@ static bool operator!=(String16 a, String16 b){
 }
 #endif
 
-#define str16(str, count) str16_((u16*)str, count)
-static String16 str16_(u16* str, u64 count){
-    String16 result = {str, count};
-    return(result);
-}
-
-#define str32(str, count) str32_((u32*)str, count)
-static String32 str32_(u32* str, u32 count){
-    String32 result = {str, count};
-    return(result);
-}
-
 #endif //BASE_STRING_H
+

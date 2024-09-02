@@ -1,6 +1,10 @@
 #ifndef BASE_TYPES_H
 #define BASE_TYPES_H
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdbool.h> // NOTE: C header
 
 
@@ -142,7 +146,6 @@ Defer<F> make_defer(F f) {
 // NOTE: Basic Types
 ///////////////////////////////
 
-#include <stdint.h>
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;

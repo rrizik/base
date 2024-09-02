@@ -18,7 +18,7 @@ if %DEBUG% == 1 (
 set cl_includes=-I ..\..\..\base\code
 set cl_flags=-Zi -nologo -std:c++latest -Wall -WX 
 rem -fsanitize=address
-set cl_ignore_warnings=-wd4201 -wd4189 -wd4101 -wd4505 -wd4820 -wd5045 -wd4996 -wd4100 -wd4668 -wd4711 -wd4710 -wd4062 -wd4388 -wd4459 -wd4626 -wd4296 -wd4577
+set cl_ignore_warnings=-wd4201 -wd4189 -wd4101 -wd4505 -wd4820 -wd5045 -wd4996 -wd4100 -wd4668 -wd4711 -wd4710 -wd4062 -wd4388 -wd4459 -wd4626 -wd4296 -wd4577 -wd4200
 rem C4201: nonstandard extension used: nameless struct/union
 rem C4189: local variable is initialized but not referenced
 rem C4101: unreferenced local variable
@@ -32,6 +32,7 @@ rem C4711: function selected for automatic inline expansion
 rem C4710: function not inlined
 rem C4062: enumerator in switch of enum is not handled
 rem C4388: '<': signed/unsigned mismatch
+rem C4200: empty [] initialization
 rem
 rem C4459: declaration of <variable> hides global declaration
 rem C4626: remove and understand (something to do with defer)

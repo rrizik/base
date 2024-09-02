@@ -11,23 +11,37 @@
 // NOTE: Win32 Memory
 ///////////////////////////////
 
-// TODO(rr): make a os_reserve_alloc() os_commit_alloc() to make a distinction between the two operations
-static void* os_virtual_alloc(u64 size){
+static void*
+os_alloc(u64 size){
     // NOTE: VirtualAlloc() && calloc() initializes its allocation to 0, malloc() does not
     void* result = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
     return(result);
 }
 
-static bool os_virtual_free(void* base){
+static void*
+os_reserve(u64 size){
+    void* base = VirtualAlloc(0, size, MEM_RESERVE, PAGE_READWRITE);
+    return(base);
+}
+
+static bool
+os_commit(void* base, u64 size){
+    bool result = (VirtualAlloc(base, size, MEM_COMMIT, PAGE_READWRITE) != 0);
+    return(result);
+}
+
+
+static bool
+os_free(void* base){
     bool result = false;
     if(base){
-        result = VirtualFree(base, 0, MEM_RELEASE);
+        result = (VirtualFree(base, 0, MEM_RELEASE) != 0);
     }
     return(result);
 }
 
 static Arena* os_make_arena(u32 size){
-    void* memory = os_virtual_alloc((size + sizeof(Arena)));
+    void* memory = os_alloc((size + sizeof(Arena)));
     Arena* result = (Arena*)memory;
     result->base = (u8*)memory + sizeof(Arena);
     result->size = size;

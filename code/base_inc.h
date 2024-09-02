@@ -9,5 +9,8 @@
 #include "base_linkedlist.h"
 #include "base_string.h"
 #include "base_random.h"
+#include "base_hash.h"
+#include "base_rect.h"
+#include "base_quad.h"
 
 #endif

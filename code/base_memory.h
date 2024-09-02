@@ -1,43 +1,57 @@
 #ifndef BASE_MEMORY_H
 #define BASE_MEMORY_H
 
-#include <stdlib.h>
 #include "base_types.h"
 #include "base_math.h"
 
-// UNTESTED: this entire file
-//TODO: arena_resize_align
+// NOTE: memory_set() and memory_copy() should only be used when we get off of CRT.
+//       Otherwise use memset() memcpy()
 static void*
-memory_set(void *base, int value, u32 size) {
-    u8* base_ref = (u8*)base;
-    while(size--){
-        *base_ref = (u8)value;
-        ++base_ref;
-    }
+memory_set(void *_base, int value, u64 size) {
+
+  u8 *base = (u8 *)_base;
+  u64 spread = 0x0101010101010101ULL * value;
+
+  while (size >= 32) {
+    ((u64 *)base)[0] = spread;
+    ((u64 *)base)[1] = spread;
+    ((u64 *)base)[2] = spread;
+    ((u64 *)base)[3] = spread;
+    base += 32;
+    size -= 32;
+  }
+  while (size >= 16) {
+    ((u64 *)base)[0] = spread;
+    ((u64 *)base)[1] = spread;
+    base += 16;
+    size -= 16;
+  }
+
+  while (size >= 8) {
+    *(u64 *)base = spread;
+    base += 8;
+    size -= 8;
+  }
+  while (size >= 4) {
+    *(u32 *)base = (u32)spread;
+    base += 4;
+    size -= 4;
+  }
+  while (size >= 2) {
+    *(u16 *)base = (u16)spread;
+    base += 2;
+    size -= 2;
+  }
+  while (size >= 1) {
+    *(u8 *)base = (u8)spread;
+    base += 1;
+    size -= 1;
+  }
 
     return(base);
 }
 
-static void*
-memory_set(void *base, int value, u64 size) {
-    u8* base_ref = (u8*)base;
-    while(size--){
-        *base_ref = (u8)value;
-        ++base_ref;
-    }
-
-    return(base);
-}
-
-static void
-memory_copy(void *dst, void *src, u32 size) {
-    u8* d = (u8*)dst;
-    u8* s = (u8*)src;
-    while(size--) {
-        *d++ = *s++;
-    }
-}
-
+// todo: this needs to be optimized in a similar way to memory_set
 static void
 memory_copy(void *dst, void *src, u64 size) {
     u8* d = (u8*)dst;
@@ -75,12 +89,14 @@ static void arena_init(Arena* arena, void* base, u32 size){
 }
 
 static void arena_free(Arena* arena){
-    memory_set(arena->base, 0, arena->at);
+    //memset(arena->base, 0, arena->at);
     arena->at = 0;
 }
 
 #define push_array(arena, type, count) (type*)push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type))
 #define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), alignof(type))
+#define push_array_zero(arena, type, count) (type*)(memset(push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type)), 0, (u32)(sizeof(type) * (u32)(count))))
+#define push_struct_zero(arena, type) (type*)(memset(push_size_aligned((arena), sizeof(type), alignof(type)), 0, sizeof(type)))
 static void* push_size_aligned(Arena* arena, u32 size, u32 align){
     u32 used_aligned = AlignUpPow2(arena->at, align);
     assert((used_aligned + size) <= arena->size);
@@ -112,8 +128,9 @@ typedef struct ScratchArena{
     u32 at;
 } ScratchArena;
 
+// todo: make it so that this is a growable arena where I reserve the size and commit what I need.
 #define DEFAULT_RESERVE_SIZE GB(1)
-#define SCRATCH_POOL_COUNT 2
+#define SCRATCH_POOL_COUNT 3
 global THREAD_LOCAL Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 static u32 scratch_index = 0;
 
@@ -125,25 +142,40 @@ static ScratchArena get_scratch(Arena* arena){
 }
 
 static ScratchArena
-begin_scratch(){
+begin_scratch(Arena* arena=0){
     // note: init scratch memory on first call
     static s32 index = 0;
     if (scratch_pool[0] == 0){
         Arena **scratch_slot = scratch_pool;
         for (u64 i=0; i < SCRATCH_POOL_COUNT; ++i, scratch_slot +=1){
-            Arena* arena = make_arena(DEFAULT_RESERVE_SIZE);
-            *scratch_slot = arena;
+            Arena* new_arena = make_arena(DEFAULT_RESERVE_SIZE);
+            *scratch_slot = new_arena;
         }
     }
 
+    //ScratchArena scratch = {0};
+    //for(s32 i=0; i < 2; i++){
+    //    Arena* pool_arena = *scratch_pool + i;
+    //    if(arena != pool_arena){
+    //        scratch = get_scratch(arena);
+    //        break;
+    //    }
+
+    //}
+    //return(scratch);
+
     // note: choose ABAB scratch arena
-    ScratchArena result = get_scratch((*(scratch_pool + (scratch_index % 2))));
-    scratch_index++;
+    ScratchArena result = get_scratch((*(scratch_pool + (scratch_index++ % SCRATCH_POOL_COUNT))));
+    //if(arena){
+    //    if(arena == result.arena){
+    //        result = get_scratch((*(scratch_pool + (scratch_index++ % SCRATCH_POOL_COUNT))));
+    //    }
+    //}
     return(result);
 }
 
 static void end_scratch(ScratchArena scratch){
-    memory_set(scratch.arena->base, 0, scratch.arena->at);
+    memset((u8*)scratch.arena->base + scratch.at, 0, scratch.arena->at - scratch.at);
     scratch.arena->at = scratch.at;
 }
 
@@ -184,7 +216,7 @@ push_pool(Arena* arena, u32 chunk_size, u32 count){
 
 static void
 pool_free_all(PoolArena* p){
-    memory_set(p->base, 0, p->size);
+    memset(p->base, 0, p->size);
     s32 chunk_count = (s32)(p->size/p->chunk_size);
 
     for(s32 i=0; i < chunk_count; ++i){
@@ -207,7 +239,7 @@ pool_free(PoolArena* p, void* ptr){
         assert(0);
     }
 
-    memory_set(ptr, 0, p->chunk_size);
+    memset(ptr, 0, p->chunk_size);
 
     PoolFreeNode* node = (PoolFreeNode*)ptr;
     node->next = p->head;
@@ -221,7 +253,7 @@ pool_next(PoolArena* p){
     assert(node != 0);
 
     p->head = p->head->next;
-    memory_set(node, 0, p->chunk_size);
+    memset(node, 0, p->chunk_size);
     return(node);
 }
 
