@@ -1,20 +1,9 @@
 
-typedef struct Window{
-    union{
-        struct{
-            f32 width;
-            f32 height;
-        };
-        v2 dim;
-    };
-
-    HWND handle;
-} Window;
 
 static v2s32
-os_mouse_pos(Window* window){
+os_mouse_pos(HWND handle){
     v2s32 result = {s32_min, s32_min};
-    if(!window->handle){
+    if(!handle){
         return(result);
     }
 
@@ -23,7 +12,7 @@ os_mouse_pos(Window* window){
         return(result);
     }
 
-    if(!ScreenToClient(window->handle, &point)){
+    if(!ScreenToClient(handle, &point)){
         return(result);
     }
 

@@ -32,7 +32,7 @@
 
 // OS
 #if defined(_WIN32)
-# define OS_WIN 1
+# define OS_WINDOWS 1
 #elif defined(__APPLE_) && defined(__MACH__)
 # define OS_MAC 1
 #elif defined(__gnu_linux__)
@@ -44,6 +44,8 @@
 # define ARCH_AMD64 1
 #elif defined(_M_I86) || defined(__i386)
 # define ARCH_X86
+#elif defined(_M_X64) || defined(__x86_64__)
+# define ARCH_X64
 #elif defined(_M_ARM) || defined(__arm__)
 # define ARCH_ARM
 #endif
@@ -56,23 +58,37 @@
 #endif
 
 
+#if OS_WINDOWS
+    #include <windows.h>
+    #include <intrin.h>
+#endif
+
 ///////////////////////////////
 // NOTE: Helper Macros
 ///////////////////////////////
 
+
 #define array_count(array) (sizeof(array) / sizeof(*(array)))
 
-#define ENABLE_ASSERT 1
+
+#if COMPILER_CL
+    #define debug_break() do{if(IsDebuggerPresent()){ __debugbreak(); }}while(0)
+#elif COMPILER_CLANG
+    #define debug_break() do{if(IsDebuggerPresent()){ __buildin_debugtrap(); }}while(0)
+#elif COMPILER_GCC
+    #define debug_break() do{if(IsDebuggerPresent()){ __asm__ __volatile__("int3"); }}while(0)
+#else
+    #define debug_break()
+#endif
+
 #ifndef ENABLE_ASSERT
-#define ENABLE_ASSERT 0
+#define ENABLE_ASSERT 1
 #endif
 
 #if ENABLE_ASSERT
-# define assert(cond) do { if (!(cond)) __debugbreak(); } while (0)
-# define assert_h(handle) assert(((handle) != (INVALID_HANDLE_VALUE)))
+# define assert(cond) do { if (!(cond)){ debug_break(); }} while (0)
 #else
 # define assert(cond)
-# define assert_h(cond)
 #endif
 
 #define invalid_code_path               assert(!(bool)"invalid_code_path");
@@ -141,6 +157,8 @@ Defer<F> make_defer(F f) {
 #pragma clang diagnostic pop
 #endif
 #endif
+
+#define defer_loop(start, end) for(int _i_ = ((start), 0); _i_ == 0; (_i_ += 1, (end)))
 
 ///////////////////////////////
 // NOTE: Basic Types

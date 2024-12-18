@@ -4,6 +4,7 @@
 
 s32 main(s32 argc, char** argv){
 
+    debug_break();
     u8* b;
     Arena* arena = make_arena(KB(1));
     for(s32 i=0; i < 80; ++i){

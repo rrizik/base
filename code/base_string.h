@@ -118,9 +118,8 @@ static String8 str8_(u8* byte_buffer, u64 count){
 
 #include <stdio.h>
 #include <stdarg.h>
-#define str8_format(arena, format) str8_formatted(arena, format, ...)
-static String8
-str8_formatted(Arena* arena, const char* format, ...){
+#define str8_format(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
+static String8 str8_formatted(Arena* arena, const char* format, ...){
     char buffer[4096] = {};
     va_list args;
     va_start(args, format);

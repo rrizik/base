@@ -1,7 +1,6 @@
 #if !defined(WIN32_FILE_H)
 #define WIN32_FILE_H
 
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "base_types.h"
 #include "base_memory.h"
@@ -150,7 +149,9 @@ os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
     return(result);
 }
 
-// untested do I need to pass back a pointer? Its not clear if this data will persist outside this scope
+// note(rr): Some basic access_write's to use, read docs if you want more granular access to file handles:
+// access_writes: GENERIC_WRITE, GENERIC_READ
+// operation:     CREATE_ALWAYS, CREATE_NEW, OPEN_ALWAYS, OPEN_EXISTING, TRUNCATE_EXISTING
 static File
 os_file_open(String8 path, DWORD access_writes, DWORD operation){
     File result = {0};

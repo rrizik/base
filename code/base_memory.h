@@ -7,7 +7,7 @@
 // NOTE: memory_set() and memory_copy() should only be used when we get off of CRT.
 //       Otherwise use memset() memcpy()
 static void*
-memory_set(void *_base, int value, u64 size) {
+memory_set(void* _base, int value, u64 size) {
 
   u8 *base = (u8 *)_base;
   u64 spread = 0x0101010101010101ULL * value;
@@ -175,6 +175,7 @@ begin_scratch(Arena* arena=0){
 }
 
 static void end_scratch(ScratchArena scratch){
+    scratch_index--;
     memset((u8*)scratch.arena->base + scratch.at, 0, scratch.arena->at - scratch.at);
     scratch.arena->at = scratch.at;
 }

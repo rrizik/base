@@ -1,6 +1,13 @@
 #ifndef WIN32_LOGGING
 #define WIN32_LOGGING
 
+#include <Windows.h>
+#include "base_types.h"
+#include "base_memory.h"
+#include "base_string.h"
+
+#pragma comment(lib, "user32")
+
 static void print(const char* format, ...) {
     char buffer[4096] = {};
 
@@ -19,14 +26,38 @@ fatal_error(const char* message){
     ExitProcess(0);
 }
 
-#define print_last_error(error) print_last_error_(error, __LINE__, str8_literal(__FILE__))
-static void print_last_error_(DWORD error, s32 line_number, String8 path){
+#define print_last_error(error) print_last_error_(error, __LINE__, str8_literal(__FILE__), str8_literal(__FUNCTION__))
+static void print_last_error_(DWORD error, s32 line_number, String8 path, String8 func){
     LPCWSTR message = NULL;
 
-    u32 size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPWSTR) &message, 0, NULL);
+    u32 size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS |
+                              FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                              NULL, error, 0, (LPWSTR) &message, 0, NULL);
+
+    //String8 file = str8_path_file(path);
+    //char buffer[1024];
+    //wchar wbuffer[1024];
+
+    //snprintf(buffer, sizeof(buffer), "%s[%i] error %i: %s(): %ls", file.str, line_number, (s32)error, func.str, message);
+    //MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 1024);
+
+    //MessageBoxW(0, wbuffer, 0, MB_OK);
 
     String8 file = str8_path_file(path);
-    print("%s:%i error:(%i) %ls", file.str, line_number, error, message);
+    print("%s[%i] error %i: %s(): %ls", file.str, line_number, (s32)error, func.str, message);
+}
+
+#define error_and_quit(message) error_and_quit_(message, __LINE__, str8_literal(__FILE__), str8_literal(__FUNCTION__))
+static void error_and_quit_(String8 message, s32 line_number, String8 path, String8 func){
+    String8 file = str8_path_file(path);
+    char buffer[1024];
+    wchar wbuffer[1024];
+
+    snprintf(buffer, sizeof(buffer), "%s[%s(), %i]: error: %s", file.str, func.str, line_number, message.str);
+    MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 1024);
+
+    MessageBoxW(0, wbuffer, 0, MB_OK);
+    ExitProcess(EXIT_FAILURE);
 }
 
 #endif

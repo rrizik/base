@@ -4,6 +4,8 @@
 #include <math.h>
 #include "base_types.h"
 #include "base_vector.h"
+#include "base_quad.h"
+#include "base_rect.h"
 // UNTESTED: re test all the rounding/trunct/floor/ceil
 
 ///////////////////////////////
@@ -65,10 +67,10 @@ static f64 tan_f64(f64 x){ return(sin_f64(x)/cos_f64(x)); }
 static f64 cot_f64(f64 x){ return(cos_f64(x)/sin_f64(x)); }
 static f64 atan_f64(f64 x, f64 y){ return(atan2(x, y)); }
 
-global f32 PI_f32 = 3.14159265359f;
-global f64 PI_f64 = 3.14159265359;
-global f32 RAD_f32 = 0.0174533f;
-global f64 RAD_f64 = 0.0174533;
+#define PI_f32 3.14159265359f
+#define PI_f64 3.14159265359
+#define RAD_f32 0.0174533f
+#define RAD_f64 0.0174533
 
 static f32
 rad_from_deg(f32 deg){
@@ -148,6 +150,7 @@ round_f32(f32 value){
     return(result);
 }
 
+// todo: this seems like something that I don't want
 static v2
 round_f32(v2 value){
     v2 result = {
@@ -319,7 +322,7 @@ rotate_point_rad(v2 p, f32 rad, v2 origin){
 }
 
 static v2
-rotate_point_deg(v2 p, f32 deg, v2 origin){
+rotate_point(v2 p, f32 deg, v2 origin){
     v2 result = {0};
 
     f32 rad = rad_from_deg(deg);
@@ -329,6 +332,45 @@ rotate_point_deg(v2 p, f32 deg, v2 origin){
     return(result);
 }
 
+static Quad
+rotate_quad(Quad quad, f32 deg, v2 origin){
+    Quad result = {0};
+
+    f32 rad = rad_from_deg(-deg);
+    result.p0 = rotate_point(quad.p0, deg, origin);
+    result.p1 = rotate_point(quad.p1, deg, origin);
+    result.p2 = rotate_point(quad.p2, deg, origin);
+    result.p3 = rotate_point(quad.p3, deg, origin);
+
+    return(result);
+}
+
+static f32
+wrap_degrees(f32 deg){
+    while (deg <= -360) deg += 360;
+    while (deg >= 360) deg -= 360;
+    return(deg);
+}
+
+static void
+wrap_degrees(f32* deg){
+    while (*deg <= 0) *deg += 360;
+    while (*deg >= 360) *deg -= 360;
+}
+
+// todo: it doesn't make sense to rotate a rect
+static Rect
+rotate_rect(Rect rect, f32 deg, v2 origin){
+    Rect result = {0};
+
+    f32 rad = rad_from_deg(-deg);
+    result.min = rotate_point(rect.min, deg, origin);
+    result.max = rotate_point(rect.max, deg, origin);
+
+    return(result);
+}
+
+// todo: this doesn't make sense. quad center but takes in min, max.
 static v2
 quad_center(v2 min, v2 max){
     v2 result;

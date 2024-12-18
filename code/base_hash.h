@@ -34,7 +34,7 @@ static void
 init_table(Arena* arena, HashTable* table){
     table->arena = arena;
     table->count = TABLE_DEFAULT_COUNT;
-    table->slots = push_array(table->arena, HashNode*, table->count);
+    table->slots = push_array_zero(table->arena, HashNode*, table->count);
 }
 
 static String8
@@ -53,7 +53,7 @@ table_insert_(HashTable* table, String8 key, void* value, u64 size){
     // if new table, allocate default amount
     if(table->count == 0){
         table->count = TABLE_DEFAULT_COUNT;
-        table->slots = push_array(table->arena, HashNode*, table->count);
+        table->slots = push_array_zero(table->arena, HashNode*, table->count);
     }
 
     u64 hash = hash_from_string(key);
