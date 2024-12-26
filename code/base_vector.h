@@ -458,8 +458,8 @@ normalize_v2(v2 a){
 }
 
 static v2
-direction_v2(v2 a, v2 b){
-    v2 result = normalize_v2(b - a);
+direction_v2(v2 from, v2 to){
+    v2 result = normalize_v2(to - from);
     return(result);
 }
 
