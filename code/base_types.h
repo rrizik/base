@@ -43,11 +43,11 @@
 #if defined(_M_AMD64) || defined(__amd64__)
 # define ARCH_AMD64 1
 #elif defined(_M_I86) || defined(__i386)
-# define ARCH_X86
+# define ARCH_X86 1
 #elif defined(_M_X64) || defined(__x86_64__)
-# define ARCH_X64
+# define ARCH_X64 1
 #elif defined(_M_ARM) || defined(__arm__)
-# define ARCH_ARM
+# define ARCH_ARM 1
 #endif
 
 // C/C++
@@ -62,6 +62,23 @@
     #include <windows.h>
     #include <intrin.h>
 #endif
+
+#if defined(ARCH_ARM)
+    inline void enable_cycle_counter() {
+        _WriteStatusReg(ARM64_PMCR_EL0, (1 << 0) | (1 << 2));  // Enable counter and reset cycle counter
+        _WriteStatusReg(ARM64_PMCNTENSET_EL0, (1 << 31));      // Enable cycle counter
+    }
+    enable_cycle_counter(); // call the function
+
+    #define __RDTSC __ReadStatusReg(ARM64_PMCCNTS_EL0); // set PROFILER_TIMER to be used in the profiler
+#elif defined(ARCH_AMD64)
+    #define __RDTSC __rdtsc()
+#elif defined(ARCH_X64)
+    #define __RDTSC __rdtsc()
+#elif defined(ARCH_X86)
+    #define __RDTSC __rdtsc()
+#endif
+
 
 ///////////////////////////////
 // NOTE: Helper Macros

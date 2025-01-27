@@ -16,7 +16,7 @@ if %DEBUG% == 1 (
 )
 
 set cl_includes=-I ..\..\..\base\code
-set cl_flags=-Zi -nologo -std:c++latest -Wall -WX 
+set cl_flags=-Zi -nologo -std:c++latest -Wall -WX -FS
 rem -fsanitize=address
 set cl_ignore_warnings=-wd4201 -wd4189 -wd4101 -wd4505 -wd4820 -wd5045 -wd4996 -wd4100 -wd4668 -wd4711 -wd4710 -wd4062 -wd4388 -wd4459 -wd4626 -wd4296 -wd4577 -wd4200 -wd5246 -wd4309
 
