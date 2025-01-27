@@ -70,7 +70,7 @@
     }
     enable_cycle_counter(); // call the function
 
-    #define __RDTSC __ReadStatusReg(ARM64_PMCCNTS_EL0); // set __RDTSC for arm architexture
+    #define __RDTSC __ReadStatusReg(ARM64_PMCCNTS_EL0) // set __RDTSC for arm architexture
 #elif defined(ARCH_AMD64)
     #define __RDTSC __rdtsc()
 #elif defined(ARCH_X64)
