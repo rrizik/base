@@ -46,7 +46,7 @@
 # define ARCH_X86 1
 #elif defined(_M_X64) || defined(__x86_64__)
 # define ARCH_X64 1
-#elif defined(_M_ARM) || defined(__arm__)
+#elif defined(_M_ARM) || defined(__arm__) || defined(_M_ARM64)
 # define ARCH_ARM 1
 #endif
 
