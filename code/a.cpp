@@ -2,81 +2,54 @@
 #include "win32_base_inc.h"
 
 
-s32 main(s32 argc, char** argv){
+Arena* arena = make_arena(KB(1));
 
-    debug_break();
-    u8* b;
-    Arena* arena = make_arena(KB(1));
-    for(s32 i=0; i < 80; ++i){
-        b = push_array(arena, u8, 8);
-        b[0] = 1;
-        b[1] = 1;
-        b[2] = 1;
-        b[3] = 1;
-        b[4] = 1;
-        b[5] = 1;
-        b[6] = 1;
-        b[7] = 1;
+s32 main(s32 argc, char** argv){
+    ScratchArena scratch = begin_scratch();
+
+    String8 value = str8_literal("d");
+    String8 path = str8_literal("a/b/c");
+    String8Node* parts = str8_split(scratch.arena, path, '/');
+    str8_list_push_back(scratch.arena, parts, value);
+
+    //String8Node* parts_view = &parts;
+    //print("Sentinel: %p\n", parts_view);
+    print("Sentinel: %p\n", parts);
+    //print("Sentinel: %p\n", &parts);
+    for(String8Node* part = parts->prev; part != parts; part = part->prev){
+        print("Data: %s, Node: %p, Next: %p, Prev: %p\n", part->str.data, part, part->next, part->prev);
+    }
+    print("-----------------------\n");
+    for(String8Node* part = parts->next; part != parts; part = part->next){
+        print("Data: %s, Node: %p, Next: %p, Prev: %p\n", part->str.data, part, part->next, part->prev);
     }
 
-    arena_free(arena);
-    b = push_array(arena, u8, 8);
-    b = push_array_zero(arena, u8, 8);
-    b = push_array_zero(arena, u8, 8);
-    b = push_array_zero(arena, u8, 8);
-        b[0] = 1;
-        b[1] = 1;
-        b[2] = 1;
-        b[3] = 1;
-        b[4] = 1;
-        b[5] = 1;
-        b[6] = 1;
-        b[7] = 1;
-    b = push_array_zero(arena, u8, 8);
-    b = push_array_zero(arena, u8, 8);
+    String8Join join = {0};
+    join.mid = str8_literal("/");
+    String8 result = str8_join(arena, parts, join);
 
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
+    end_scratch(scratch);
 
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
+    //String8 a = str8_literal("a/b/c");
+    //String8 full_a = str8_path_append(arena, a, str8_literal("d"));
 
-        b[0] = 1;
-        b[1] = 1;
-        b[2] = 1;
-        b[3] = 1;
-        b[4] = 1;
-        b[5] = 1;
-        b[6] = 1;
-        b[7] = 1;
+    //String8Node parts = str8_split(arena, a, '/');
 
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
-    b = push_struct_zero(arena, u8);
+    ////String8Node* parts_view = &parts;
+    ////print("Sentinel: %p\n", parts_view);
+    ////for(String8Node* part = parts_view->next; part != parts_view; part = part->next){
+    ////    print("Data: %s, Node: %p, Next: %p, Prev: %p\n", part->str.data, part, part->next, part->prev);
+    ////}
+
+    //print("Sentinel: %p\n", &parts);
+    //for(String8Node* part = parts.next; part != &parts; part = part->next){
+    //    print("Data: %s, Node: %p, Next: %p, Prev: %p\n", part->str.data, part, part->next, part->prev);
+    //}
+
+    //String8Join join = {0};
+    //join.mid = str8_literal("/");
+    //String8 result = str8_join(arena, &parts, join);
+    //print("%s\n", result.data);
+
     return(0);
 }

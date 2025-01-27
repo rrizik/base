@@ -8,6 +8,10 @@ typedef union Rect {
         f32 x1, y1;
     };
     struct {
+        f32 left, top;
+        f32 right, bottom;
+    };
+    struct {
         v2 min;
         v2 max;
     };

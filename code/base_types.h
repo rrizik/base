@@ -185,22 +185,22 @@ typedef wchar_t wchar;
 // NOTE: Basic Constants
 ///////////////////////////////
 
-//global s8  s8_min  = (s8) 0x80;
-global s8  s8_min  = INT8_MIN;
-//global s16 s16_min = (s16)0x8000;
-global s16 s16_min = INT16_MIN;
-global s32 s32_min = (s32)0x80000000;
-global s64 s64_min = (s64)0x8000000000000000llu;
+global s8  s8_min  = 0x80;
+//global s8  s8_min  = INT8_MIN;
+global s16 s16_min = 0x8000;
+//global s16 s16_min = INT16_MIN;
+global s32 s32_min = 0x80000000;
+global s64 s64_min = 0x8000000000000000llu;
 
-global s8  s8_max  = (s8) 0x7f;
-global s16 s16_max = (s16)0x7fff;
-global s32 s32_max = (s32)0x7fffffff;
-global s64 s64_max = (s64)0x7fffffffffffffffllu;
+global s8  s8_max  = 0x7f;
+global s16 s16_max = 0x7fff;
+global s32 s32_max = 0x7fffffff;
+global s64 s64_max = 0x7fffffffffffffffllu;
 
-global u8  u8_max  = (u8) 0xff;
-global u16 u16_max = (u16)0xffff;
-global u32 u32_max = (u32)0xffffffff;
-global u64 u64_max = (u64)0xffffffffffffffffllu;
+global u8  u8_max  = 0xff;
+global u16 u16_max = 0xffff;
+global u32 u32_max = 0xffffffff;
+global u64 u64_max = 0xffffffffffffffffllu;
 
 typedef enum Month{
     Month_Jan,

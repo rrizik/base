@@ -65,6 +65,7 @@ static String8     str8_range(u8* first, u8* opl);
 static void        str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string);
 static String8Node str8_split(Arena* arena, String8 string, char byte);
 static String8     str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts);
+
 static String8     str8_path_append(Arena* arena, String8 path, String8 value);
 static String8     str8_path_pop(Arena* arena, String8 path, char slash);
 static String8     str8_path_file(String8 path);
@@ -111,6 +112,7 @@ typedef union String8{
 
 #define str8(byte_buffer, count) str8_((u8*)byte_buffer, count)
 #define str8_literal(byte_buffer) str8_((u8*)byte_buffer, (sizeof(byte_buffer) - 1))
+#define str8_lit(byte_buffer) str8_literal(byte_buffer)
 static String8 str8_(u8* byte_buffer, u64 count){
     String8 result = {byte_buffer, count};
     return(result);
@@ -118,6 +120,7 @@ static String8 str8_(u8* byte_buffer, u64 count){
 
 #include <stdio.h>
 #include <stdarg.h>
+#define str8_fmt(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
 #define str8_format(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
 static String8 str8_formatted(Arena* arena, const char* format, ...){
     char buffer[4096] = {};
@@ -813,17 +816,50 @@ str8_range(u8* first, u8* opl){
 static void
 str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
-    string_node->str.data = push_array(arena, u8, string.count);
-    memcpy(string_node->str.data, string.data, string.count);
+
     string_node->str.count = string.count;
+    string_node->str.data = push_array(arena, u8, string.count);
+
+    memcpy(string_node->str.data, string.data, string.count);
+
     dll_push_back(str_sentinel, string_node);
 }
 
-static String8Node
+//static String8Node
+//str8_split(Arena* arena, String8 string, char byte){
+//    String8Node parts = {};
+//    //dll_clear(&parts);
+//    parts.next = &parts;
+//    parts.prev = &parts;
+//
+//    u8* ptr =   string.data;
+//    u8* first = string.data;
+//    u8* opl =   string.data + string.count;
+//    for(; ptr < opl; ptr += 1){
+//        bool is_split_byte = false;
+//        if(*ptr == byte){
+//            is_split_byte = true;
+//        }
+//
+//        if(is_split_byte){
+//            if(first < ptr){
+//                str8_list_push_back(arena, &parts, str8_range(first, ptr));
+//            }
+//            first = ptr + 1;
+//        }
+//    }
+//
+//    if(first < ptr){
+//        str8_list_push_back(arena, &parts, str8_range(first, ptr));
+//    }
+//
+//    return(parts);
+//}
+
+static String8Node*
 str8_split(Arena* arena, String8 string, char byte){
-    String8Node parts = {};
-    parts.next = &parts;
-    parts.prev = &parts;
+    String8Node* parts = push_struct(arena, String8Node);
+    dll_clear(parts);
 
     u8* ptr =   string.data;
     u8* first = string.data;
@@ -836,14 +872,14 @@ str8_split(Arena* arena, String8 string, char byte){
 
         if(is_split_byte){
             if(first < ptr){
-                str8_list_push_back(arena, &parts, str8_range(first, ptr));
+                str8_list_push_back(arena, parts, str8_range(first, ptr));
             }
             first = ptr + 1;
         }
     }
 
     if(first < ptr){
-        str8_list_push_back(arena, &parts, str8_range(first, ptr));
+        str8_list_push_back(arena, parts, str8_range(first, ptr));
     }
 
     return(parts);
@@ -860,6 +896,7 @@ str8_join(Arena* arena, String8Node* str_sentinel, String8Join join_opts){
         count += node->str.count;
 		count += join_opts.mid.count;
     }
+    // remove last mid
 	count -= join_opts.mid.count;
 
     // allocate count
@@ -901,11 +938,11 @@ static String8
 str8_path_append(Arena* arena, String8 path, String8 value){
     ScratchArena scratch = begin_scratch();
 
-    String8Node parts = str8_split(scratch.arena, path, '/');
-    str8_list_push_back(scratch.arena, &parts, value);
+    String8Node* parts = str8_split(scratch.arena, path, '/');
+    str8_list_push_back(scratch.arena, parts, value);
     String8Join join = {0};
     join.mid = str8_literal("/");
-    String8 result = str8_join(arena, &parts, join);
+    String8 result = str8_join(arena, parts, join);
     end_scratch(scratch);
 
     return(result);
@@ -915,12 +952,12 @@ static String8
 str8_path_pop(Arena* arena, String8 path, char slash){
     ScratchArena scratch = begin_scratch();
 
-    String8Node parts = str8_split(scratch.arena, path, slash);
-    dll_pop_back(&parts);
+    String8Node* parts = str8_split(scratch.arena, path, slash);
+    dll_pop_back(parts);
 
     String8Join join = {0};
     join.mid = str8_literal("/");
-    String8 result = str8_join(arena, &parts, join);
+    String8 result = str8_join(arena, parts, join);
 
     end_scratch(scratch);
 

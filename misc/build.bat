@@ -18,7 +18,7 @@ if %DEBUG% == 1 (
 set cl_includes=-I ..\..\..\base\code
 set cl_flags=-Zi -nologo -std:c++latest -Wall -WX 
 rem -fsanitize=address
-set cl_ignore_warnings=-wd4201 -wd4189 -wd4101 -wd4505 -wd4820 -wd5045 -wd4996 -wd4100 -wd4668 -wd4711 -wd4710 -wd4062 -wd4388 -wd4459 -wd4626 -wd4296 -wd4577 -wd4200 -wd5246
+set cl_ignore_warnings=-wd4201 -wd4189 -wd4101 -wd4505 -wd4820 -wd5045 -wd4996 -wd4100 -wd4668 -wd4711 -wd4710 -wd4062 -wd4388 -wd4459 -wd4626 -wd4296 -wd4577 -wd4200 -wd5246 -wd4309
 
 rem C5246: the initialization of a subobject should be wrapped in braces
 rem C4201: nonstandard extension used: nameless struct/union
@@ -38,6 +38,7 @@ rem C4200: empty [] initialization
 rem
 rem C4459: declaration of <variable> hides global declaration
 rem C4626: remove and understand (something to do with defer)
+rem C4309: truncation of constant value
 
 IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build

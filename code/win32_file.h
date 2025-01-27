@@ -108,13 +108,13 @@ os_application_path(Arena* arena) {
 
     String8 utf8_path = os_utf8_from_utf16(scratch.arena, utf16_path);
 
-    String8Node split_path = str8_split(scratch.arena, utf8_path, '\\');
-    dll_pop_back(&split_path); // remove exe
+    String8Node* split_path = str8_split(scratch.arena, utf8_path, '\\');
+    dll_pop_back(split_path); // remove exe
 
     String8Join opts = {0};
     opts.mid = str8_literal("/");
     opts.post = str8_literal("/");
-    result = str8_join(arena, &split_path, opts);
+    result = str8_join(arena, split_path, opts);
 
     end_scratch(scratch);
     return(result);
@@ -157,7 +157,6 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
     File result = {0};
 
     ScratchArena scratch = begin_scratch();
-    defer(end_scratch(scratch));
 
     String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
@@ -174,6 +173,7 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
 
     result.size = (u64)large_file_size.QuadPart;
 
+    end_scratch(scratch);
     return(result);
 }
 
@@ -271,13 +271,11 @@ os_file_create(String8 dir, String8 filename){
     return(result);
 }
 
-// INCOMPLETE
 static bool
-os_file_exists(String8 path){
+os_path_exists(String8 path){
     bool result = false;
 
     ScratchArena scratch = begin_scratch();
-    defer(end_scratch(scratch));
 
     String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
@@ -289,26 +287,47 @@ os_file_exists(String8 path){
     }
 
     result = true;
+    end_scratch(scratch);
+    return(result);
+}
+
+// INCOMPLETE
+static bool
+os_file_exists(String8 path, String8 filename){
+    bool result = false;
+
+    ScratchArena scratch = begin_scratch();
+    String8 full_path = str8_path_append(scratch.arena, path, filename);
+    String16 wide_path = os_utf16_from_utf8(scratch.arena, full_path);
+
+    HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+
+    if(file_handle != INVALID_HANDLE_VALUE){
+        result = true;
+        CloseHandle(file_handle);
+    }
+
+    end_scratch(scratch);
     return(result);
 }
 
 static bool
-os_file_delete(String8 dir, String8 filename){
+os_file_delete(String8 path, String8 filename){
     ScratchArena scratch = begin_scratch();
-    defer(end_scratch(scratch));
 
-    String8 full_path = str8_path_append(scratch.arena, dir, filename);
+    String8 full_path = str8_path_append(scratch.arena, path, filename);
     String16 wide_path = os_utf16_from_utf8(scratch.arena, full_path);
 
     bool result = DeleteFileW((wchar*)wide_path.str);
+    end_scratch(scratch);
     return(result);
 }
 
 static bool
-os_file_move(String8 source_dir, String8 source_file, String8 dest_dir, String8 dest_file){
+os_file_move(String8 source_path, String8 source_file, String8 dest_path, String8 dest_file){
     ScratchArena scratch = begin_scratch();
-    String8 source_string = str8_path_append(scratch.arena, source_dir, source_file);
-    String8 dest_string = str8_path_append(scratch.arena, dest_dir, dest_file);
+    String8 source_string = str8_path_append(scratch.arena, source_path, source_file);
+    String8 dest_string = str8_path_append(scratch.arena, dest_path, dest_file);
     String16 source_wide = os_utf16_from_utf8(scratch.arena, source_string);
     String16 dest_wide = os_utf16_from_utf8(scratch.arena, dest_string);
 

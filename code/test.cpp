@@ -530,12 +530,12 @@ s32 main(s32 argc, char** argv){
         {
             ScratchArena inner_scratch = begin_scratch();
             String8 string = str8_literal("1one\\two\\three\\four\\five8");
-            String8Node result = str8_split(inner_scratch.arena, string, '\\');
-            eval(str8_compare(result.next->str, str8_literal("1one")));
-            eval(str8_compare(result.next->next->str, str8_literal("two")));
-            eval(str8_compare(result.next->next->next->str, str8_literal("three")));
-            eval(str8_compare(result.next->next->next->next->str, str8_literal("four")));
-            eval(str8_compare(result.next->next->next->next->next->str, str8_literal("five8")));
+            String8Node* result = str8_split(inner_scratch.arena, string, '\\');
+            eval(str8_compare(result->next->str, str8_literal("1one")));
+            eval(str8_compare(result->next->next->str, str8_literal("two")));
+            eval(str8_compare(result->next->next->next->str, str8_literal("three")));
+            eval(str8_compare(result->next->next->next->next->str, str8_literal("four")));
+            eval(str8_compare(result->next->next->next->next->next->str, str8_literal("five8")));
             end_scratch(inner_scratch);
         }
 
@@ -566,7 +566,7 @@ s32 main(s32 argc, char** argv){
 
         // cwd
         {
-            String8 cwd_literal = str8_literal("C:\\sh1tz\\apesticks\\cc++\\base");
+            String8 cwd_literal = str8_literal("C:\\sh1tz\\apesticks\\cc++\\base\\build");
             eval(cwd == cwd_literal);
         }
 

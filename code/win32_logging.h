@@ -44,8 +44,11 @@ static void print_last_error_(DWORD error, s32 line_number, String8 path, String
     //MessageBoxW(0, wbuffer, 0, MB_OK);
 
     String8 file = str8_path_file(path);
-    print("%s[%i] error %i: %s(): %ls", file.str, line_number, (s32)error, func.str, message);
+    print("Error %i: %s[%i] %s(): %ls", (s32)error, file.str, line_number, func.str, message);
 }
+
+// todo(rr): implement this
+static void message_box_last_error();
 
 #define error_and_quit(message) error_and_quit_(message, __LINE__, str8_literal(__FILE__), str8_literal(__FUNCTION__))
 static void error_and_quit_(String8 message, s32 line_number, String8 path, String8 func){

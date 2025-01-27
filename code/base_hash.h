@@ -31,7 +31,7 @@ hash_from_string(String8 string){
 
 #define TABLE_DEFAULT_COUNT 1024
 static void
-init_table(Arena* arena, HashTable* table){
+table_init(Arena* arena, HashTable* table){
     table->arena = arena;
     table->count = TABLE_DEFAULT_COUNT;
     table->slots = push_array_zero(table->arena, HashNode*, table->count);
