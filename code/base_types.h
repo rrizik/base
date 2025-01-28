@@ -67,11 +67,7 @@
 
 
 #if defined(ARCH_ARM) || defined(ARCH_ARM64)
-    inline void enable_arm_cycle_counter() {
-        _WriteStatusReg(ARM64_PMCR_EL0, (1 << 0) | (1 << 2));  // Enable counter and reset cycle counter
-        _WriteStatusReg(ARM64_PMCNTENSET_EL0, (1 << 31));      // Enable cycle counter
-    }
-    #define READ_TIMESTAMP_COUNTER _ReadStatusReg(ARM64_PMCCNTR_EL0)
+    #define READ_TIMESTAMP_COUNTER _ReadStatusReg(ARM64_SYSREG(3, 3, 14, 0, 2));
 #elif defined(ARCH_AMD64)
     #define READ_TIMESTAMP_COUNTER __rdtsc()
 #elif defined(ARCH_X64)
