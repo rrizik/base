@@ -46,8 +46,10 @@
 # define ARCH_X86 1
 #elif defined(_M_X64) || defined(__x86_64__)
 # define ARCH_X64 1
-#elif defined(_M_ARM) || defined(__arm__) || defined(_M_ARM64)
+#elif defined(_M_ARM) || defined(__arm__)
 # define ARCH_ARM 1
+#elif defined(_M_ARM64) || defined(__aarch64__)
+# define ARCH_ARM64 1
 #endif
 
 // C/C++
@@ -63,20 +65,19 @@
     #include <intrin.h>
 #endif
 
-#if defined(ARCH_ARM)
-    inline void enable_cycle_counter() {
+
+#if defined(ARCH_ARM) || defined(ARCH_ARM64)
+    inline void enable_arm_cycle_counter() {
         _WriteStatusReg(ARM64_PMCR_EL0, (1 << 0) | (1 << 2));  // Enable counter and reset cycle counter
         _WriteStatusReg(ARM64_PMCNTENSET_EL0, (1 << 31));      // Enable cycle counter
     }
-    enable_cycle_counter(); // call the function
-
-    #define __RDTSC __ReadStatusReg(ARM64_PMCCNTS_EL0) // set __RDTSC for arm architexture
+    #define READ_TIMESTAMP_COUNTER _ReadStatusReg(ARM64_PMCCNTR_EL0)
 #elif defined(ARCH_AMD64)
-    #define __RDTSC __rdtsc()
+    #define READ_TIMESTAMP_COUNTER __rdtsc()
 #elif defined(ARCH_X64)
-    #define __RDTSC __rdtsc()
+    #define READ_TIMESTAMP_COUNTER __rdtsc()
 #elif defined(ARCH_X86)
-    #define __RDTSC __rdtsc()
+    #define READ_TIMESTAMP_COUNTER __rdtsc()
 #endif
 
 
