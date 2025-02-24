@@ -149,6 +149,18 @@ os_application_file_open(String8 path, DWORD access_writes, DWORD operation){
     return(result);
 }
 
+static bool
+os_file_close(File file){
+    bool result = CloseHandle(file.handle);
+    if(!result){
+        print_last_error(GetLastError());
+        return(result);
+    }
+
+    file.size = 0;
+    return(result);
+}
+
 // note(rr): Some basic access_write's to use, read docs if you want more granular access to file handles:
 // access_writes: GENERIC_WRITE, GENERIC_READ
 // operation:     CREATE_ALWAYS, CREATE_NEW, OPEN_ALWAYS, OPEN_EXISTING, TRUNCATE_EXISTING
@@ -160,32 +172,22 @@ os_file_open(String8 path, DWORD access_writes, DWORD operation){
 
     String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     result.handle = CreateFileW((wchar*)wide_path.str, access_writes, 0, 0, operation, 0, 0);
+    end_scratch(scratch);
+
     if(result.handle == INVALID_HANDLE_VALUE){
+        os_file_close(result);
         print_last_error(GetLastError());
         return(result);
     }
 
     LARGE_INTEGER large_file_size;
     if(!GetFileSizeEx(result.handle, &large_file_size)){
+        os_file_close(result);
         print_last_error(GetLastError());
         return(result);
     }
 
     result.size = (u64)large_file_size.QuadPart;
-
-    end_scratch(scratch);
-    return(result);
-}
-
-static bool
-os_file_close(File file){
-    bool result = CloseHandle(file.handle);
-    if(!result){
-        print_last_error(GetLastError());
-        return(result);
-    }
-
-    file.size = 0;
     return(result);
 }
 
@@ -279,15 +281,16 @@ os_path_exists(String8 path){
 
     String16 wide_path = os_utf16_from_utf8(scratch.arena, path);
     HANDLE file_handle = CreateFileW((wchar*)wide_path.str, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-    defer(CloseHandle(file_handle));
 
     if(file_handle == INVALID_HANDLE_VALUE){
-        print_last_error(GetLastError());
+        //print_last_error(GetLastError());
+        CloseHandle(file_handle);
         return(result);
     }
 
     result = true;
     end_scratch(scratch);
+    CloseHandle(file_handle);
     return(result);
 }
 
@@ -357,9 +360,10 @@ os_dir_delete(String8 dir, String8 delete_dir){
     return(result);
 }
 
+// todo takes in String8Node???
 // untested
 static bool
-os_dir_files(Arena* arena, String8Node* node, String8 dir){
+os_dir_read(Arena* arena, String8Node* node, String8 dir){
     bool result = false;
 
     ScratchArena scratch = begin_scratch();

@@ -33,18 +33,16 @@
 // OS
 #if defined(_WIN32)
 # define OS_WINDOWS 1
-#elif defined(__APPLE_) && defined(__MACH__)
+#elif defined(__APPLE_)
 # define OS_MAC 1
-#elif defined(__gnu_linux__)
+#elif defined(__linux__)
 # define OS_LINUX 1
 #endif
 
 // Architecture
-#if defined(_M_AMD64) || defined(__amd64__)
-# define ARCH_AMD64 1
-#elif defined(_M_I86) || defined(__i386)
+#if defined(_M_IX86) || defined(__i386)
 # define ARCH_X86 1
-#elif defined(_M_X64) || defined(__x86_64__)
+#elif defined(_M_AMD64) || defined(__x86_64__) // _M_X64 is redudant with _M_AMD64
 # define ARCH_X64 1
 #elif defined(_M_ARM) || defined(__arm__)
 # define ARCH_ARM 1
@@ -59,13 +57,25 @@
 # define STANDARD_C 1
 #endif
 
-
 #if OS_WINDOWS
     #include <windows.h>
     #include <intrin.h>
+
+    #if   COMPILER_CL
+        #define os_debug_break() __debugbreak()
+    #elif COMPILER_CLANG
+        #define os_debug_break() __buildin_debugtrap()
+    #else
+        #define os_debug_break()
+    #endif
+
+#elif OS_LINUX
+    #define os_debug_break()
+#elif OS_MAC
+    #define os_debug_break()
 #endif
 
-
+// Timestamp counter
 #if defined(ARCH_ARM) || defined(ARCH_ARM64)
     #define READ_TIMESTAMP_COUNTER _ReadStatusReg(ARM64_SYSREG(3, 3, 14, 0, 2));
 #elif defined(ARCH_AMD64)
@@ -77,20 +87,31 @@
 #endif
 
 
+static bool debugger_present(){
+#if OS_WINDOWS
+    return(IsDebuggerPresent());
+#elif OS_LINUX
+    return(false); // not implemented
+#elif OS_MAC
+    return(false); // not implemented
+#else
+    return(false);
+#endif
+}
+
 ///////////////////////////////
 // NOTE: Helper Macros
 ///////////////////////////////
 
-
 #define array_count(array) (sizeof(array) / sizeof(*(array)))
 
-
+//Important: Use this as reference to improve this: https://discord.com/channels/239737791225790464/1316145567180521572
 #if COMPILER_CL
-    #define debug_break() do{if(IsDebuggerPresent()){ __debugbreak(); }}while(0)
+    #define debug_break() do{if(debugger_present()){ os_debug_break(); }}while(0)
 #elif COMPILER_CLANG
-    #define debug_break() do{if(IsDebuggerPresent()){ __buildin_debugtrap(); }}while(0)
+    #define debug_break() do{if(debugger_present()){ os_debug_break(); }}while(0)
 #elif COMPILER_GCC
-    #define debug_break() do{if(IsDebuggerPresent()){ __asm__ __volatile__("int3"); }}while(0)
+    #define debug_break() do{if(debugger_present()){ __asm__ __volatile__("int3"); }}while(0)
 #else
     #define debug_break()
 #endif

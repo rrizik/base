@@ -29,7 +29,6 @@ os_commit(void* base, u64 size){
     return(result);
 }
 
-
 static bool
 os_free(void* base){
     bool result = false;

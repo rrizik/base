@@ -3,6 +3,7 @@ build/
 main.cpp
 session.vim
 testfile.txt
+strag*
 
 .tags
 

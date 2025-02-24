@@ -43,7 +43,8 @@ rem C4309: truncation of constant value
 IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build
 cl %cl_flags% %optimization% %cl_ignore_warnings% ..\code\test.cpp 
-cl %cl_flags% %optimization% %cl_ignore_warnings% ..\code\a.cpp 
+cl %cl_flags% %optimization% %cl_ignore_warnings% ..\code\quick.cpp 
+cl %cl_flags% %optimization% %cl_ignore_warnings% ..\code\strag.cpp 
 rem clang-cl -Z7 -ferror-limit=999 %clangcl_flags% %warnings_as_errors_flags% ..\code\test.cpp 
 rem clang-cl -Z7 -Wno-writable-strings ..\code\a.cpp 
 popd

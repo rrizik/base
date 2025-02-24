@@ -89,7 +89,11 @@ static void arena_init(Arena* arena, void* base, u32 size){
 }
 
 static void arena_free(Arena* arena){
-    //memset(arena->base, 0, arena->at);
+    arena->at = 0;
+}
+
+static void arena_free_zero(Arena* arena){
+    memset(arena->base, 0, arena->at);
     arena->at = 0;
 }
 
@@ -134,6 +138,7 @@ typedef struct ScratchArena{
 global THREAD_LOCAL Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 static u32 scratch_index = 0;
 
+// todo: change to make_scratch()
 static ScratchArena get_scratch(Arena* arena){
     ScratchArena result;
     result.arena = arena;
@@ -164,7 +169,7 @@ begin_scratch(Arena* arena=0){
     //}
     //return(scratch);
 
-    // note: choose ABAB scratch arena
+    // note: choose ABCABC scratch arena
     ScratchArena result = get_scratch((*(scratch_pool + (scratch_index++ % SCRATCH_POOL_COUNT))));
     //if(arena){
     //    if(arena == result.arena){
@@ -192,6 +197,8 @@ typedef struct PoolArena{
     void* base;
     u32 size;
     u32 chunk_size;
+    s32 chunk_total;
+    s32 chunk_at;
 
     PoolFreeNode* head;
 } PoolArena;
@@ -212,6 +219,8 @@ push_pool(Arena* arena, u32 chunk_size, u32 count){
     result->base = push_array(arena, u8, (chunk_size * count));
     result->size = chunk_size * count;
     result->chunk_size = chunk_size;
+    result->chunk_total = (s32)(result->size/result->chunk_size);
+    result->chunk_at  = 0;
     return(result);
 }
 
@@ -226,6 +235,7 @@ pool_free_all(PoolArena* p){
         node->next = p->head;
         p->head = node;
     }
+    p->chunk_at  = 0;
 }
 
 static void
@@ -245,6 +255,7 @@ pool_free(PoolArena* p, void* ptr){
     PoolFreeNode* node = (PoolFreeNode*)ptr;
     node->next = p->head;
     p->head = node;
+    --p->chunk_at;
 }
 
 static void*
@@ -255,6 +266,7 @@ pool_next(PoolArena* p){
 
     p->head = p->head->next;
     memset(node, 0, p->chunk_size);
+    ++p->chunk_at;
     return(node);
 }
 
