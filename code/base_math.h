@@ -286,11 +286,11 @@ slerp_v2(v2 a, f32 t, v2 b) {
     a = normalize_v2(a);
     b = normalize_v2(b);
 
-    f32 inner = inner_product_v2(a, b);
-    clamp_f32(-1.0, 1.0, &inner);
+    f32 dot = dot_product_v2(a, b);
+    clamp_f32(-1.0, 1.0, &dot);
 
-    f32 theta = acosf(inner) * t;
-    v2 relative_vector = normalize_v2(b - a * inner);
+    f32 theta = acosf(dot) * t;
+    v2 relative_vector = normalize_v2(b - a * dot);
     v2 result = (a * cos_f32(theta)) + (relative_vector * sin_f32(theta));
     return(result);
 }

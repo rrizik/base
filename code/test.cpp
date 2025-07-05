@@ -141,13 +141,13 @@ s32 main(s32 argc, char** argv){
         // vector2 math
         eval(round_v2(make_v2(1.1f, 1.9f)) == make_v2(1.0f, 2.0f));
         eval(round_v2_v2s32(make_v2(1.1f, 1.9f)) == make_v2s32(1, 2));
-        eval(inner_product_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == 0);
+        eval(dot_product_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == 0);
         eval(is_perpendicular_v2(make_v2(1.0f, 0.0f), make_v2(0.0f, 1.0f)) == 1);
         eval(right_direction_v2(make_v2(1.0f, 0.5f), make_v2(1.0f, 0.8f)) == 1);
         eval(same_direction_v2(make_v2(1.0f, 0.5f), make_v2(1.0f, 0.8f)) == 1);
         eval(left_direction_v2(make_v2(1.0f, 0.5f), make_v2(-1.0f, 0.8f)) == 1);
         eval(opposite_direction_v2(make_v2(1.0f, 0.5f), make_v2(-1.0f, 0.8f)) == 1);
-        eval(magnitude_sqrt_v2(make_v2(3.0f, 0.0f)) == 9);
+        eval(magnitude_squared_v2(make_v2(3.0f, 0.0f)) == 9);
         eval(magnitude_v2(make_v2(3.0f, 0.0f)) == 3);
         eval(distance_v2(make_v2(0.0f, 0.0f), make_v2(3.0f, 3.0f)) == 4.2426405f);
         eval(distance_v2(make_v2(0.0f, 0.0f), make_v2(3.0f, 0.0f)) == 3);
@@ -165,13 +165,13 @@ s32 main(s32 argc, char** argv){
 
         // vector3 math
         //eval(round_v3(((v3){1.1f, 1.9f, 2.5f})) == ((v3){1.0f, 2.0f, 2.0f})); not implemented yet
-        eval(inner_product_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == 0);
+        eval(dot_product_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == 0);
         eval(is_perpendicular_v3(make_v3(1.0f, 0.0f, 0.0f), make_v3(0.0f, 1.0f, 0.0f)) == 1);
         eval(right_direction_v3((make_v3(1.0f, 0.5f, 0.5f)), (make_v3(1.0f, 0.8f, 0.5f))) == 1);
         eval(same_direction_v3(make_v3(1.0f, 0.5f, 0.5f), make_v3(1.0f, 0.8f, 0.3f)) == 1);
         eval(opposite_direction_v3(make_v3(1.0f, 0.5f, 0.5f), make_v3(-1.0f, 0.8f, 0.5f)) == 1);
         eval(left_direction_v3((make_v3(1.0f, 0.5f, 0.5f)), (make_v3(-1.0f, 0.8f, 0.5f))) == 1);
-        eval(magnitude_sqrt_v3(make_v3(3.0f, 0.0f, 3.0f)) == 18);
+        eval(magnitude_squared_v3(make_v3(3.0f, 0.0f, 3.0f)) == 18);
         eval(magnitude_v3(make_v3(3.0f, 0.0f, 3.0f)) == 4.2426405f);
         eval(distance_v3(make_v3(0.0f, 0.0f, 0.0f), make_v3(3.0f, 3.0f, 3.0f)) == 5.19615221f);
         eval(distance_v3(make_v3(0.0f, 0.0f, 0.0f), make_v3(3.0f, 0.0f, 0.0f)) == 3);

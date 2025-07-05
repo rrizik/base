@@ -52,22 +52,22 @@ rect_collides_rect(Rect rect1, Rect rect2) {
 }
 
 static bool
-rect_contains_point(Rect r1, v2 p){
-    if((p.x >= r1.x0) &&
-       (p.x < r1.x1) &&
-       (p.y >= r1.y0) &&
-       (p.y < r1.y1)){
+rect_contains_point(Rect r, v2 p){
+    if((p.x >= r.x0) &&
+       (p.x <  r.x1) &&
+       (p.y >= r.y0) &&
+       (p.y <  r.y1)){
         return true;
     }
     return false;
 }
 
 static bool
-rect_contains_point(Rect r1, v2s32 p){
-    if(((f32)p.x > r1.x0) &&
-       ((f32)p.x < r1.x1) &&
-       ((f32)p.y > r1.y0) &&
-       ((f32)p.y < r1.y1)){
+rect_contains_point(Rect r, v2s32 p){
+    if(((f32)p.x > r.x0) &&
+       ((f32)p.x < r.x1) &&
+       ((f32)p.y > r.y0) &&
+       ((f32)p.y < r.y1)){
         return true;
     }
     return false;

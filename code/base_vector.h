@@ -404,42 +404,48 @@ round_v2_v2s32(v2 value){
 // If negative, the vectors point in opposing *general* directions
 // If 0, the vectors are perpendicular important: You can use 0 to face things in the right direction (forward vector, right vector)
 
-#define dot_v2(a, b) inner_product_v2(a, b)
+#define dot_v2(a, b) dot_product_v2(a, b)
 static f32
-inner_product_v2(v2 a, v2 b){
+dot_product_v2(v2 a, v2 b){
     return((a.x * b.x) + (a.y * b.y));
 }
 
 static bool
 is_perpendicular_v2(v2 a, v2 b){
-    return(inner_product_v2(a, b) == 0);
+    return(dot_product_v2(a, b) == 0);
 }
 
 #define right_direction_v2(a, b) same_direction_v2(a, b)
 static bool same_direction_v2(v2 a, v2 b){
-    return(inner_product_v2(a, b) > 0);
+    return(dot_product_v2(a, b) > 0);
 }
 
 #define left_direction_v2(a, b) opposite_direction_v2(a, b)
 static bool opposite_direction_v2(v2 a, v2 b){
-    return(inner_product_v2(a, b) < 0);
+    return(dot_product_v2(a, b) < 0);
 }
 
 static f32
-magnitude_sqrt_v2(v2 a){
-    f32 result = inner_product_v2(a, a);
+magnitude_squared_v2(v2 a){
+    f32 result = dot_product_v2(a, a);
     return(result);
 }
 
 static f32
 magnitude_v2(v2 a){
-    f32 result = sqrtf(inner_product_v2(a, a));
+    f32 result = sqrtf(dot_product_v2(a, a));
     return(result);
 }
 
 static f32
 distance_v2(v2 a, v2 b){
     f32 result = magnitude_v2(a - b);
+    return(result);
+}
+
+static f32
+distance_squared_v2(v2 a, v2 b){
+    f32 result = magnitude_squared_v2(a - b);
     return(result);
 }
 
@@ -463,19 +469,26 @@ direction_v2(v2 from, v2 to){
     return(result);
 }
 
+static f32 // NOTE: produces a scalar
+cross_product_v2(v2 a, v2 b){
+    f32 result;
+    result = (a.x * b.y) - (a.y * b.x);
+    return(result);
+}
+
 static f32
 angle_v2(v2 a, v2 b){
-    f32 magnitude = sqrtf(magnitude_sqrt_v2(a) * magnitude_sqrt_v2(b));
-    f32 inner = inner_product_v2(a, b);
-    f32 result = acosf(inner / magnitude);
+    f32 magnitude = sqrtf(magnitude_squared_v2(a) * magnitude_squared_v2(b));
+    f32 dot = dot_product_v2(a, b);
+    f32 result = acosf(dot / magnitude);
     return(result);
 }
 
 static v2
 project_v2(v2 a, v2 b){
-    f32 inner =  inner_product_v2(a, b);
-    f32 mag_sqrt = magnitude_sqrt_v2(b);
-    v2 result = v2_scale(b, (inner / mag_sqrt));
+    f32 dot =  dot_product_v2(a, b);
+    f32 mag_sqrt = magnitude_squared_v2(b);
+    v2 result = v2_scale(b, (dot / mag_sqrt));
     return(result);
 }
 
@@ -495,42 +508,42 @@ perpendicular_v2(v2 a, v2 b){
 
 static v2
 reflection_v2(v2 a, v2 normal){
-    f32 inner = inner_product_v2(a, normal);
-    v2 result = a - (2.0f * (inner * normal));
+    f32 dot = dot_product_v2(a, normal);
+    v2 result = a - (2.0f * (dot * normal));
     return(result);
 }
 
 // Vector3
-#define dot_v3(a, b) inner_product_v3(a, b)
+#define dot_v3(a, b) dot_product_v3(a, b)
 static f32
-inner_product_v3(v3 a, v3 b){
+dot_product_v3(v3 a, v3 b){
     return((a.x * b.x) + (a.y * b.y) + (a.z * b.z));
 }
 
 static bool
 is_perpendicular_v3(v3 a, v3 b){
-    return(inner_product_v3(a, b) == 0);
+    return(dot_product_v3(a, b) == 0);
 }
 
 #define right_direction_v3(a, b) same_direction_v3(a, b)
 static bool same_direction_v3(v3 a, v3 b){
-    return(inner_product_v3(a, b) > 0);
+    return(dot_product_v3(a, b) > 0);
 }
 
 #define left_direction_v3(a, b) opposite_direction_v3(a, b)
 static bool opposite_direction_v3(v3 a, v3 b){
-    return(inner_product_v3(a, b) < 0);
+    return(dot_product_v3(a, b) < 0);
 }
 
 static f32
-magnitude_sqrt_v3(v3 a){
-    f32 result = inner_product_v3(a, a);
+magnitude_squared_v3(v3 a){
+    f32 result = dot_product_v3(a, a);
     return(result);
 }
 
 static f32
 magnitude_v3(v3 a){
-    f32 result = sqrtf(inner_product_v3(a, a));
+    f32 result = sqrtf(dot_product_v3(a, a));
     return(result);
 }
 
@@ -563,17 +576,17 @@ cross_product_v3(v3 a, v3 b){
 
 static f32
 angle_v3(v3 a, v3 b){
-    f32 magnitude = sqrtf(magnitude_sqrt_v3(a) * magnitude_sqrt_v3(b));
-    f32 inner = inner_product_v3(a, b);
-    f32 result = acosf(inner / magnitude);
+    f32 magnitude = sqrtf(magnitude_squared_v3(a) * magnitude_squared_v3(b));
+    f32 dot = dot_product_v3(a, b);
+    f32 result = acosf(dot / magnitude);
     return(result);
 }
 
 static v3
 project_v3(v3 a, v3 b){
-    f32 inner =  inner_product_v3(a, b);
-    f32 mag_sqrt = magnitude_sqrt_v3(b);
-    v3 result = b * (inner / mag_sqrt);
+    f32 dot =  dot_product_v3(a, b);
+    f32 mag_sqrt = magnitude_squared_v3(b);
+    v3 result = b * (dot / mag_sqrt);
     return(result);
 }
 
@@ -585,8 +598,8 @@ perpendicular_v3(v3 a, v3 b){
 
 static v3
 reflection_v3(v3 a, v3 normal){
-    f32 inner = inner_product_v3(a, normal);
-    return(a - ((2.0f * inner) * normal));
+    f32 dot = dot_product_v3(a, normal);
+    return(a - ((2.0f * dot) * normal));
 }
 
 // UNTSTED

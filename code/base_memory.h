@@ -98,8 +98,8 @@ static void arena_free_zero(Arena* arena){
 }
 
 #define push_array(arena, type, count) (type*)push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type))
-#define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), alignof(type))
 #define push_array_zero(arena, type, count) (type*)(memset(push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type)), 0, (u32)(sizeof(type) * (u32)(count))))
+#define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), alignof(type))
 #define push_struct_zero(arena, type) (type*)(memset(push_size_aligned((arena), sizeof(type), alignof(type)), 0, sizeof(type)))
 static void* push_size_aligned(Arena* arena, u32 size, u32 align){
     u32 used_aligned = AlignUpPow2(arena->at, align);

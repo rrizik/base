@@ -3,31 +3,201 @@
 
 #include "base_vector.h"
 
-typedef union m2{
-    f32 e[2][2];
+//typedef union m4{
+//    union{
+//        struct{
+//            f32 _11, _12, _13, _14,
+//                _21, _22, _23, _24,
+//                _31, _32, _33, _34,
+//                _41, _42, _43, _44;
+//        };
+//        f32 array[16];
+//    };
+//
+//    inline f32* operator[](u32 i){
+//        return(&(array[i * 4]));
+//    }
+//
+//    inline m4() {
+//        _11 = _22 = _33 = _44 = 1.0f;
+//        _12 = _13 = _14 = _21 = 0.0f;
+//        _23 = _24 = _31 = _32 = 0.0f;
+//        _34 = _41 = _42 = _43 = 0.0f;
+//    }
+//    inline m4(f32 f11, f32 f12, f32 f13, f32 f14,
+//                f32 f21, f32 f22, f32 f23, f32 f24,
+//                f32 f31, f32 ff32, f32 f33, f32 f34,
+//                f32 f41, f32 f42, f32 f43, f32 f44) {
+//        _11 = f11; _12 = f12; _13 = f13; _14 = f14;
+//        _21 = f21; _22 = f22; _23 = f23; _24 = f24;
+//        _31 = f31; _32 = ff32; _33 = f33; _34 = f34;
+//        _41 = f41; _42 = f42; _43 = f43; _44 = f44;
+//    }
+//} m4;
 
-    inline m2() {
-        e[0][0] = e[1][1] = 1.0f;
-    }
-} m2;
+typedef struct m4{
+    union{
+        struct{
+            f32 _11, _12, _13, _14,
+                _21, _22, _23, _24,
+                _31, _32, _33, _34,
+                _41, _42, _43, _44;
+        };
+        f32 array[16];
+    };
+} m4;
 
-static m2
-m2_mul(m2 a, m2 b){
-    m2 result;
-    result.e[0][0] = (a.e[0][0] * b.e[0][0]) + (a.e[0][1] * b.e[1][0]);
-    result.e[0][1] = (a.e[0][0] * b.e[0][1]) + (a.e[0][1] * b.e[1][1]);
-    result.e[1][0] = (a.e[1][0] * b.e[0][0]) + (a.e[1][1] * b.e[1][0]);
-    result.e[1][1] = (a.e[1][0] * b.e[0][1]) + (a.e[1][1] * b.e[1][1]);
+typedef struct m3{
+    union{
+        struct{
+            f32 _11, _12, _13,
+                _21, _22, _23,
+                _31, _32, _33;
+        };
+        f32 array[9];
+    };
+} m3;
+
+static m3
+make_m3_zero(){
+    m3 result = {0};
+    return(result);
+}
+
+static m3
+make_m3_ident(){
+    m3 result = {0};
+    result._11, result._22, result._33 = 1;
+    return(result);
+}
+
+static m4
+make_m4_zero(){
+    m4 result = {0};
+    return(result);
+}
+
+static m4
+make_m4_ident(){
+    m4 result = {0};
+    result._11 = result._22 = result._33 = result._44 = 1;
+    return(result);
+}
+
+static bool
+m3_equals(m3 left, m3 right, f32 epsilon){
+    bool result = ((left._11 - right._11) <= epsilon &&
+                   (left._12 - right._12) <= epsilon &&
+                   (left._13 - right._13) <= epsilon &&
+                   (left._21 - right._21) <= epsilon &&
+                   (left._22 - right._22) <= epsilon &&
+                   (left._23 - right._23) <= epsilon &&
+                   (left._31 - right._31) <= epsilon &&
+                   (left._32 - right._32) <= epsilon &&
+                   (left._33 - right._33) <= epsilon);
+    return(result);
+}
+
+static m3
+m3_make_transform(v2 pos, f32 angle, v2 scale){
+    m3 result = {0};
+
+    f32 c = cos_f32(angle);
+    f32 s = sin_f32(angle);
+
+    f32 x_basis = cos_f32(angle) * scale.x;
+
+    result._11 = c * scale.x;
+    result._21 = s * scale.x;
+
+    result._12 = -s * scale.y;
+    result._21 = c * scale.y;
+
+    result._13 = pos.x;
+    result._23 = pos.y;
+    result._33 = 1.0f;
+
     return(result);
 }
 
 static v2
-m2_mul_v2(m2 m, v2 v){
-    v2 result;
-    result.x = (m.e[0][0] * v.x) + (m.e[0][1] * v.y);
-    result.y = (m.e[1][0] * v.x) + (m.e[1][1] * v.y);
-    return(result);
+m3_mul_v2(m3 mat, v2 pos) {
+    v2 world_pos;
+    world_pos.x = mat._11 * pos.x + mat._12 * pos.y + mat._13 * 1.0f;
+    world_pos.y = mat._21 * pos.x + mat._22 * pos.y + mat._23 * 1.0f;
+    return world_pos;
 }
+
+//typedef union m2{
+//    f32 e[2][2];
+//
+//    inline m2() {
+//        e[0][0] = e[1][1] = 1.0f;
+//    }
+//} m2;
+
+//typedef union m2{
+//    struct{
+//        f32 _11, _12,
+//            _21, _22;
+//    };
+//    f32 array[4];
+//} m2;
+//
+//static m2
+//make_m2_zero(){
+//    m2 result = {0};
+//    return(result);
+//}
+//
+//static m2
+//make_m2_ident(){
+//    m2 result = {0};
+//    result._11, result._22 = 1;
+//    return(result);
+//}
+
+//typedef struct m2{
+//    union{
+//        struct {
+//            f32 _11, _12,
+//                _21, _22;
+//        };
+//        f32 array[4];
+//    };
+//
+//    inline f32* operator[](u32 i){
+//        return(&(array[i * 2]));
+//    }
+//
+//    inline m2(){
+//        _11 = _22 = 1.0f;
+//        _12 = _21 = 0.0f;
+//    }
+//    inline m2(f32 f11, f32 f12,
+//              f32 f21, f32 f22) {
+//        _11 = f11; _12 = f12;
+//        _21 = f21; _22 = f22;
+//    }
+//} m2;
+
+//static m2
+//m2_mul(m2 a, m2 b){
+//    m2 result;
+//    result.e[0][0] = (a.e[0][0] * b.e[0][0]) + (a.e[0][1] * b.e[1][0]);
+//    result.e[0][1] = (a.e[0][0] * b.e[0][1]) + (a.e[0][1] * b.e[1][1]);
+//    result.e[1][0] = (a.e[1][0] * b.e[0][0]) + (a.e[1][1] * b.e[1][0]);
+//    result.e[1][1] = (a.e[1][0] * b.e[0][1]) + (a.e[1][1] * b.e[1][1]);
+//    return(result);
+//}
+//
+//static v2
+//m2_mul_v2(m2 m, v2 v){
+//    v2 result;
+//    result.x = (m.e[0][0] * v.x) + (m.e[0][1] * v.y);
+//    result.y = (m.e[1][0] * v.x) + (m.e[1][1] * v.y);
+//    return(result);
+//}
 
 //typedef union m4{
 //    f32 e[4][4];
@@ -431,16 +601,31 @@ m2_mul_v2(m2 m, v2 v){
 //// NOTE: Matrix Transformations
 /////////////////////////////////
 //
-//static m4
-//m4_translate(v3 pos){
-//    m4 result = {
-//        1.0f, 0.0f, 0.0f, 0.0f,
-//        0.0f, 1.0f, 0.0f, 0.0f,
-//        0.0f, 0.0f, 1.0f, 0.0f,
-//        pos.x, pos.y, pos.z, 1.0f,
-//    };
-//    return(result);
-//}
+static m4
+m4_translate(v3 pos){
+    m4 result = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        pos.x, pos.y, pos.z, 1.0f,
+    };
+    return(result);
+}
+
+#define m4_compare m4_equal(m4 a, m4 b, f32 epsilon)
+#define m4_equals  m4_equal(m4 a, m4 b, f32 epsilon)
+static bool
+m4_equal(m4 a, m4 b, f32 epsilon){
+    bool result = ((a._11 - b._11) <= epsilon && (a._12 - b._12) <= epsilon &&
+                   (a._13 - b._13) <= epsilon && (a._14 - b._14) <= epsilon &&
+                   (a._21 - b._21) <= epsilon && (a._22 - b._22) <= epsilon &&
+                   (a._23 - b._23) <= epsilon && (a._24 - b._24) <= epsilon &&
+                   (a._31 - b._31) <= epsilon && (a._32 - b._32) <= epsilon &&
+                   (a._33 - b._33) <= epsilon && (a._34 - b._34) <= epsilon &&
+                   (a._41 - b._41) <= epsilon && (a._42 - b._42) <= epsilon &&
+                   (a._43 - b._43) <= epsilon && (a._44 - b._44) <= epsilon);
+    return(result);
+}
 //
 //static v3
 //m4_get_translation(m4 m){

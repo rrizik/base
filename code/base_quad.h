@@ -26,10 +26,10 @@ make_quad(v2 p0, v2 p1, v2 p2, v2 p3){
 static Quad
 make_quad(v2 pos, v2 dim){
     Quad result;
-    result.p0 = make_v2(pos.x - dim.w/2, pos.y - dim.h/2);
-    result.p1 = make_v2(pos.x + dim.w/2, pos.y - dim.h/2);
-    result.p2 = make_v2(pos.x + dim.w/2, pos.y + dim.h/2);
-    result.p3 = make_v2(pos.x - dim.w/2, pos.y + dim.h/2);
+    result.p0 = make_v2(pos.x, pos.y);
+    result.p1 = make_v2(pos.x, pos.y + dim.h);
+    result.p2 = make_v2(pos.x + dim.w, pos.y + dim.h);
+    result.p3 = make_v2(pos.x + dim.w, pos.y);
     return(result);
 }
 
