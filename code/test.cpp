@@ -231,12 +231,12 @@ s32 main(s32 argc, char** argv){
         eval(ceil_f32(1.910293f) == 2.0f);
         eval(ceil_f32_s32(1.110293f) == 1);
         f32 value = 2.0f;
-        clamp_f32(1.0f, 3.0f, &value);
+        value = clamp_f32(value, 1.0f, 3.0f);
         eval(value == 2.0f);
-        clamp_f32(1.0f, 0.5f, &value);
+        value = clamp_f32(value, 1.0f, 0.5f);
         eval(value == 1.0f);
         value = 3.0f;
-        clamp_f32(1.0f, 2.0f, &value);
+        value = clamp_f32(value, 1.0f, 2.0f);
         eval(value == 2.0f);
 
         // lerp stuff

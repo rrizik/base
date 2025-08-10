@@ -221,30 +221,30 @@ ceil_f32_s32(f32 value){
     return(result);
 }
 
-static void
-clamp_f32(f32 left, f32 right, f32* value){
-    if(*value < left) { *value = left; }
-    if(*value > right) { *value = right; }
+static f32
+clamp_f32(f32 v, f32 l, f32 r){
+    f32 result = MIN(MAX(v, l), r);
+    return(result);
 }
 
-static void
-clamp_u32(u32 left, u32 right, u32* value){
-    if(*value < left) { *value = left; }
-    if(*value > right) { *value = right; }
+static u32
+clamp_u32(u32 v, u32 l, u32 r){
+    u32 result = MIN(MAX(v, l), r);
+    return(result);
 }
 
-static void
-clamp_s32(s32 left, s32 right, s32* value){
-    if(*value < left) { *value = left; }
-    if(*value > right) { *value = right; }
+static s32
+clamp_s32(s32 v, s32 l, s32 r){
+    s32 result = MIN(MAX(v, l), r);
+    return(result);
 }
 
 // UNTESTED:
-static void
-clamp_f32_s32(f32 left, f32 right, f32* value){
-    if(*value < left) { *value = left; }
-    if(*value > right) { *value = right; }
-}
+//static void
+//clamp_f32_s32(f32 left, f32 right, f32* value){
+//    if(*value < left) { *value = left; }
+//    if(*value > right) { *value = right; }
+//}
 
 ///////////////////////////////
 // NOTE: Lerp & Easing
@@ -287,7 +287,7 @@ slerp_v2(v2 a, f32 t, v2 b) {
     b = normalize_v2(b);
 
     f32 dot = dot_product_v2(a, b);
-    clamp_f32(-1.0, 1.0, &dot);
+    dot = clamp_f32(dot, -1.0, 1.0);
 
     f32 theta = acosf(dot) * t;
     v2 relative_vector = normalize_v2(b - a * dot);

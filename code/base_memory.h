@@ -97,6 +97,7 @@ static void arena_free_zero(Arena* arena){
     arena->at = 0;
 }
 
+// todo: push_array/push_struct should default to zeroing I think
 #define push_array(arena, type, count) (type*)push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type))
 #define push_array_zero(arena, type, count) (type*)(memset(push_size_aligned((arena), (u32)(sizeof(type) * (u32)(count)), alignof(type)), 0, (u32)(sizeof(type) * (u32)(count))))
 #define push_struct(arena, type) (type*)push_size_aligned((arena), sizeof(type), alignof(type))

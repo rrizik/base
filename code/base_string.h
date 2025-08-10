@@ -111,9 +111,9 @@ static bool        str8_path_is_absolute(String8 path);
 // note: String8
 ///////////////////////////////
 
-typedef union String8{
-    struct{ u8* str; u64 size; };
-    struct{ u8* data; u64 count; };
+typedef struct String8{
+    union{ u8* str; u8* data; };
+    union{ u64 size; u64 count; u64 length; };
 } String8;
 
 #define str8(byte_buffer, count) str8_((u8*)byte_buffer, count)

@@ -105,7 +105,7 @@ static bool debugger_present(){
 
 #define array_count(array) (sizeof(array) / sizeof(*(array)))
 
-//Important: Use this as reference to improve this: https://discord.com/channels/239737791225790464/1316145567180521572
+// Important: Use this as reference to improve this: https://discord.com/channels/239737791225790464/1316145567180521572
 #if COMPILER_CL
     #define debug_break() do{if(debugger_present()){ os_debug_break(); }}while(0)
 #elif COMPILER_CLANG
