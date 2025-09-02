@@ -14,10 +14,29 @@
 ///////////////////////////////
 
 
-#define sll_push_front(list, node) (((node)->next)=(list->next),\
-                                    ((list)->next)=(node))
+// testing: trying solution without sentinel node. Its causing me headaches.
+#define sll_push_front(list, node) \
+    do { \
+        (node)->next = (list); \
+        (list) = (node); \
+    } while(0)
 
-#define sll_pop_front(list) ((((list)->next)=((list)->next->next)))
+#define sll_pop_front(list) \
+    do { \
+        (list) = (list)->next; \
+    } while(0)
+
+//#define sll_push_front(list, node) \
+//    do { \
+//        (node)->next = (list)->next; \
+//        (list)->next = (node); \
+//    } while(0)
+
+
+//#define sll_pop_front(list) \
+//    do { \
+//        (list)->next = (list)->next->next; \
+//    } while(0)
 
 #define dll_push_front(list, node) ((((node)->prev)=(list)),\
                                     (((node)->next)=((list)->next)),\

@@ -68,6 +68,7 @@ static bool    str8_starts_with(String8 string, String8 sub_string);
 static bool    str8_starts_with_nocase(String8 string, String8 sub_string);
 static bool    str8_ends_with(String8 string, String8 sub_string);
 static bool    str8_ends_with_nocase(String8 string, String8 sub_string);
+static bool    str8_ends_with_byte(String8 string, u8 byte); // consider: maybe I don't want this
 
 static s64     str8_index_from_left(String8 string, u8 byte);
 static s64     str8_index_from_right(String8 string, u8 byte);
@@ -668,6 +669,18 @@ str8_ends_with(String8 string, String8 sub_string){
         --index;
     }
     return(true);
+}
+
+static bool
+str8_ends_with_byte(String8 string, u8 byte){
+    if(string.count < 1){
+        return(false);
+    }
+
+    if(string.str[string.count - 1] == byte){
+        return(true);
+    }
+    return(false);
 }
 
 static bool
