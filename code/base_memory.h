@@ -131,6 +131,7 @@ static Arena* push_arena(Arena *arena, u32 size){
 typedef struct ScratchArena{
     Arena* arena;
     u32 at;
+    u32 idx;
 } ScratchArena;
 
 // todo: make it so that this is a growable arena where I reserve the size and commit what I need.
@@ -147,8 +148,11 @@ static ScratchArena get_scratch(Arena* arena){
     return(result);
 }
 
+s32 begin_scratch_count = 0;
+s32 end_scratch_count = 0;
 static ScratchArena
 begin_scratch(Arena* arena=0){
+    begin_scratch_count++;
     // note: init scratch memory on first call
     static s32 index = 0;
     if (scratch_pool[0] == 0){
@@ -171,7 +175,9 @@ begin_scratch(Arena* arena=0){
     //return(scratch);
 
     // note: choose ABCABC scratch arena
-    ScratchArena result = get_scratch((*(scratch_pool + (scratch_index++ % SCRATCH_POOL_COUNT))));
+    ScratchArena result = get_scratch((*(scratch_pool + (scratch_index % SCRATCH_POOL_COUNT))));
+    result.idx = scratch_index;
+    scratch_index++;
     //if(arena){
     //    if(arena == result.arena){
     //        result = get_scratch((*(scratch_pool + (scratch_index++ % SCRATCH_POOL_COUNT))));
@@ -181,6 +187,7 @@ begin_scratch(Arena* arena=0){
 }
 
 static void end_scratch(ScratchArena scratch){
+    end_scratch_count++;
     scratch_index--;
     memset((u8*)scratch.arena->base + scratch.at, 0, scratch.arena->at - scratch.at);
     scratch.arena->at = scratch.at;

@@ -9,6 +9,14 @@ There are a few exeptions to this such as:
 ===================================================================================================
 ===================================================================================================
 
+typedef struct String8;
+typedef struct String8Node;
+typedef struct String8List;
+typedef struct String8Join;
+
+===================================================================================================
+===================================================================================================
+
 static u64 char_length(char* buff);
 static u64 char_copy(char* dst, char* src); // assumes both buffers are 0 terminated
 static u64 wchar_length(wchar* wbuff);
@@ -18,27 +26,31 @@ static u64 wchar_copy(wchar* dst, wchar* src); // assumes both buffers are 0 ter
 #define        str8_literal(byte_buffer) str8_((u8*)byte_buffer, (sizeof(byte_buffer) - 1))
 static String8 str8_(u8* byte_buffer, u64 count);
 static String8 str8_range(u8* first, u8* opl);
-static String8 str8_cstring(u8* cstr);
+static String8 str8_cstring(char* cstr);
 static String8 str8_format(Arena* arena, const char* format, ...);
 
 #define str16(string, count) str16_((u16*)string, count)
 static  String16 str16_(u16* string, u64 count);
 
-static bool    byte_is_slash(u8 byte);
 static bool    byte_is_digit(u8 byte);
-static bool    byte_is_space(u8 byte);
 static bool    byte_is_alpha(u8 byte);
 static bool    byte_is_alnum(u8 byte);
+static bool    byte_is_special(u8 byte);
+static bool    byte_is_slash(u8 byte);
+static bool    byte_is_space(u8 byte);
 static bool    byte_is_upper(u8 byte);
 static bool    byte_is_lower(u8 byte);
 static u8      byte_to_upper(u8 byte);
 static u8      byte_to_lower(u8 byte);
-static bool    str8_is_upper(String8 string);
-static bool    str8_is_lower(String8 string);
+
 static void    str8_to_upper(String8* string);
 static void    str8_to_lower(String8* string);
-
+static bool    str8_is_upper(String8 string);
+static bool    str8_is_lower(String8 string);
+static bool    str8_is_digit(String8 string);
+static bool    str8_is_alpha(String8 string);
 static bool    str8_is_zero_terminated(String8 string);
+
 static String8 str8_zero_terminate(Arena* arena, String8 string);
 static String8 str8_concatenate(Arena* arena, String8 left, String8 right);
 static u64     str8_replace_byte(String8* string, u8 byte_in, u8 byte_out);
@@ -64,6 +76,8 @@ static bool    str8_compare_nocase(String8 left, String8 right);
 static bool    str8_contains(String8 string, String8 sub_string);
 static bool    str8_contains_byte(String8 string, u8 byte);
 static bool    str8_contains_nocase(String8 string, String8 sub_string);
+static bool    str8_contains_alpha(String8 string);
+static bool    str8_contains_digit(String8 string);
 static bool    str8_starts_with(String8 string, String8 sub_string);
 static bool    str8_starts_with_nocase(String8 string, String8 sub_string);
 static bool    str8_ends_with(String8 string, String8 sub_string);
@@ -77,9 +91,15 @@ static s64     str8_index_from_right(String8 string, String8 sub_string);
 static s64     any_index_from_right(String8 string, String8 any);
 static s64     any_index_from_left(String8 string, String8 any);
 
+// todo keep as new
+static void        str8_list_push(Arena* arena, String8List* list, String8 string);
+static String8     str8_join(Arena* arena, String8List* str8_sentinel, String8Join join_opts);
+static String8Node str8_split(Arena* arena, String8 string, char byte, u32 count);
+
+// todo remove as old
 static void        str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string);
-static String8Node str8_split(Arena* arena, String8 string, char byte);
 static String8     str8_join(Arena* arena, String8Node* str8_sentinel, String8Join join_opts);
+static String8Node str8_split(Arena* arena, String8 string, char byte);
 
 static String8     str8_path_append(Arena* arena, String8 path, String8 value);
 static String8     str8_path_pop(Arena* arena, String8 path, char slash);
@@ -113,7 +133,7 @@ static bool        str8_path_is_absolute(String8 path);
 ///////////////////////////////
 
 typedef struct String8{
-    union{ u8* str; u8* data; };
+    union{ u8* str; u8* data; u8* base; };
     union{ u64 size; u64 count; u64 length; };
 } String8;
 
@@ -140,14 +160,6 @@ str8_cstring(char* cstr){
     return(result);
 }
 
-static String8
-str8_cstring(u8* cstr){
-    u8* ptr = cstr;
-    for(; *ptr != 0; ptr += 1);
-    String8 result = str8_range(cstr, ptr);
-    return(result);
-}
-
 #include <stdio.h>
 #include <stdarg.h>
 #define str8_fmt(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
@@ -170,16 +182,23 @@ str8_formatted(Arena* arena, const char* format, ...){
 typedef struct String8Node{
     String8Node* next;
     String8Node* prev;
-    String8 str;
+    String8 string;
+} String8Node;
+
+typedef struct String8List{
+    String8Node* first;
+    String8Node* last;
+    u64 node_count;
+    u64 total_size;
 } String8List;
 
-static String8Node*
-push_str8_node(Arena* arena){
-    String8Node* result = push_struct(arena, String8Node);
-    result->next = result;
-    result->prev = result;
-    return(result);
-}
+//static String8Node*
+//push_str8_node(Arena* arena){
+//    String8Node* result = push_struct(arena, String8Node);
+//    result->next = result;
+//    result->prev = result;
+//    return(result);
+//}
 
 typedef struct String8Join{
     String8 pre;
@@ -255,22 +274,9 @@ static u64 wchar_copy(wchar* dst, wchar* src){
 ///////////////////////////////
 
 static bool
-byte_is_slash(u8 byte){
-    return(byte == '\\' || byte == '/');
-}
-
-static bool
 byte_is_digit(u8 byte){
     bool result = ((byte >= '0') && (byte <= '9'));
     return(result);
-}
-
-static bool
-byte_is_space(u8 byte){
-    if(byte == ' ' || byte == '\n' || byte == '\t' || byte == '\r'){
-        return(true);
-    }
-    return(false);
 }
 
 static bool
@@ -284,6 +290,31 @@ byte_is_alpha(u8 byte){
 static bool
 byte_is_alnum(u8 byte){
     if(byte_is_alpha(byte) || byte_is_digit(byte)){
+        return(true);
+    }
+    return(false);
+}
+
+static bool
+byte_is_special(u8 byte){
+    if(byte_is_alnum(byte)){
+        return(false);
+    }
+
+    if(byte >= 32 && byte <= 126){
+        return(true);
+    }
+    return(false);
+}
+
+static bool
+byte_is_slash(u8 byte){
+    return(byte == '\\' || byte == '/');
+}
+
+static bool
+byte_is_space(u8 byte){
+    if(byte == ' ' || byte == '\n' || byte == '\t' || byte == '\r'){
         return(true);
     }
     return(false);
@@ -353,6 +384,54 @@ str8_to_lower(String8* string){
     for(s32 i=0; i < string->count; ++i){
         string->data[i] = byte_to_lower(string->data[i]);
     }
+}
+
+static bool
+str8_is_digit(String8 string){
+    bool result = true;
+    for(s32 i=0; i < string.count; ++i){
+        if(!byte_is_digit(string.data[i])){
+            result = false;
+            break;
+        }
+    }
+    return(result);
+}
+
+static bool
+str8_is_alpha(String8 string){
+    bool result = true;
+    for(s32 i=0; i < string.count; ++i){
+        if(!byte_is_alpha(string.data[i])){
+            result = false;
+            break;
+        }
+    }
+    return(result);
+}
+
+static bool
+str8_contains_alpha(String8 string){
+    bool result = false;
+    for(s32 i=0; i < string.count; ++i){
+        if(byte_is_alpha(string.data[i])){
+            result = true;
+            break;
+        }
+    }
+    return(result);
+}
+
+static bool
+str8_contains_digit(String8 string){
+    bool result = false;
+    for(s32 i=0; i < string.count; ++i){
+        if(byte_is_digit(string.data[i])){
+            result = true;
+            break;
+        }
+    }
+    return(result);
 }
 
 static bool
@@ -735,6 +814,7 @@ str8_index_from_left(String8 string, String8 sub_string){
     s64 sub_index = 0;
     for(u64 i=0; i < string.count; ++i){
         if(string.data[i] == sub_string.data[sub_index]){
+            // Not enough bytes left to check.
             if(string.count - i < sub_string.count){
                 return(-1);
             }
@@ -770,11 +850,12 @@ str8_index_from_right(String8 string, String8 sub_string){
     u64 sub_index = sub_string.count - 1;
     for(u64 i=string.count - 1; i < string.count; --i){
         if(string.data[i] == sub_string.data[sub_index]){
+            // Not enough bytes left to check.
             if(string.count - (string.count - i) < sub_string.count - 1){
                 return(-1);
             }
 
-            index = (s64)i;
+            index = (s64)(string.count - i);
             for(u64 j=0; j < sub_string.count; ++j){
                 if(string.data[i - j] == sub_string.data[sub_index]){
                     --sub_index;
@@ -872,47 +953,62 @@ str8_path_is_absolute(String8 path){
 }
 
 static void
+str8_list_push(Arena* arena, String8List* list, String8 string){
+    String8Node* node = push_struct(arena, String8Node);
+    node->string = string;
+
+    if(list->first == 0){
+        list->first = node;
+        list->last = node;
+    }
+    else{
+        list->last->next = node;
+        list->last = node;
+    }
+    node->next = 0;
+
+    list->node_count += 1;
+    list->total_size += string.size;
+}
+
+static void
 str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
 
-    string_node->str.count = string.count;
-    string_node->str.data = push_array(arena, u8, string.count);
-
-    memcpy(string_node->str.data, string.data, string.count);
+    string_node->string.size = string.size;
+    string_node->string.data = push_array(arena, u8, string.size);
+    memcpy(string_node->string.data, string.data, string.size);
 
     dll_push_back(str_sentinel, string_node);
 }
 
-//static String8Node
-//str8_split(Arena* arena, String8 string, char byte){
-//    String8Node parts = {};
-//    //dll_clear(&parts);
-//    parts.next = &parts;
-//    parts.prev = &parts;
-//
-//    u8* ptr =   string.data;
-//    u8* first = string.data;
-//    u8* opl =   string.data + string.count;
-//    for(; ptr < opl; ptr += 1){
-//        bool is_split_byte = false;
-//        if(*ptr == byte){
-//            is_split_byte = true;
-//        }
-//
-//        if(is_split_byte){
-//            if(first < ptr){
-//                str8_list_push_back(arena, &parts, str8_range(first, ptr));
-//            }
-//            first = ptr + 1;
-//        }
-//    }
-//
-//    if(first < ptr){
-//        str8_list_push_back(arena, &parts, str8_range(first, ptr));
-//    }
-//
-//    return(parts);
-//}
+static String8List
+str8_split(Arena* arena, String8 string, char byte, u32 count){
+    String8List parts = {};
+
+    u8* ptr   = string.data;
+    u8* first = string.data;
+    u8* opl   = string.data + string.size;
+    for(; ptr < opl; ptr += 1){
+        bool is_split_byte = false;
+        if(*ptr == byte){
+            is_split_byte = true;
+        }
+
+        if(is_split_byte){
+            if(first < ptr){
+                str8_list_push(arena, &parts, str8_range(first, ptr));
+            }
+            first = ptr + 1;
+        }
+    }
+
+    if(first < ptr){
+        str8_list_push(arena, &parts, str8_range(first, ptr));
+    }
+
+    return(parts);
+}
 
 static String8Node*
 str8_split(Arena* arena, String8 string, char byte){
@@ -921,7 +1017,7 @@ str8_split(Arena* arena, String8 string, char byte){
 
     u8* ptr =   string.data;
     u8* first = string.data;
-    u8* opl =   string.data + string.count;
+    u8* opl =   string.data + string.size;
     for(; ptr < opl; ptr += 1){
         bool is_split_byte = false;
         if(*ptr == byte){
@@ -944,6 +1040,48 @@ str8_split(Arena* arena, String8 string, char byte){
 }
 
 static String8
+str8_join(Arena* arena, String8List* list, String8Join join_opts){
+    u64 size = 0;
+    size += join_opts.pre.size;
+    size += join_opts.post.size;
+    size += join_opts.mid.size * (list->node_count - 1);
+    size += list->total_size;
+
+    // allocate count
+    u8* str = push_array(arena, u8, size + 1);
+    u8* ptr = str;
+
+    // write pre
+    memcpy(ptr, join_opts.pre.data, join_opts.pre.size);
+    ptr += join_opts.pre.size;
+
+    // write mid
+    bool is_mid = false;
+    for(String8Node* node = list->first; node != 0; node = node->next){
+        if(is_mid && join_opts.mid.size){
+            memcpy(ptr, join_opts.mid.data, join_opts.mid.size);
+            ptr += join_opts.mid.size;
+        }
+
+        // write node string
+        memcpy(ptr, node->string.str, node->string.size);
+        ptr += node->string.size;
+
+        is_mid = true;
+    }
+
+    // write post
+    memcpy(ptr, join_opts.post.data, join_opts.post.size);
+    ptr += join_opts.post.size;
+
+    // write zero.
+    *ptr = 0;
+
+    String8 result = {str, size};
+    return(result);
+}
+
+static String8
 str8_join(Arena* arena, String8Node* str_sentinel, String8Join join_opts){
     u64 count = 0;
 
@@ -951,7 +1089,7 @@ str8_join(Arena* arena, String8Node* str_sentinel, String8Join join_opts){
     count += join_opts.pre.count;
     count += join_opts.post.count;
     for(String8Node* node = str_sentinel->next; node != str_sentinel; node = node->next){
-        count += node->str.count;
+        count += node->string.count;
 		count += join_opts.mid.count;
     }
     // remove last mid
@@ -974,7 +1112,7 @@ str8_join(Arena* arena, String8Node* str_sentinel, String8Join join_opts){
         }
 
         // write node string
-        String8 node_string = node->str;
+        String8 node_string = node->string;
         memcpy(ptr, node_string.data, node_string.count);
         ptr += node_string.count;
 

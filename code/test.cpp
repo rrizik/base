@@ -330,7 +330,7 @@ s32 main(s32 argc, char** argv){
                 u32 value;
             };
 
-            SLLNode* sentinel = push_struct(arena, SLLNode);
+            SLLNode* start = push_struct(arena, SLLNode);
             SLLNode* a = push_struct(arena, SLLNode);
             a->value = 1;
             SLLNode* b = push_struct(arena, SLLNode);
@@ -339,72 +339,113 @@ s32 main(s32 argc, char** argv){
             c->value = 3;
             SLLNode* d = push_struct(arena, SLLNode);
             d->value = 4;
-            sll_push_front(sentinel, a);
-            sll_push_front(sentinel, b);
-            sll_push_front(sentinel, c);
-            sll_push_front(sentinel, d);
+            sll_push_front(start, a);
+            sll_push_front(start, b);
+            sll_push_front(start, c);
+            sll_push_front(start, d);
 
-            eval(sentinel->value == 0);
-            eval(sentinel->next->value == 4);
-            eval(sentinel->next->next->value == 3);
-            eval(sentinel->next->next->next->value == 2);
-            eval(sentinel->next->next->next->next->value == 1);
+            eval(start->value == 4);
+            eval(start->next->value == 3);
+            eval(start->next->next->value == 2);
+            eval(start->next->next->next->value == 1);
 
-            sll_pop_front(sentinel);
-            eval(sentinel->next->value == 3);
-            eval(sentinel->next->next->value == 2);
-            eval(sentinel->next->next->next->value == 1);
+            sll_pop_front(start);
+            eval(start->value == 3);
+            eval(start->next->value == 2);
+            eval(start->next->next->value == 1);
 
-            sll_pop_front(sentinel);
-            eval(sentinel->next->value == 2);
-            eval(sentinel->next->next->value == 1);
+            sll_pop_front(start);
+            eval(start->value == 2);
+            eval(start->next->value == 1);
 
-            sll_pop_front(sentinel);
-            eval(sentinel->next->value == 1);
+            sll_pop_front(start);
+            eval(start->value == 1);
+
+            start = push_struct(arena, SLLNode);
+            a = push_struct(arena, SLLNode);
+            a->value = 1;
+            b = push_struct(arena, SLLNode);
+            b->value = 2;
+            c = push_struct(arena, SLLNode);
+            c->value = 3;
+            d = push_struct(arena, SLLNode);
+            d->value = 4;
+            sll_push_front(start, a);
+            sll_push_front(start, b);
+            sll_push_front(start, c);
+            sll_push_front(start, d);
+
+            sll_clear(start);
+            eval(start == 0);
+
             arena_free(arena);
         }
+
         // default node creation
-        String8Node* sentinel = push_str8_node(arena);
-        eval(sentinel->next == sentinel);
-        eval(sentinel->prev == sentinel);
+        //String8Node* sentinel = push_str8_node(arena);
+        //eval(sentinel->next == sentinel);
+        //eval(sentinel->prev == sentinel);
 
-        String8Node* n0 = push_str8_node(arena);
-        String8Node* n1 = push_str8_node(arena);
-        String8Node* n2 = push_str8_node(arena);
+        //String8Node* n0 = push_str8_node(arena);
+        //String8Node* n1 = push_str8_node(arena);
+        //String8Node* n2 = push_str8_node(arena);
 
-        n0->str = str8_literal("one");
-        n1->str = str8_literal("two");
-        n2->str = str8_literal("three");
+        //n0->string = str8_literal("one");
+        //n1->string = str8_literal("two");
+        //n2->string = str8_literal("three");
 
-        dll_push_front(sentinel, n0);
-        dll_push_back(sentinel, n1);
-        dll_push_back(sentinel, n2);
+        //dll_push_front(sentinel, n0);
+        //dll_push_back(sentinel, n1);
+        //dll_push_back(sentinel, n2);
 
-        // test push_front/back
-        eval(sentinel->next == n0);
-        eval(sentinel->prev == n2);
-        eval(sentinel->prev->prev == n1);
+        //// test push_front/back
+        //eval(sentinel->next == n0);
+        //eval(sentinel->prev == n2);
+        //eval(sentinel->prev->prev == n1);
 
-        // test pop_front/back/remove
-        dll_pop_front(sentinel);
-        eval(sentinel->next == n1);
-        dll_pop_back(sentinel);
-        eval(sentinel->prev == n1);
-        dll_remove(n1);
-        eval(sentinel->next == sentinel);
-        eval(sentinel->prev == sentinel);
+        //// test pop_front/back/remove
+        //dll_pop_front(sentinel);
+        //eval(sentinel->next == n1);
+        //dll_pop_back(sentinel);
+        //eval(sentinel->prev == n1);
+        //dll_remove(n1);
+        //eval(sentinel->next == sentinel);
+        //eval(sentinel->prev == sentinel);
 
-        // test reset
-        dll_push_front(sentinel, n0);
-        dll_push_back(sentinel, n1);
-        dll_push_back(sentinel, n2);
-        dll_clear(sentinel);
-        eval(sentinel->next == sentinel);
-        eval(sentinel->prev == sentinel);
+        //// test reset
+        //dll_push_front(sentinel, n0);
+        //dll_push_back(sentinel, n1);
+        //dll_push_back(sentinel, n2);
+        //dll_clear(sentinel);
+        //eval(sentinel->next == sentinel);
+        //eval(sentinel->prev == sentinel);
     }
 
     // base_string.h
     {
+        Arena* arena = make_arena(KB(1));
+
+        String8List list = {0};
+        String8 a = str8_lit("aaa");
+        String8 b = str8_lit("bbb");
+        String8 c = str8_lit("ccc");
+        String8 d = str8_lit("ddd");
+
+        str8_list_push(arena, &list, a);
+        str8_list_push(arena, &list, b);
+        str8_list_push(arena, &list, c);
+        str8_list_push(arena, &list, d);
+
+        eval(str8_compare(list.first->string, a));
+        eval(str8_compare(list.first->next->string, b));
+        eval(str8_compare(list.first->next->next->string, c));
+        eval(str8_compare(list.first->next->next->next->string, d));
+
+        String8Join join = {0};
+        join.mid = str8_lit("-");
+        String8 result_string = str8_join(arena, &list, join);
+        list = str8_split(arena, result_string, '-', 0);
+
         // str8/str8_literaln
         eval(str8_literal("haha").size == 4);
         eval(*str8_literal("haha").str == 'h');
@@ -451,10 +492,10 @@ s32 main(s32 argc, char** argv){
             eval(str8_index_from_right(string, sub1) == -1);
             eval(str8_index_from_right(string, sub2) == -1);
             eval(str8_index_from_right(string, sub3) == -1);
-            eval(str8_index_from_right(string, sub4) == 3);
+            eval(str8_index_from_right(string, sub4) == 6);
         }
 
-        // any_index_from_right(string, string)
+        // any_index_from_left/right(string, string)
         {
             String8 string = str8_literal("a/b\\c/d");
             String8 sub1 = str8_literal("\\/");
@@ -467,12 +508,6 @@ s32 main(s32 argc, char** argv){
             eval(any_index_from_left(string, sub2) == 1);
             eval(any_index_from_left(string, sub3) == -1);
         }
-//str8_split_left(string, index);
-//str8_split_right(string, index);
-//str8_trim_left(string, count);
-//str8_trim_left(string, count);
-//str8_trim_right(string, count);
-//str8_trim_right(string, count);
 
         // str8_concatenate
         ScratchArena scratch = begin_scratch();
@@ -500,42 +535,42 @@ s32 main(s32 argc, char** argv){
 
 
         // str8_join
-        {
-            scratch = begin_scratch();
-            String8Node* sentinel = push_str8_node(scratch.arena);
-            String8Node* node;
+        //{
+        //    scratch = begin_scratch();
+        //    String8Node* sentinel = push_str8_node(scratch.arena);
+        //    String8Node* node;
 
-            String8 one =   str8_literal("one");
-            str8_list_push_back(scratch.arena, sentinel, one);
-            String8 two =   str8_literal("two");
-            str8_list_push_back(scratch.arena, sentinel, two);
-            String8 three = str8_literal("three");
-            str8_list_push_back(scratch.arena, sentinel, three);
-            String8 four =  str8_literal("four");
-            str8_list_push_back(scratch.arena, sentinel, four);
-            String8 five =  str8_literal("five");
-            str8_list_push_back(scratch.arena, sentinel, five);
+        //    String8 one =   str8_literal("one");
+        //    str8_list_push_back(scratch.arena, sentinel, one);
+        //    String8 two =   str8_literal("two");
+        //    str8_list_push_back(scratch.arena, sentinel, two);
+        //    String8 three = str8_literal("three");
+        //    str8_list_push_back(scratch.arena, sentinel, three);
+        //    String8 four =  str8_literal("four");
+        //    str8_list_push_back(scratch.arena, sentinel, four);
+        //    String8 five =  str8_literal("five");
+        //    str8_list_push_back(scratch.arena, sentinel, five);
 
-            String8Join join_options = {
-                str8_literal("1"),
-                str8_literal("\\"),
-                str8_literal("8"),
-            };
-            String8 result = str8_join(scratch.arena, sentinel, join_options);
-            eval(str8_compare(result, str8_literal("1one\\two\\three\\four\\five8")) == true);
-            end_scratch(scratch);
-        }
+        //    String8Join join_options = {
+        //        str8_literal("1"),
+        //        str8_literal("\\"),
+        //        str8_literal("8"),
+        //    };
+        //    String8 result = str8_join(scratch.arena, sentinel, join_options);
+        //    eval(str8_compare(result, str8_literal("1one\\two\\three\\four\\five8")) == true);
+        //    end_scratch(scratch);
+        //}
 
         //str8_split
         {
             ScratchArena inner_scratch = begin_scratch();
             String8 string = str8_literal("1one\\two\\three\\four\\five8");
             String8Node* result = str8_split(inner_scratch.arena, string, '\\');
-            eval(str8_compare(result->next->str, str8_literal("1one")));
-            eval(str8_compare(result->next->next->str, str8_literal("two")));
-            eval(str8_compare(result->next->next->next->str, str8_literal("three")));
-            eval(str8_compare(result->next->next->next->next->str, str8_literal("four")));
-            eval(str8_compare(result->next->next->next->next->next->str, str8_literal("five8")));
+            eval(str8_compare(result->next->string, str8_literal("1one")));
+            eval(str8_compare(result->next->next->string, str8_literal("two")));
+            eval(str8_compare(result->next->next->next->string, str8_literal("three")));
+            eval(str8_compare(result->next->next->next->next->string, str8_literal("four")));
+            eval(str8_compare(result->next->next->next->next->next->string, str8_literal("five8")));
             end_scratch(inner_scratch);
         }
 

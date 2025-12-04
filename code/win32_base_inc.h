@@ -6,6 +6,7 @@
 #include "win32_memory.h"
 #include "win32_logging.h"
 #include "win32_file.h"
+#include "win32_http.h"
 #include "win32_os.h"
 
 #if ENABLE_ASSERT

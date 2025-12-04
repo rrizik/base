@@ -7,7 +7,7 @@
 ///////////////////////////////
 // NOTE: Doubly Linked List
 //
-// - This is a Linked List with a Sentinel implementation.
+// - This is a Linked List with a Sentinel implementation. IMPORTANT: Sentinel is being removed
 //   It is expected that you dll_init() or dll_clear() before you can use the sentinel.
 // - DLL here can be treated as DLL, SLL, Queue, Stack out of convenience, although not optimal.
 // - SLL stack should have only 1 next pointer.
@@ -24,6 +24,11 @@
 #define sll_pop_front(list) \
     do { \
         (list) = (list)->next; \
+    } while(0)
+
+#define sll_clear(list) \
+    do { \
+        (list) = 0; \
     } while(0)
 
 //#define sll_push_front(list, node) \
