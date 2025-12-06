@@ -10,23 +10,46 @@ typedef struct HTTP_Response{
     String8 body;
 } HTTP_Response;
 
+typedef struct Win32_HTTP_State{
+    Arena* arena;
+    HINTERNET hSession;
+} Win32_HTTP_State;
+
+global Win32_HTTP_State* win32_http_state = 0;
+
+static void http_init(u32 size=0){
+    if(win32_http_state == 0){
+        Arena* arena = 0;
+        if(size){
+            arena = make_arena(size);
+        }
+        else{
+            arena = make_arena(MB(1));
+        }
+
+        win32_http_state = push_struct(arena, Win32_HTTP_State);
+        win32_http_state->arena = arena;
+        win32_http_state->hSession = WinHttpOpen(0, WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    }
+}
+
 int main(){
     ScratchArena scratch = begin_scratch(0);
 
-    HINTERNET hSession = 0;
+    http_init();
     HINTERNET hConnect = 0;
     HINTERNET hRequest = 0;
     HINTERNET hResults = 0;
     bool bResults = 0;
 
     // Obtain a session handle.
-    hSession = WinHttpOpen(0, WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    win32_http_state->hSession = WinHttpOpen(0, WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
 
     // Specify an HTTP server.
     String8 hostname = str8_lit("www.rafikrizik.com");
     String16 hostname_16 = os_utf16_from_utf8(scratch.arena, hostname);
-    if(hSession){
-        hConnect = WinHttpConnect(hSession, (wchar*)hostname_16.str, INTERNET_DEFAULT_HTTPS_PORT, 0 );
+    if(win32_http_state->hSession){
+        hConnect = WinHttpConnect(win32_http_state->hSession, (wchar*)hostname_16.str, INTERNET_DEFAULT_HTTPS_PORT, 0 );
     }
 
     // Create an HTTP Request handle.
@@ -64,20 +87,25 @@ int main(){
                 if(!WinHttpReadData(hRequest, (void*)buffer.str, size, (DWORD*)&downloaded)){
                     print_last_error(GetLastError());
                 }
-                u32 a = 1;
+
+                str8_list_push(scratch.arena, &response_data, buffer);
             }
         } while(size > 0);
 
+        String8 result = str8_join(win32_http_state->arena, &response_data, 0);
+        u32 a = 1;
     }
 
     if(!bResults){
         print_last_error(GetLastError());
     }
+    else{
+    }
 
     // Close handles.
     if(hRequest) WinHttpCloseHandle(hRequest);
     if(hConnect) WinHttpCloseHandle(hConnect);
-    if(hSession) WinHttpCloseHandle(hSession);
+    if(win32_http_state->hSession) WinHttpCloseHandle(win32_http_state->hSession);
 
     return(0);
 }

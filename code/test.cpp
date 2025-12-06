@@ -425,6 +425,7 @@ s32 main(s32 argc, char** argv){
     {
         Arena* arena = make_arena(KB(1));
 
+        // String8List test
         String8List list = {0};
         String8 a = str8_lit("aaa");
         String8 b = str8_lit("bbb");
@@ -443,8 +444,11 @@ s32 main(s32 argc, char** argv){
 
         String8Join join = {0};
         join.mid = str8_lit("-");
-        String8 result_string = str8_join(arena, &list, join);
+        String8 result_string = str8_join(arena, &list, &join);
         list = str8_split(arena, result_string, '-', 0);
+        result_string = str8_join(arena, &list, 0);
+
+
 
         // str8/str8_literaln
         eval(str8_literal("haha").size == 4);

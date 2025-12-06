@@ -1040,11 +1040,16 @@ str8_split(Arena* arena, String8 string, char byte){
 }
 
 static String8
-str8_join(Arena* arena, String8List* list, String8Join join_opts){
+str8_join(Arena* arena, String8List* list, String8Join* join_opts){
+    local String8Join empty_join = {0};
+    if(join_opts == 0){
+        join_opts = &empty_join;
+    }
+
     u64 size = 0;
-    size += join_opts.pre.size;
-    size += join_opts.post.size;
-    size += join_opts.mid.size * (list->node_count - 1);
+    size += join_opts->pre.size;
+    size += join_opts->post.size;
+    size += join_opts->mid.size * (list->node_count - 1);
     size += list->total_size;
 
     // allocate count
@@ -1052,15 +1057,15 @@ str8_join(Arena* arena, String8List* list, String8Join join_opts){
     u8* ptr = str;
 
     // write pre
-    memcpy(ptr, join_opts.pre.data, join_opts.pre.size);
-    ptr += join_opts.pre.size;
+    memcpy(ptr, join_opts->pre.data, join_opts->pre.size);
+    ptr += join_opts->pre.size;
 
     // write mid
     bool is_mid = false;
     for(String8Node* node = list->first; node != 0; node = node->next){
-        if(is_mid && join_opts.mid.size){
-            memcpy(ptr, join_opts.mid.data, join_opts.mid.size);
-            ptr += join_opts.mid.size;
+        if(is_mid && join_opts->mid.size){
+            memcpy(ptr, join_opts->mid.data, join_opts->mid.size);
+            ptr += join_opts->mid.size;
         }
 
         // write node string
@@ -1071,8 +1076,8 @@ str8_join(Arena* arena, String8List* list, String8Join join_opts){
     }
 
     // write post
-    memcpy(ptr, join_opts.post.data, join_opts.post.size);
-    ptr += join_opts.post.size;
+    memcpy(ptr, join_opts->post.data, join_opts->post.size);
+    ptr += join_opts->post.size;
 
     // write zero.
     *ptr = 0;
