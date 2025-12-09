@@ -5,8 +5,8 @@ session.vim
 testfile.txt
 strag*
 
-quick.c
-quick.cpp
-quick.h
+code/quick.c
+code/quick.cpp
+code/quick.h
 .tags
 
