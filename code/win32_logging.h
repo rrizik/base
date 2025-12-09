@@ -8,16 +8,29 @@
 
 #pragma comment(lib, "user32")
 
-static void print(const char* format, ...) {
+static void
+print(const char* fmt, ...) {
     char buffer[4096] = {};
 
     va_list args;
-    va_start(args, format);
-    s32 result = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_start(args, fmt);
+    s32 result = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
 
     printf("%s", buffer);
     OutputDebugStringA(buffer);
+}
+
+static void
+print_str8(String8 string){
+    u32 chunk_size = 4096;
+    u32 size = 0;
+    u8* ptr = string.str;
+    while(size < string.size){
+        print("%.*s", chunk_size, ptr);
+        ptr += chunk_size;
+        size += chunk_size;
+    }
 }
 
 [[ noreturn ]] static void // QUESTION: what is this?

@@ -423,7 +423,7 @@ s32 main(s32 argc, char** argv){
 
     // base_string.h
     {
-        Arena* arena = make_arena(KB(1));
+        Arena* arena = make_arena(MB(1));
 
         // String8List test
         String8List list = {0};
@@ -448,7 +448,12 @@ s32 main(s32 argc, char** argv){
         list = str8_split(arena, result_string, '-', 0);
         result_string = str8_join(arena, &list, 0);
 
-
+        list = {0};
+        str8_list_pushf(arena, &list, "A: %s\r\n", a.str);
+        str8_list_pushf(arena, &list, "B: %s\r\n", b.str);
+        str8_list_pushf(arena, &list, "C: %s\r\n", c.str);
+        str8_list_pushf(arena, &list, "D: %s\r\n", d.str);
+        result_string = str8_join(arena, &list, 0);
 
         // str8/str8_literaln
         eval(str8_literal("haha").size == 4);

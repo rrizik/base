@@ -27,7 +27,7 @@ static u64 wchar_copy(wchar* dst, wchar* src); // assumes both buffers are 0 ter
 static String8 str8_(u8* byte_buffer, u64 count);
 static String8 str8_range(u8* first, u8* opl);
 static String8 str8_cstring(char* cstr);
-static String8 str8_format(Arena* arena, const char* format, ...);
+static String8 str8_format(Arena* arena, const char* fmt, ...);
 
 #define str16(string, count) str16_((u16*)string, count)
 static  String16 str16_(u16* string, u64 count);
@@ -162,14 +162,14 @@ str8_cstring(char* cstr){
 
 #include <stdio.h>
 #include <stdarg.h>
-#define str8_fmt(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
-#define str8_format(arena, format, ...) str8_formatted(arena, format, __VA_ARGS__)
+#define str8_fmt(arena, fmt, ...) str8_formatted(arena, fmt, __VA_ARGS__)
+#define str8_format(arena, fmt, ...) str8_formatted(arena, fmt, __VA_ARGS__)
 static String8
-str8_formatted(Arena* arena, const char* format, ...){
+str8_formatted(Arena* arena, const char* fmt, ...){
     char buffer[4096] = {};
     va_list args;
-    va_start(args, format);
-    u64 count = (u64)vsnprintf(buffer, sizeof(buffer), format, args);
+    va_start(args, fmt);
+    u64 count = (u64)vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
 
     u8* byte_buffer = (u8*)push_array(arena, u8, count);
@@ -178,6 +178,31 @@ str8_formatted(Arena* arena, const char* format, ...){
 
     return(result);
 }
+//static String8
+//str8_formatted(Arena* arena, const char* fmt, ...){
+//
+//    va_list args;
+//    va_start(args, fmt);
+//
+//    u32 buffer_size = 10;
+//    u8* buffer = push_array(arena, u8, buffer_size);
+//    u32 real_size = (u64)vsnprintf((char*)buffer, buffer_size, fmt, args);
+//
+//    String8 result = {0};
+//    if(real_size < buffer_size){
+//        pop_array(arena, u8, buffer_size - real_size - 1);
+//        result = str8(buffer, real_size);
+//    }
+//    else{
+//        pop_array(arena, u8, buffer_size);
+//        buffer = push_array(arena, u8, real_size + 1); // +1 null terminator
+//        real_size = (u64)vsnprintf((char*)buffer, real_size + 1, fmt, args);
+//        result = str8(buffer, real_size);
+//    }
+//    va_end(args);
+//
+//    return(result);
+//}
 
 typedef struct String8Node{
     String8Node* next;
@@ -972,6 +997,21 @@ str8_list_push(Arena* arena, String8List* list, String8 string){
 }
 
 static void
+str8_list_pushf(Arena* arena, String8List* list, const char* fmt, ...){
+    char buffer_tmp[4096] = {};
+    va_list args;
+    va_start(args, fmt);
+    u64 count = (u64)vsnprintf(buffer_tmp, sizeof(buffer_tmp), fmt, args);
+    va_end(args);
+
+    u8* buffer = (u8*)push_array(arena, u8, count);
+    memcpy(buffer, buffer_tmp, count);
+    String8 result = str8(buffer, count);
+
+    str8_list_push(arena, list, result);
+}
+
+static void
 str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string){
     String8Node* string_node = push_array(arena, String8Node, 1);
 
@@ -1060,9 +1100,9 @@ str8_join(Arena* arena, String8List* list, String8Join* join_opts){
     memcpy(ptr, join_opts->pre.data, join_opts->pre.size);
     ptr += join_opts->pre.size;
 
-    // write mid
     bool is_mid = false;
     for(String8Node* node = list->first; node != 0; node = node->next){
+        // write mid
         if(is_mid && join_opts->mid.size){
             memcpy(ptr, join_opts->mid.data, join_opts->mid.size);
             ptr += join_opts->mid.size;
