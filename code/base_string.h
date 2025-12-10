@@ -60,7 +60,9 @@ static String8 str8_advance(String8 str, u64 count);
 static u64     str8_eat_spaces(String8* string);
 static String8 str8_eat_spaces(String8 string);
 static String8 str8_eat_word(String8* string);
+static String8 str8_eat_word(String8 string);
 static String8 str8_eat_line(String8* string);
+static String8 str8_eat_line(String8 string);
 
 static void    str8_split_left(String8* string, u64 index);
 static String8 str8_split_left(String8 string, u64 index);
@@ -84,12 +86,12 @@ static bool    str8_ends_with(String8 string, String8 sub_string);
 static bool    str8_ends_with_nocase(String8 string, String8 sub_string);
 static bool    str8_ends_with_byte(String8 string, u8 byte); // consider: maybe I don't want this
 
-static s64     str8_index_from_left(String8 string, u8 byte);
-static s64     str8_index_from_right(String8 string, u8 byte);
-static s64     str8_index_from_left(String8 string, String8 sub_string);
-static s64     str8_index_from_right(String8 string, String8 sub_string);
-static s64     any_index_from_right(String8 string, String8 any);
-static s64     any_index_from_left(String8 string, String8 any);
+static u64     str8_index_from_left(String8 string, u8 byte);
+static u64     str8_index_from_right(String8 string, u8 byte);
+static u64     str8_index_from_left(String8 string, String8 sub_string);
+static u64     str8_index_from_right(String8 string, String8 sub_string);
+static u64     any_index_from_right(String8 string, String8 any);
+static u64     any_index_from_left(String8 string, String8 any);
 
 // todo keep as new
 static void        str8_list_push(Arena* arena, String8List* list, String8 string);
@@ -571,9 +573,23 @@ str8_eat_word(String8* string){
 }
 
 static String8
-str8_eat_line(String8* string){
-    String8 result = {0};
+str8_eat_word(String8 string){
+    string = str8_eat_spaces(string);
 
+    u64 count = 0;
+    while(string.count){
+        if(byte_is_space(*string.data)){
+            break;
+        }
+        ++count;
+    }
+
+    String8 result = str8_advance(string, count);
+    return(result);
+}
+
+static String8
+str8_eat_line(String8* string){
     u64 count = 0;
     while(string->count){
         if(*string->data == '\n'){
@@ -585,12 +601,29 @@ str8_eat_line(String8* string){
         ++count;
     }
 
-    result = {string->data - count, count};
+    String8 result = {string->data - count, count};
+    return(result);
+}
+
+static String8
+str8_eat_line(String8 string){
+    u64 count = 0;
+    while(string.count){
+        if(*string.data == '\n'){
+            ++count;
+            break;
+        }
+        ++count;
+    }
+
+    String8 result = str8_advance(string, count);
     return(result);
 }
 
 static void
 str8_split_left(String8* string, u64 index){
+    if(index == u64_max) return;
+
     if(string->count >= index){
         string->count = index;
     }
@@ -598,6 +631,8 @@ str8_split_left(String8* string, u64 index){
 
 static String8
 str8_split_left(String8 string, u64 index){
+    if(index == u64_max) return(string);
+
     if(string.count >= index){
         string.count = index;
     }
@@ -606,6 +641,8 @@ str8_split_left(String8 string, u64 index){
 
 static void
 str8_split_right(String8* string, u64 index){
+    if(index == u64_max) return;
+
     if(string->count >= index){
         string->data = string->data + (index + 1);
         string->count -= (index + 1);
@@ -614,6 +651,8 @@ str8_split_right(String8* string, u64 index){
 
 static String8
 str8_split_right(String8 string, u64 index){
+    if(index == u64_max) return(string);
+
     if(string.count >= index){
         string.data = string.data + (index + 1);
         string.count -= (index + 1);
@@ -624,6 +663,8 @@ str8_split_right(String8 string, u64 index){
 // consider: str8_trim_both_sides_at_the_same_time()? or str8_sub_string()?
 static void
 str8_trim_left(String8* string, u64 count){
+    if(count == u64_max) return;
+
     u64 min = MIN(string->count, count);
     string->data = string->data + min;
     string->count -= min;
@@ -631,6 +672,8 @@ str8_trim_left(String8* string, u64 count){
 
 static String8
 str8_trim_left(String8 string, u64 count){
+    if(count == u64_max) return(string);
+
     u64 min = MIN(string.count, count);
     String8 result = {string.data + min, string.count - min};
     return(result);
@@ -638,12 +681,16 @@ str8_trim_left(String8 string, u64 count){
 
 static void
 str8_trim_right(String8* string, u64 count){
+    if(count == u64_max) return;
+
     u64 min = MIN(string->count, count);
     string->count -= min;
 }
 
 static String8
 str8_trim_right(String8 string, u64 count){
+    if(count == u64_max) return(string);
+
     u64 min = MIN(string.count, count);
     String8 result = {string.data, string.count - min};
     return(result);
@@ -803,106 +850,105 @@ str8_ends_with_nocase(String8 string, String8 sub_string){
     return(true);
 }
 
-#define byte_index_from_left(a, b) str8_index_from_left(a, b)
-static s64
+static u64
 str8_index_from_left(String8 string, u8 byte){
-    s64 index = 0;
-    while(index < (s64)string.count){
+    u64 index = 0;
+    while(index < string.count){
         if(string.data[index] == byte){
-            return((s64)index);
+            return(index);
         }
         index++;
     }
-    return(-1);
+    return(u64_max);
 }
 
-static s64
+static u64
 str8_index_from_right(String8 string, u8 byte){
     u64 index = string.count - 1;
     while(index < string.count){
         if(string.data[index] == byte){
-            return((s64)index);
+            return(index);
         }
         --index;
     }
-    return(-1);
+    return(u64_max);
 }
 
-static s64
+static u64
 str8_index_from_left(String8 string, String8 sub_string){
     if(string.count < sub_string.count){
-        return(-1);
+        return(u64_max);
     }
 
     bool first = true;
-    s64 index = -1;
-    s64 sub_index = 0;
+    u64 index = u64_max;
+    u64 sub_index = 0;
     for(u64 i=0; i < string.count; ++i){
         if(string.data[i] == sub_string.data[sub_index]){
             // Not enough bytes left to check.
             if(string.count - i < sub_string.count){
-                return(-1);
+                return(u64_max);
             }
 
-            index = (s64)i;
+            index = i;
             for(u64 j=0; j < sub_string.count; ++j){
                 if(string.data[i + j] == sub_string.data[sub_index]){
                     ++sub_index;
                 }
                 else{
-                    index = -1;
+                    index = u64_max;
                     sub_index = 0;
                     break;
                 }
 
-                if(sub_index == (s64)sub_string.count){
-                    return((s64)index);
+                if(sub_index == sub_string.count){
+                    return(index);
                 }
             }
         }
     }
-    return(-1);
+    return(u64_max);
 }
 
-static s64
+static u64
 str8_index_from_right(String8 string, String8 sub_string){
     if(string.count < sub_string.count){
-        return(-1);
+        return(u64_max);
     }
 
     bool first = true;
-    s64 index = -1;
+    u64 index = u64_max;
     u64 sub_index = sub_string.count - 1;
     for(u64 i=string.count - 1; i < string.count; --i){
         if(string.data[i] == sub_string.data[sub_index]){
             // Not enough bytes left to check.
             if(string.count - (string.count - i) < sub_string.count - 1){
-                return(-1);
+                return(u64_max);
             }
 
-            index = (s64)(string.count - i);
+            index = string.count - i;
             for(u64 j=0; j < sub_string.count; ++j){
                 if(string.data[i - j] == sub_string.data[sub_index]){
                     --sub_index;
                 }
                 else{
-                    index = -1;
+                    index = u64_max;
                     sub_index = 0;
                     break;
                 }
 
                 if(sub_index == -1){
-                    return((s64)index);
+                    return(index);
                 }
             }
         }
     }
-    return(-1);
+    return(u64_max);
 }
 
-static s64
+static u64
 any_index_from_right(String8 string, String8 any){
-    s64 index = -1;
+    u64 index = u64_max;
     for(u64 i=0; i < any.count; ++i){
         u8 byte = any.data[i];
         index = str8_index_from_right(string, byte);
@@ -913,9 +959,9 @@ any_index_from_right(String8 string, String8 any){
     return(index);
 }
 
-static s64
+static u64
 any_index_from_left(String8 string, String8 any){
-    s64 index = -1;
+    u64 index = u64_max;
     for(u64 i=0; i < any.count; ++i){
         u8 byte = any.data[i];
         index = str8_index_from_left(string, byte);
@@ -932,36 +978,36 @@ any_index_from_left(String8 string, String8 any){
 
 static String8
 str8_path_file(String8 path){
-    s64 index = any_index_from_right(path, str8_literal("\\/"));
-    path = str8_split_right(path, (u64)index); // include / in split
+    u64 index = any_index_from_right(path, str8_literal("\\/"));
+    path = str8_split_right(path, index); // include / in split
     return(path);
 }
 
 static String8
 str8_path_filename(String8 path){
     path = str8_path_file(path);
-    s64 index = str8_index_from_right(path, '.');
+    u64 index = str8_index_from_right(path, '.');
     path = str8_trim_right(path, path.count - index);
     return(path);
 }
 
 static String8
 str8_path_extension(String8 path){
-    s64 index = str8_index_from_right(path, '.');
-    path = str8_trim_left(path, (u64)index);
+    u64 index = str8_index_from_right(path, '.');
+    path = str8_trim_left(path, index);
     return(path);
 }
 
 static void
 str8_path_strip_file(String8* path){
-    s64 index = any_index_from_right(*path, str8_literal("\\/"));
-    str8_trim_right(path, path->count - (u64)index);
+    u64 index = any_index_from_right(*path, str8_literal("\\/"));
+    str8_trim_right(path, path->count - index);
 }
 
 static void
 str8_path_strip_extension(String8 path){
-    s64 index = str8_index_from_right(path, '.');
-    str8_trim_right(path, path.count - (u64)index);
+    u64 index = str8_index_from_right(path, '.');
+    str8_trim_right(path, path.count - index);
 }
 
 static bool
