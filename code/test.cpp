@@ -477,6 +477,24 @@ s32 main(s32 argc, char** argv){
         eval((str16_1 == str16_2));
         eval((str16_1 != str16_3));
 
+        // str8_split_left_right(String8* string, u64 index);
+        {
+            String8 string = str8_lit("abcd1efghi");
+            String8 result = str8_split_left_right(&string, 4);
+            eval(*(char*)string.str == 'e');
+            eval(string.size == 5);
+            eval(*(char*)result.str == 'a');
+            eval(result.size == 4);
+        }
+        // str8_split_left(String8* string, u64 index);
+        // str8_split_left(String8 string, u64 index);
+        // str8_split_right(String8* string, u64 index);
+        // str8_split_right(String8 string, u64 index);
+        // str8_trim_left(String8* string, u64 count);
+        // str8_trim_left(String8 string, u64 count);
+        // str8_trim_right(String8* string, u64 count);
+        // str8_trim_right(String8 string, u64 count);
+
         // str8_index_from_left(string, string)
         {
             String8 string = str8_literal("efgw efgh");

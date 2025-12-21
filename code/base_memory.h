@@ -139,17 +139,24 @@ typedef struct ScratchArena{
 #define SCRATCH_POOL_COUNT 3
 global THREAD_LOCAL Arena* scratch_pool[SCRATCH_POOL_COUNT] = {};
 static u32 scratch_index = 0;
+static u32 begin_scratch_count = 0;
+static u32 end_scratch_count = 0;
 
 // todo: change to make_scratch()
-static ScratchArena get_scratch(Arena* arena){
+static ScratchArena
+get_scratch(Arena* arena){
     ScratchArena result;
     result.arena = arena;
     result.at = arena->at;
     return(result);
 }
 
-s32 begin_scratch_count = 0;
-s32 end_scratch_count = 0;
+static void
+release_scratch(ScratchArena scratch){
+    memset((u8*)scratch.arena->base + scratch.at, 0, scratch.arena->at - scratch.at);
+    scratch.arena->at = scratch.at;
+}
+
 static ScratchArena
 begin_scratch(Arena* arena=0){
     begin_scratch_count++;
@@ -186,7 +193,8 @@ begin_scratch(Arena* arena=0){
     return(result);
 }
 
-static void end_scratch(ScratchArena scratch){
+static void
+end_scratch(ScratchArena scratch){
     end_scratch_count++;
     scratch_index--;
     memset((u8*)scratch.arena->base + scratch.at, 0, scratch.arena->at - scratch.at);

@@ -109,8 +109,9 @@ os_application_path(Arena* arena){
     String8 exe_path8 = os_utf8_from_utf16(scratch.arena, exe_path16);
 
     // exe utf8 -> exe folder path parts
+    // todo important: change this to dll_pop_back, and use the new str8_split that produces a String8List
     String8Node* exe_folder_path_parts = str8_split(scratch.arena, exe_path8, '\\');
-    dll_pop_back(exe_folder_path_parts); // remove exe
+    dll_pop_back_old(exe_folder_path_parts); // remove exe
 
     // exe folder path parts -> final path
     String8 result = {0};

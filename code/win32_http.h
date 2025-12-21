@@ -60,7 +60,6 @@ http_request(String8 url, HTTP_Info* info){
     HINTERNET hConnect = 0;
     HINTERNET hRequest = 0;
     bool ok = false;
-    u32 status_code;
 
     u32 flags = 0;
     u16 port = INTERNET_DEFAULT_HTTP_PORT;
@@ -142,7 +141,6 @@ http_request(String8 url, HTTP_Info* info){
                             WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX,
                             &status_code_out, &status_code_size, WINHTTP_NO_HEADER_INDEX);
     }
-    status_code = status_code_out;
 
     // Get response data.
     String8List response_data = {0};
@@ -172,7 +170,7 @@ http_request(String8 url, HTTP_Info* info){
 
     HTTP_Response response = {0};
     response.body = str8_join(win32_http_state->arena, &response_data, 0);
-    response.status_code = status_code;
+    response.status_code = (u32)status_code_out;
     response.ok = ok;
 
     // Close handles.

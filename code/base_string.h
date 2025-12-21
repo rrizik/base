@@ -64,6 +64,7 @@ static String8 str8_eat_word(String8 string);
 static String8 str8_eat_line(String8* string);
 static String8 str8_eat_line(String8 string);
 
+static String8 str8_split_left_right(String8* string, u64 index);
 static void    str8_split_left(String8* string, u64 index);
 static String8 str8_split_left(String8 string, u64 index);
 static void    str8_split_right(String8* string, u64 index);
@@ -82,6 +83,7 @@ static bool    str8_contains_alpha(String8 string);
 static bool    str8_contains_digit(String8 string);
 static bool    str8_starts_with(String8 string, String8 sub_string);
 static bool    str8_starts_with_nocase(String8 string, String8 sub_string);
+static bool    str8_starts_with_byte(String8 string, u8 byte); // consider: maybe I don't want this
 static bool    str8_ends_with(String8 string, String8 sub_string);
 static bool    str8_ends_with_nocase(String8 string, String8 sub_string);
 static bool    str8_ends_with_byte(String8 string, u8 byte); // consider: maybe I don't want this
@@ -512,21 +514,23 @@ str8_replace_byte(String8* string, u8 byte_in, u8 byte_out){
     return(count);
 }
 
-static String8
-str8_advance(String8 string, u64 count){
-    if(string.count >= count){
-        string.data = string.data + count;
-        string.count -= count;
-    }
-    return(string);
-}
-
 static void
 str8_advance(String8* string, u64 count){
-    if(string->count >= count){
-        string->data = string->data + count;
-        string->count -= count;
-    }
+    if(count == u64_max) return;
+
+    u64 min = MIN(string->count, count);
+    string->data = string->data + min;
+    string->count -= min;
+}
+
+static String8
+str8_advance(String8 string, u64 count){
+    if(count == u64_max) return(string);
+
+    u64 min = MIN(string.count, count);
+    string.data = string.data + min;
+    string.count -= min;
+    return(string);
 }
 
 // CONSIDER: Maybe have other functions like this, like eat_digits, eat_number, eat_string, ...
@@ -620,13 +624,17 @@ str8_eat_line(String8 string){
     return(result);
 }
 
-static void
-str8_split_left(String8* string, u64 index){
-    if(index == u64_max) return;
+static String8
+str8_split_left_right(String8* string, u64 index){
+    if(index == u64_max) return(*string);
 
+    String8 result = *string;
     if(string->count >= index){
-        string->count = index;
+        string->data = string->data + (index + 1);
+        string->count -= (index + 1);
     }
+    result.size = index;
+    return(result);
 }
 
 static String8
@@ -675,8 +683,9 @@ str8_trim_left(String8 string, u64 count){
     if(count == u64_max) return(string);
 
     u64 min = MIN(string.count, count);
-    String8 result = {string.data + min, string.count - min};
-    return(result);
+    string.data = string.data + min;
+    string.count -= min;
+    return(string);
 }
 
 static void
@@ -804,6 +813,18 @@ str8_starts_with_nocase(String8 string, String8 sub_string){
         }
     }
     return(true);
+}
+
+static bool
+str8_starts_with_byte(String8 string, u8 byte){
+    if(string.count < 1){
+        return(false);
+    }
+
+    if(string.str[0] == byte){
+        return(true);
+    }
+    return(false);
 }
 
 static bool
@@ -1034,6 +1055,7 @@ str8_list_push(Arena* arena, String8List* list, String8 string){
     }
     else{
         list->last->next = node;
+        node->prev = list->last;
         list->last = node;
     }
     node->next = 0;
@@ -1065,7 +1087,7 @@ str8_list_push_back(Arena* arena, String8Node* str_sentinel, String8 string){
     string_node->string.data = push_array(arena, u8, string.size);
     memcpy(string_node->string.data, string.data, string.size);
 
-    dll_push_back(str_sentinel, string_node);
+    dll_push_back_old(str_sentinel, string_node);
 }
 
 static String8List
@@ -1240,7 +1262,7 @@ str8_path_pop(Arena* arena, String8 path, char slash){
     ScratchArena scratch = begin_scratch();
 
     String8Node* parts = str8_split(scratch.arena, path, slash);
-    dll_pop_back(parts);
+    dll_pop_back_old(parts);
 
     String8Join join = {0};
     join.mid = str8_literal("/");
