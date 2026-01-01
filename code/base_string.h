@@ -1304,4 +1304,3 @@ static bool operator!=(String16 a, String16 b){
 #endif
 
 #endif //BASE_STRING_H
-
